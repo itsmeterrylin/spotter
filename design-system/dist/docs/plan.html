@@ -366,7 +366,7 @@ textarea.input { min-height: 120px; padding-block: var(--space-3); resize: verti
 <li>A judge&#39;s scores count only after it is calibrated against human labels.</li>
 </ol>
 <h2>Non-goals</h2>
-<p>Prompt management, playgrounds, dashboards, alerts, sessions or threads, multi-user auth, server-side task execution, OTLP ingestion, a Python SDK. Each can be added later; none blocks the loop above.</p>
+<p>Prompt management for the task under test, playgrounds, dashboards, multi-user auth, server-side task or model execution, a Python SDK. Each can be added later; none blocks the loop above.</p>
 <h2>Stack</h2>
 <p>Pinned to exact versions. A version is adopted only after it has been public for 60 days, which is the age gate for supply-chain worms that spread through fresh releases. Newer versions listed for reference are not used.</p>
 <div class="scroll"><table>
@@ -568,6 +568,26 @@ Scenario: Roll back a judge
   When the person or agent calls judge.activate with version 3
   Then version 3 is active again and its stored calibration applies
 
+Scenario: Score a conversation by turn
+  Given a trace with a 6-turn transcript from a voice session
+  When a turn-scoped judge runs on it
+  Then three assistant turns each get a score with turn set, and the trace-level value is their mean
+
+Scenario: A transfer is recorded on a trace without a code change
+  Given the project attribute map promotes lk.transfer.destination to metadata.transfer_to
+  When an OTLP trace arrives carrying that attribute and a transfer_initiated span event
+  Then the trace has metadata.transfer_to, an events entry with the timestamp, and the raw attribute under metadata.attributes
+
+Scenario: Alert on a judge threshold
+  Given a rule &quot;exercise_match mean &lt; 0.85 on run.completed&quot; with a Slack channel
+  When a run finishes with mean 0.81
+  Then one Slack message is sent with the number, the run link, and the compare link, and a delivery row records the response
+
+Scenario: Error analysis feeds a dataset
+  Given the reviewer is on a failing trace
+  When they press A and pick &quot;tagging-hard-cases&quot;
+  Then the trace becomes an item with source_trace_id set and expected taken from the human verdict
+
 Scenario: MCP compare
   Given runs A and B share a dataset
   When an agent calls the MCP tool compare with run_ids [A, B]
@@ -587,7 +607,11 @@ Scenario: MCP compare
 <li>FR10 Pages: runs list, run detail, compare, trace detail, review, judges; every filter and selection lives in the URL.</li>
 <li>FR11 SDK and CLI: <code>defineEval({ dataset, task, scores, metadata })</code>; <code>spotter run</code>, <code>spotter compare</code>; <code>--no-send</code> prints only.</li>
 <li>FR12 Judge calibration: store human-vs-judge agreement per judge version; compute TPR, TNR, and a bias-corrected pass rate with a bootstrap interval.</li>
-<li>FR13 Judge versioning: judges are immutable versions with one active pointer; any definition change creates a version (hash-deduplicated); <code>judge.propose</code> and <code>judge.activate</code> through REST and MCP; rollback is activation of an older version; disagreements listable per version.</li>
+<li>FR13 Conversations: a trace may carry <code>messages</code>; scores may carry <code>turn</code>; judges have a <code>scope</code>; review shows a verdict row per assistant turn plus one for the transcript; aggregates use the trace-level score or the mean of turns.</li>
+<li>FR14 Extra inputs: OTLP attributes and events are kept raw; a per-project <code>attribute_map</code> promotes chosen ones to typed metadata keys; <code>PATCH /api/traces/{id}/metadata</code> deep-merges late facts; filters accept <code>metadata.&lt;key&gt;</code> and <code>events.name</code>.</li>
+<li>FR15 Alerts: rules with trigger, condition, channel (<code>webhook</code>, <code>slack</code>, <code>email</code>), cooldown, test send, delivery log; evaluated in-process after writes; payloads carry deep links.</li>
+<li>FR16 Datasets from traces: <code>items/from-traces</code> with <code>expected_from</code>; <code>A</code> in review; bulk add from compare and the trace list; <code>purpose: judge_labels</code> datasets calibrate judge versions; items archive, never delete; runs record <code>item_count</code> and <code>items_hash</code>.</li>
+<li>FR17 Judge versioning: judges are immutable versions with one active pointer; any definition change creates a version (hash-deduplicated); <code>judge.propose</code> and <code>judge.activate</code> through REST and MCP; rollback is activation of an older version; disagreements listable per version.</li>
 </ol>
 <h2>Deep link contract</h2>
 <div class="scroll"><table>
@@ -615,7 +639,17 @@ Scenario: MCP compare
 </tr>
 <tr>
 <td>Trace</td>
-<td><code>/traces/{trace_id}</code></td>
+<td><code>/traces/{trace_id}?turn={n}</code></td>
+<td>focused turn</td>
+</tr>
+<tr>
+<td>Dataset items</td>
+<td><code>/datasets/{dataset_id}/items?tag={tag}</code></td>
+<td>tag filter</td>
+</tr>
+<tr>
+<td>Alerts</td>
+<td><code>/alerts</code>, <code>/alerts/{id}/deliveries</code></td>
 <td></td>
 </tr>
 <tr>
@@ -652,17 +686,21 @@ Scenario: MCP compare
 <p>Rule: a URL, opened fresh in a new tab, shows the same thing it showed when it was copied. Client code reads state from the URL on load and writes it back on change with <code>history.replaceState</code>.</p>
 <h2>Data schema</h2>
 <pre><code class="language-sql">CREATE TABLE project      (id TEXT PRIMARY KEY, name TEXT NOT NULL UNIQUE, created_at TEXT NOT NULL);
-CREATE TABLE dataset      (id TEXT PRIMARY KEY, project_id TEXT NOT NULL REFERENCES project(id), name TEXT NOT NULL, description TEXT, created_at TEXT NOT NULL, UNIQUE(project_id, name));
-CREATE TABLE dataset_item (id TEXT PRIMARY KEY, dataset_id TEXT NOT NULL REFERENCES dataset(id), input TEXT NOT NULL, expected TEXT, metadata TEXT, created_at TEXT NOT NULL);
-CREATE TABLE run          (id TEXT PRIMARY KEY, dataset_id TEXT NOT NULL REFERENCES dataset(id), name TEXT NOT NULL, metadata TEXT, started_at TEXT NOT NULL, ended_at TEXT);
-CREATE TABLE trace        (id TEXT PRIMARY KEY, project_id TEXT NOT NULL REFERENCES project(id), run_id TEXT REFERENCES run(id), dataset_item_id TEXT REFERENCES dataset_item(id), input TEXT, output TEXT, expected TEXT, metadata TEXT, tags TEXT, start TEXT NOT NULL, &quot;end&quot; TEXT, metrics TEXT, spans TEXT, created_at TEXT NOT NULL);
+CREATE TABLE dataset      (id TEXT PRIMARY KEY, project_id TEXT NOT NULL REFERENCES project(id), name TEXT NOT NULL, description TEXT, purpose TEXT NOT NULL DEFAULT &#39;eval&#39; CHECK (purpose IN (&#39;eval&#39;,&#39;judge_labels&#39;)), created_at TEXT NOT NULL, UNIQUE(project_id, name));
+CREATE TABLE dataset_item (id TEXT PRIMARY KEY, dataset_id TEXT NOT NULL REFERENCES dataset(id), input TEXT NOT NULL, expected TEXT, metadata TEXT, tags TEXT, source_trace_id TEXT, archived_at TEXT, created_at TEXT NOT NULL);
+CREATE TABLE run          (id TEXT PRIMARY KEY, dataset_id TEXT NOT NULL REFERENCES dataset(id), name TEXT NOT NULL, metadata TEXT, item_count INTEGER, items_hash TEXT, started_at TEXT NOT NULL, ended_at TEXT);
+CREATE TABLE trace        (id TEXT PRIMARY KEY, project_id TEXT NOT NULL REFERENCES project(id), run_id TEXT REFERENCES run(id), dataset_item_id TEXT REFERENCES dataset_item(id), input TEXT, output TEXT, expected TEXT, metadata TEXT, tags TEXT, start TEXT NOT NULL, &quot;end&quot; TEXT, metrics TEXT, messages TEXT, events TEXT, spans TEXT, created_at TEXT NOT NULL);
 CREATE TABLE judge        (name TEXT PRIMARY KEY, active_version_id TEXT REFERENCES judge_version(id), description TEXT, created_at TEXT NOT NULL);
-CREATE TABLE judge_version (id TEXT PRIMARY KEY, judge_name TEXT NOT NULL REFERENCES judge(name), number INTEGER NOT NULL, parent_id TEXT REFERENCES judge_version(id), prompt TEXT NOT NULL, model TEXT NOT NULL, params TEXT, examples TEXT, content_hash TEXT NOT NULL, created_by TEXT NOT NULL CHECK (created_by IN (&#39;human&#39;,&#39;agent&#39;)), note TEXT, created_at TEXT NOT NULL, UNIQUE (judge_name, number), UNIQUE (judge_name, content_hash));
-CREATE TABLE score        (id TEXT PRIMARY KEY, trace_id TEXT NOT NULL REFERENCES trace(id), name TEXT NOT NULL, value REAL NOT NULL, label TEXT, reason TEXT, source TEXT NOT NULL CHECK (source IN (&#39;sdk&#39;,&#39;judge&#39;,&#39;human&#39;)), judge_version_id TEXT REFERENCES judge_version(id), created_at TEXT NOT NULL);
-CREATE TABLE judge_calibration (judge_version_id TEXT NOT NULL REFERENCES judge_version(id), split TEXT NOT NULL CHECK (split IN (&#39;dev&#39;,&#39;test&#39;)), n INTEGER NOT NULL, tpr REAL NOT NULL, tnr REAL NOT NULL, created_at TEXT NOT NULL, PRIMARY KEY (judge_version_id, split));
+CREATE TABLE judge_version (id TEXT PRIMARY KEY, judge_name TEXT NOT NULL REFERENCES judge(name), number INTEGER NOT NULL, parent_id TEXT REFERENCES judge_version(id), scope TEXT NOT NULL DEFAULT &#39;transcript&#39; CHECK (scope IN (&#39;turn&#39;,&#39;transcript&#39;)), prompt TEXT NOT NULL, model TEXT NOT NULL, params TEXT, examples TEXT, content_hash TEXT NOT NULL, created_by TEXT NOT NULL CHECK (created_by IN (&#39;human&#39;,&#39;agent&#39;)), note TEXT, created_at TEXT NOT NULL, UNIQUE (judge_name, number), UNIQUE (judge_name, content_hash));
+CREATE TABLE score        (id TEXT PRIMARY KEY, trace_id TEXT NOT NULL REFERENCES trace(id), name TEXT NOT NULL, turn INTEGER, value REAL NOT NULL, label TEXT, reason TEXT, source TEXT NOT NULL CHECK (source IN (&#39;sdk&#39;,&#39;judge&#39;,&#39;human&#39;)), judge_version_id TEXT REFERENCES judge_version(id), created_at TEXT NOT NULL);
+CREATE TABLE judge_calibration (judge_version_id TEXT NOT NULL REFERENCES judge_version(id), dataset_id TEXT REFERENCES dataset(id), split TEXT NOT NULL CHECK (split IN (&#39;dev&#39;,&#39;test&#39;)), n INTEGER NOT NULL, tpr REAL NOT NULL, tnr REAL NOT NULL, created_at TEXT NOT NULL, PRIMARY KEY (judge_version_id, split));
+CREATE TABLE attribute_map (project_id TEXT NOT NULL REFERENCES project(id), source TEXT NOT NULL, target TEXT NOT NULL, type TEXT NOT NULL CHECK (type IN (&#39;string&#39;,&#39;number&#39;,&#39;boolean&#39;)), PRIMARY KEY (project_id, source));
+CREATE TABLE alert_rule   (id TEXT PRIMARY KEY, project_id TEXT NOT NULL REFERENCES project(id), name TEXT NOT NULL, enabled INTEGER NOT NULL DEFAULT 1, trigger TEXT NOT NULL, condition TEXT NOT NULL, channel TEXT NOT NULL, cooldown_s INTEGER NOT NULL DEFAULT 3600, last_fired_at TEXT, created_at TEXT NOT NULL);
+CREATE TABLE alert_delivery (id TEXT PRIMARY KEY, rule_id TEXT NOT NULL REFERENCES alert_rule(id), payload TEXT NOT NULL, status TEXT NOT NULL, response TEXT, created_at TEXT NOT NULL);
 CREATE INDEX trace_run ON trace(run_id);
 CREATE INDEX trace_item ON trace(dataset_item_id);
-CREATE INDEX score_trace ON score(trace_id, name);
+CREATE INDEX score_trace ON score(trace_id, name, turn);
+CREATE INDEX item_source ON dataset_item(source_trace_id);
 </code></pre>
 <p>JSON columns (<code>input</code>, <code>expected</code>, <code>metadata</code>, <code>tags</code>, <code>metrics</code>, <code>spans</code>) are stored as text and parsed at the repository boundary. Timestamps are ISO 8601 UTC.</p>
 <h2>API</h2>
@@ -736,6 +774,48 @@ CREATE INDEX score_trace ON score(trace_id, name);
 <td>rows; SELECT only</td>
 </tr>
 <tr>
+<td>PATCH</td>
+<td><code>/api/traces/{id}/metadata</code></td>
+<td><code>{metadata?, events?}</code></td>
+<td>deep-merged trace with <code>url</code></td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/otel/v1/traces</code></td>
+<td>OTLP JSON or protobuf</td>
+<td><code>{accepted}</code>; raw attributes kept, <code>attribute_map</code> applied</td>
+</tr>
+<tr>
+<td>GET, PUT</td>
+<td><code>/api/projects/{id}/attribute-map</code></td>
+<td><code>[{source, target, type}]</code></td>
+<td>the map</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/datasets/{id}/items/from-traces</code></td>
+<td><code>{trace_ids, expected_from, tags?}</code></td>
+<td><code>{created, skipped}</code> with <code>url</code></td>
+</tr>
+<tr>
+<td>GET, POST</td>
+<td><code>/api/alerts</code></td>
+<td>rule body</td>
+<td>rules with <code>url</code></td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/alerts/{id}/test</code></td>
+<td></td>
+<td>a delivery with the sample payload</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/alerts/{id}/deliveries</code></td>
+<td></td>
+<td>delivery log</td>
+</tr>
+<tr>
 <td>GET</td>
 <td><code>/api/judges/{name}</code></td>
 <td></td>
@@ -773,7 +853,7 @@ CREATE INDEX score_trace ON score(trace_id, name);
 </thead>
 <tbody><tr>
 <td><code>list</code></td>
-<td><code>{type: &#39;datasets&#39; | &#39;runs&#39; | &#39;traces&#39; | &#39;judges&#39; | &#39;disagreements&#39;, filters?, judge?, version?, limit?}</code></td>
+<td><code>{type: &#39;datasets&#39; | &#39;items&#39; | &#39;runs&#39; | &#39;traces&#39; | &#39;judges&#39; | &#39;disagreements&#39; | &#39;alerts&#39; | &#39;deliveries&#39;, filters?, judge?, version?, limit?}</code></td>
 <td>rows, each with <code>url</code></td>
 </tr>
 <tr>
@@ -783,7 +863,7 @@ CREATE INDEX score_trace ON score(trace_id, name);
 </tr>
 <tr>
 <td><code>write</code></td>
-<td><code>{op: &#39;dataset.create&#39; | &#39;items.upsert&#39; | &#39;run.create&#39; | &#39;traces.insert&#39; | &#39;scores.put&#39; | &#39;judge.propose&#39; | &#39;judge.activate&#39;, data, dry_run?}</code></td>
+<td><code>{op: &#39;dataset.create&#39; | &#39;items.upsert&#39; | &#39;items.from_traces&#39; | &#39;run.create&#39; | &#39;traces.insert&#39; | &#39;trace.patch_metadata&#39; | &#39;scores.put&#39; | &#39;judge.propose&#39; | &#39;judge.activate&#39; | &#39;alert.create&#39; | &#39;alert.test&#39;, data, dry_run?}</code></td>
 <td><code>{ok, ids, url}</code></td>
 </tr>
 <tr>
@@ -832,7 +912,13 @@ export default defineEval({
 <li>Purpose: label one trace at a time.</li>
 <li>Input: keys 1, 2, D, U, arrows, Cmd+Enter; note text. Output: human score saved, counter updates.</li>
 <li>Primary action: Pass or Fail.</li>
-<li>Layout: counter, transcript, output, expected, verdict row, note.</li>
+<li>Layout: counter, transcript with a verdict row under each assistant turn, whole-conversation verdict row, expected, note. <code>A</code> adds the trace to a dataset via a picker.</li>
+</ul>
+<h3>Alerts (<code>/alerts</code>)</h3>
+<ul>
+<li>Purpose: see what fired and why.</li>
+<li>Output: rules with enabled toggle, last fired, channel icon; delivery log per rule with status.</li>
+<li>Primary action: Test rule.</li>
 </ul>
 <h3>Judges (<code>/judges</code>, <code>/judges/{name}</code>)</h3>
 <ul>
@@ -899,6 +985,16 @@ CMD [&quot;bun&quot;, &quot;src/server.ts&quot;]
 <td><code>SPOTTER_BASE_URL</code></td>
 <td><code>http://localhost:3000</code></td>
 <td>Origin used in every <code>url</code> field</td>
+</tr>
+<tr>
+<td><code>SPOTTER_SMTP_URL</code></td>
+<td>unset</td>
+<td><code>smtp://user:pass@host:587</code> for email alerts</td>
+</tr>
+<tr>
+<td><code>SPOTTER_ALERT_SECRET</code></td>
+<td>unset</td>
+<td>HMAC key for webhook signatures</td>
 </tr>
 <tr>
 <td><code>SPOTTER_AUTH_TOKEN</code></td>
@@ -1004,7 +1100,7 @@ evals/
 </tbody></table></div>
 <p>No existing backend, frontend, or tests exist in this repo, so there are no compatibility assumptions.</p>
 <h2>Git strategy</h2>
-<p>Branch <code>feat/skeleton</code> off <code>main</code>. One commit per phase. PR to <code>main</code> after phase 6, auto-merge.</p>
+<p>Branch <code>feat/skeleton</code> off <code>main</code>. One commit per phase. PR to <code>main</code> after phase 6; phases 7 to 10 each get their own branch and PR.</p>
 <h2>QA strategy</h2>
 <ul>
 <li>LLM self-test per phase: <code>bun test</code> unit tests for services, a request-level test per endpoint with an in-memory SQLite, an MCP client script that calls all four tools.</li>
@@ -1054,7 +1150,25 @@ evals/
 <li>Calibration per version from human-vs-judge pairs: splits, TPR, TNR, bias-corrected pass rate with bootstrap interval; aggregates exclude uncalibrated versions.</li>
 <li>Judges pages: timeline with calibration per version and active marker, version detail, disagreements queue that reuses the review screen.</li>
 </ol>
-<p><strong>Phase 7: Distribution</strong></p>
+<p><strong>Phase 7: Conversations and extra inputs</strong></p>
+<ol>
+<li><code>messages</code>, <code>events</code>, <code>turn</code> on scores; turn rollup in aggregates; judge <code>scope</code>; <code>spotter judge run</code> per turn.</li>
+<li>Review screen per-turn verdict rows and <code>?turn=</code> deep link; trace page timeline from <code>events</code>.</li>
+<li><code>PATCH /traces/{id}/metadata</code>, <code>attribute_map</code> CRUD, filters on <code>metadata.&lt;key&gt;</code> and <code>events.name</code>; OTLP receiver with raw-keep and promotion.</li>
+</ol>
+<p><strong>Phase 8: Datasets from traces</strong></p>
+<ol>
+<li><code>items/from-traces</code> with <code>expected_from</code>; <code>A</code> in review with picker; bulk add from compare and trace list.</li>
+<li><code>purpose: judge_labels</code>; <code>spotter judge run --dataset</code>; calibration rows carry <code>dataset_id</code>.</li>
+<li>Archive instead of delete; <code>item_count</code> and <code>items_hash</code> on runs; items page with tag filter.</li>
+</ol>
+<p><strong>Phase 9: Alerts</strong></p>
+<ol>
+<li><code>alert_rule</code> and <code>alert_delivery</code>; condition evaluator over run and trace scopes; cooldown.</li>
+<li>Channels: signed webhook, Slack block template, SMTP email; Mustache templates; Test send.</li>
+<li>Alerts page and deliveries log; MCP <code>alert.create</code> and <code>alert.test</code>.</li>
+</ol>
+<p><strong>Phase 10: Distribution</strong></p>
 <ol>
 <li>Dockerfile with digest-pinned base, <code>.dockerignore</code>, <code>SPOTTER_*</code> config, health check; <code>docker run</code> smoke test.</li>
 <li>Release workflow: multi-arch build, GHCR push on tag, SBOM, cosign signature.</li>

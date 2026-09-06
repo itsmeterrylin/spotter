@@ -365,7 +365,7 @@ textarea.input { min-height: 120px; padding-block: var(--space-3); resize: verti
 <li><strong>Judges are versioned, never edited.</strong> Any change to a judge&#39;s prompt, model, or parameters creates a new immutable version. One version is active. Rollback is activating an older one.</li>
 </ol>
 <h2>Data model</h2>
-<p>Nine tables. A trace with a <code>run_id</code> is an experiment result. A trace without one is a production log.</p>
+<p>Twelve tables. A trace with a <code>run_id</code> is an experiment result. A trace without one is a production log.</p>
 <div class="scroll"><table>
 <thead>
 <tr>
@@ -379,23 +379,23 @@ textarea.input { min-height: 120px; padding-block: var(--space-3); resize: verti
 </tr>
 <tr>
 <td><code>dataset</code></td>
-<td><code>id</code>, <code>project_id</code>, <code>name</code>, <code>description</code></td>
+<td><code>id</code>, <code>project_id</code>, <code>name</code>, <code>description</code>, <code>purpose</code> (<code>eval</code>, <code>judge_labels</code>)</td>
 </tr>
 <tr>
 <td><code>dataset_item</code></td>
-<td><code>id</code> (client-set), <code>dataset_id</code>, <code>input</code> JSON, <code>expected</code> JSON, <code>metadata</code> JSON</td>
+<td><code>id</code> (client-set), <code>dataset_id</code>, <code>input</code> JSON, <code>expected</code> JSON, <code>metadata</code> JSON, <code>tags</code>, <code>source_trace_id</code> nullable, <code>archived_at</code> nullable</td>
 </tr>
 <tr>
 <td><code>run</code></td>
-<td><code>id</code>, <code>dataset_id</code>, <code>name</code>, <code>metadata</code> JSON (model, prompt version, git sha), <code>started_at</code>, <code>ended_at</code></td>
+<td><code>id</code>, <code>dataset_id</code>, <code>name</code>, <code>metadata</code> JSON (model, prompt version, git sha), <code>item_count</code>, <code>items_hash</code>, <code>started_at</code>, <code>ended_at</code></td>
 </tr>
 <tr>
 <td><code>trace</code></td>
-<td><code>id</code> (client-set), <code>project_id</code>, <code>run_id</code> nullable, <code>dataset_item_id</code> nullable, <code>input</code>, <code>output</code>, <code>expected</code>, <code>metadata</code>, <code>tags</code>, <code>start</code>, <code>end</code>, <code>metrics</code> JSON (<code>prompt_tokens</code>, <code>completion_tokens</code>, <code>duration_ms</code>, <code>errors</code>), <code>spans</code> JSON nullable</td>
+<td><code>id</code> (client-set), <code>project_id</code>, <code>run_id</code> nullable, <code>dataset_item_id</code> nullable, <code>input</code>, <code>output</code>, <code>expected</code>, <code>metadata</code>, <code>tags</code>, <code>start</code>, <code>end</code>, <code>metrics</code> JSON (<code>prompt_tokens</code>, <code>completion_tokens</code>, <code>duration_ms</code>, <code>errors</code>), <code>messages</code> JSON nullable (transcript, <code>{turn, role, content, metadata}</code>), <code>events</code> JSON nullable (timeline, <code>{at, name, data}</code>), <code>spans</code> JSON nullable</td>
 </tr>
 <tr>
 <td><code>score</code></td>
-<td><code>id</code>, <code>trace_id</code>, <code>name</code>, <code>value</code> REAL, <code>label</code> nullable, <code>reason</code> nullable, <code>source</code> (<code>sdk</code>, <code>judge</code>, <code>human</code>), <code>judge_version_id</code> nullable</td>
+<td><code>id</code>, <code>trace_id</code>, <code>name</code>, <code>turn</code> INTEGER nullable (null = whole transcript), <code>value</code> REAL, <code>label</code> nullable, <code>reason</code> nullable, <code>source</code> (<code>sdk</code>, <code>judge</code>, <code>human</code>), <code>judge_version_id</code> nullable</td>
 </tr>
 <tr>
 <td><code>judge</code></td>
@@ -403,11 +403,23 @@ textarea.input { min-height: 120px; padding-block: var(--space-3); resize: verti
 </tr>
 <tr>
 <td><code>judge_version</code></td>
-<td><code>id</code>, <code>judge_name</code>, <code>number</code>, <code>parent_id</code> nullable, <code>prompt</code>, <code>model</code>, <code>params</code> JSON, <code>examples</code> JSON, <code>content_hash</code> UNIQUE per judge, <code>created_by</code> (<code>human</code>, <code>agent</code>), <code>note</code>, <code>created_at</code></td>
+<td><code>id</code>, <code>judge_name</code>, <code>number</code>, <code>parent_id</code> nullable, <code>scope</code> (<code>turn</code>, <code>transcript</code>), <code>prompt</code>, <code>model</code>, <code>params</code> JSON, <code>examples</code> JSON, <code>content_hash</code> UNIQUE per judge, <code>created_by</code> (<code>human</code>, <code>agent</code>), <code>note</code>, <code>created_at</code></td>
 </tr>
 <tr>
 <td><code>judge_calibration</code></td>
-<td><code>judge_version_id</code>, <code>split</code> (<code>dev</code>, <code>test</code>), <code>n</code>, <code>tpr</code>, <code>tnr</code>, <code>created_at</code></td>
+<td><code>judge_version_id</code>, <code>dataset_id</code> nullable, <code>split</code> (<code>dev</code>, <code>test</code>), <code>n</code>, <code>tpr</code>, <code>tnr</code>, <code>created_at</code></td>
+</tr>
+<tr>
+<td><code>attribute_map</code></td>
+<td><code>project_id</code>, <code>source</code> (attribute or event name), <code>target</code> (metadata key), <code>type</code> (<code>string</code>, <code>number</code>, <code>boolean</code>)</td>
+</tr>
+<tr>
+<td><code>alert_rule</code></td>
+<td><code>id</code>, <code>project_id</code>, <code>name</code>, <code>enabled</code>, <code>trigger</code>, <code>condition</code> JSON, <code>channel</code> JSON, <code>cooldown_s</code>, <code>last_fired_at</code></td>
+</tr>
+<tr>
+<td><code>alert_delivery</code></td>
+<td><code>id</code>, <code>rule_id</code>, <code>payload</code> JSON, <code>status</code>, <code>response</code>, <code>created_at</code></td>
 </tr>
 </tbody></table></div>
 <p>Relationship chain:</p>
@@ -415,7 +427,7 @@ textarea.input { min-height: 120px; padding-block: var(--space-3); resize: verti
                                 │
                               score
 </code></pre>
-<p>Run aggregates (mean per score name, p50 duration, tokens) are computed on read, never stored.</p>
+<p>Run aggregates (mean per score name, p50 duration, tokens) are computed on read, never stored. Turn scores roll up to the trace as the mean per score name; the trace-level score, when present, wins.</p>
 <p>Ids are UUIDv7, generated by the client, so scores can be written before the server acknowledges the trace.</p>
 <h2>API</h2>
 <div class="scroll"><table>
@@ -512,6 +524,82 @@ spotter compare &lt;run_a&gt; &lt;run_b&gt;           # summary with diffs
 <li>Report production pass rates corrected for judge error, with a bootstrapped confidence interval.</li>
 </ol>
 <p>A judge whose TPR or TNR is unknown shows as <code>pending</code> in the UI and its scores do not enter run aggregates.</p>
+<h2>Conversations: scoring by turn or transcript</h2>
+<p>A conversation is one trace whose <code>messages</code> array is the transcript. <code>input</code> is the first user message and <code>output</code> is the final assistant message, so single-turn code keeps working.</p>
+<ul>
+<li>A score with <code>turn</code> set applies to that turn. A score with <code>turn</code> null applies to the whole transcript.</li>
+<li>A judge version has a <code>scope</code>. A <code>turn</code> judge is called once per assistant turn with the transcript up to that turn and writes one score per turn. A <code>transcript</code> judge is called once with the full transcript and writes one score.</li>
+<li>Human review shows the transcript with a verdict row under each assistant turn and one for the whole conversation. Arrow down moves between turns; <code>1</code>, <code>2</code>, <code>D</code> apply to the focused row.</li>
+<li>Run aggregates use trace-level scores when present, otherwise the mean of turn scores per name. Compare shows the trace-level value and expands to turns on click.</li>
+<li>Deep link <code>/traces/{id}?turn=3</code> opens the trace scrolled to turn 3 with that verdict row focused.</li>
+</ul>
+<h2>Extra inputs on a trace</h2>
+<p>Anything a system knows about a call can be attached to its trace, without a schema change, in three layers.</p>
+<div class="scroll"><table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Where</th>
+<th>How it gets there</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Raw</td>
+<td><code>metadata.attributes</code>, <code>events[]</code></td>
+<td>Every OTel span attribute is kept under its original key. Every span event becomes an entry in <code>events</code> with its timestamp.</td>
+<td><code>lk.transfer.destination = &quot;+1...&quot;</code>, event <code>transfer_initiated</code> at 42.1 s</td>
+</tr>
+<tr>
+<td>Promoted</td>
+<td><code>metadata.&lt;key&gt;</code></td>
+<td>The project&#39;s <code>attribute_map</code> copies chosen attributes or event names to top-level metadata keys with a type, so they filter, sort, and show in tables.</td>
+<td><code>lk.transfer.destination</code> → <code>metadata.transfer_to</code></td>
+</tr>
+<tr>
+<td>Late facts</td>
+<td><code>metadata</code>, <code>events</code></td>
+<td><code>PATCH /traces/{id}/metadata</code> deep-merges data that arrives after the trace, from a webhook, a cron job, or an agent.</td>
+<td>Telephony provider confirms the transfer completed</td>
+</tr>
+</tbody></table></div>
+<p>Filters accept <code>metadata.&lt;key&gt;</code> and <code>events.name</code>. Judges receive the full trace, so a prompt can reference promoted fields by name. Nothing about voice, transfers, or any one framework is hard-coded; the attribute map is data.</p>
+<h2>Alerts</h2>
+<p>A rule is a trigger, a condition, and a channel. Rules run in-process after the write that could fire them. There is no queue.</p>
+<div class="scroll"><table>
+<thead>
+<tr>
+<th>Part</th>
+<th>Options</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Trigger</td>
+<td><code>run.completed</code>, <code>score.written</code>, <code>disagreement.created</code>, <code>judge.calibrated</code></td>
+</tr>
+<tr>
+<td>Condition</td>
+<td><code>{score, aggregate: &#39;mean&#39; | &#39;min&#39; | &#39;count_below&#39;, operator, threshold, scope: &#39;run&#39; | &#39;trace&#39; | &#39;window&#39;, window_n?, min_n?}</code> and optional <code>filters</code> on metadata</td>
+</tr>
+<tr>
+<td>Channel</td>
+<td><code>webhook</code> (JSON POST, <code>X-Spotter-Signature</code> HMAC, retries 3), <code>slack</code> (incoming webhook URL, block template), <code>email</code> (SMTP from <code>SPOTTER_SMTP_URL</code>, text template)</td>
+</tr>
+<tr>
+<td>Controls</td>
+<td><code>enabled</code>, <code>cooldown_s</code> per rule, a Test button that sends a sample payload, a delivery log with status and response</td>
+</tr>
+</tbody></table></div>
+<p>Every payload includes the rule name, the numbers that tripped it, and deep links to the run, the compare view against the previous run, and the failing traces. Templates are Mustache over the same payload, so a Slack message and an email differ only in the template. Deep link <code>/alerts</code> and <code>/alerts/{id}/deliveries</code>.</p>
+<h2>Datasets from traces</h2>
+<p>Datasets are how error analysis turns into a permanent test.</p>
+<ul>
+<li><code>POST /datasets/{id}/items/from-traces {trace_ids, expected_from: &#39;human&#39; \| &#39;output&#39; \| null, tags?}</code> copies traces into items with <code>source_trace_id</code> set. <code>human</code> takes <code>expected</code> from the human verdict and note; <code>output</code> takes the trace output as the new reference; <code>null</code> leaves it for later.</li>
+<li>In review, <code>A</code> adds the current trace to a dataset chosen from a picker; in compare and the trace list, a selection can be added in bulk.</li>
+<li>A dataset with <code>purpose: judge_labels</code> holds items whose <code>expected</code> is a human verdict. <code>spotter judge run &lt;name&gt; --version N --dataset &lt;id&gt;</code> scores those items and writes a calibration for that version against that dataset. This is how a judge is tested before it is activated.</li>
+<li>Items are never deleted; <code>archived_at</code> hides them. Runs record <code>item_count</code> and <code>items_hash</code> so a run stays comparable to earlier runs after items are added.</li>
+<li>Deep links: <code>/datasets/{id}/items?tag=transfer</code>, <code>/datasets/{id}/items/{item_id}</code> (item with its source trace and every run&#39;s output).</li>
+</ul>
 <h2>Judge versioning</h2>
 <p>A judge is a name with an immutable version history and one active version.</p>
 <ul>
@@ -558,7 +646,7 @@ spotter compare &lt;run_a&gt; &lt;run_b&gt;           # summary with diffs
 </thead>
 <tbody><tr>
 <td><code>list</code></td>
-<td>Datasets, runs, traces, judges, disagreements with filters</td>
+<td>Datasets, items, runs, traces, judges, disagreements, alerts, deliveries with filters</td>
 </tr>
 <tr>
 <td><code>read</code></td>
@@ -566,7 +654,7 @@ spotter compare &lt;run_a&gt; &lt;run_b&gt;           # summary with diffs
 </tr>
 <tr>
 <td><code>write</code></td>
-<td>Scores, traces, runs, judge versions, judge activation; validates against a schema first</td>
+<td>Scores (with <code>turn</code>), traces, trace metadata patches, runs, items from traces, judge versions, judge activation, alert rules; validates against a schema first</td>
 </tr>
 <tr>
 <td><code>compare</code></td>
@@ -574,13 +662,10 @@ spotter compare &lt;run_a&gt; &lt;run_b&gt;           # summary with diffs
 </tr>
 </tbody></table></div>
 <p>Every result carries a URL into the UI.</p>
-<h2>Later</h2>
-<ul>
-<li>OTLP/HTTP receiver at <code>/otel/v1/traces</code> for agent and voice frameworks. Map <code>gen_ai.*</code> attributes first, keep unknown attributes in <code>metadata</code>.</li>
-<li>Compare page in the UI. Until then the CLI table is the compare view.</li>
-</ul>
+<h2>OTLP ingestion</h2>
+<p><code>POST /otel/v1/traces</code> accepts OTLP/HTTP JSON and protobuf. One OTel trace becomes one Spotter trace: <code>gen_ai.*</code> message attributes fill <code>messages</code>, token attributes fill <code>metrics</code>, spans are kept under <code>spans</code>, every other attribute is kept raw under <code>metadata.attributes</code>, span events become <code>events</code>, and the project&#39;s <code>attribute_map</code> promotes the chosen ones. A trace that arrives in several batches is merged by trace id.</p>
 <h2>Non-goals</h2>
-<p>Prompt management for the task under test (git owns those prompts), playgrounds, dashboards, alerts, sessions, multi-user access control, server-side code or model execution.</p>
+<p>Prompt management for the task under test (git owns those prompts), playgrounds, dashboards, multi-user access control, server-side code or model execution.</p>
 
 </main>
 <div class="zoom" id="zoom" role="dialog" aria-label="Diagram">
