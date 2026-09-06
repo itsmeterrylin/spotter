@@ -13,11 +13,12 @@ Run a test set through an LLM task, score every result, compare two runs by test
 2. **Binary verdicts.** A score is a name and a number. Human review is Pass or Fail with a note. No 1 to 5 scales.
 3. **Error analysis before judges.** Read traces, write notes, group notes into failure modes, then write one judge per failure mode.
 4. **Judges are validated, not trusted.** Every LLM judge is measured against human labels before its output counts.
-5. **One process, one file.** SQLite and a single Python service. No containers.
+5. **One process, one file.** SQLite and a single Bun process serving pages, REST, and MCP. Docker is for distribution, not a requirement.
+6. **Judges are versioned, never edited.** Any change to a judge's prompt, model, or parameters creates a new immutable version. One version is active. Rollback is activating an older one.
 
 ## Data model
 
-Six tables. A trace with a `run_id` is an experiment result. A trace without one is a production log.
+Nine tables. A trace with a `run_id` is an experiment result. A trace without one is a production log.
 
 | Table | Columns |
 |---|---|
@@ -26,7 +27,10 @@ Six tables. A trace with a `run_id` is an experiment result. A trace without one
 | `dataset_item` | `id` (client-set), `dataset_id`, `input` JSON, `expected` JSON, `metadata` JSON |
 | `run` | `id`, `dataset_id`, `name`, `metadata` JSON (model, prompt version, git sha), `started_at`, `ended_at` |
 | `trace` | `id` (client-set), `project_id`, `run_id` nullable, `dataset_item_id` nullable, `input`, `output`, `expected`, `metadata`, `tags`, `start`, `end`, `metrics` JSON (`prompt_tokens`, `completion_tokens`, `duration_ms`, `errors`), `spans` JSON nullable |
-| `score` | `id`, `trace_id`, `name`, `value` REAL, `label` nullable, `reason` nullable, `source` (`sdk`, `judge`, `human`) |
+| `score` | `id`, `trace_id`, `name`, `value` REAL, `label` nullable, `reason` nullable, `source` (`sdk`, `judge`, `human`), `judge_version_id` nullable |
+| `judge` | `name` PK, `active_version_id`, `description` |
+| `judge_version` | `id`, `judge_name`, `number`, `parent_id` nullable, `prompt`, `model`, `params` JSON, `examples` JSON, `content_hash` UNIQUE per judge, `created_by` (`human`, `agent`), `note`, `created_at` |
+| `judge_calibration` | `judge_version_id`, `split` (`dev`, `test`), `n`, `tpr`, `tnr`, `created_at` |
 
 Relationship chain:
 
@@ -59,22 +63,21 @@ Filter operators: `=`, `!=`, `<`, `<=`, `>`, `>=`, `contains`, `starts_with`, `i
 
 ## SDK and CLI
 
-```python
-from spotter import Eval
+```ts
+import { defineEval } from '@spotter/evals'
 
-def task(item):
-    return my_pipeline(item.input["transcript"])
-
-def exercise_match(item, output):
-    return {"name": "exercise_match", "value": float(output["exercise"] == item.expected["exercise"])}
-
-Eval("tagging-golden", task=task, scores=[exercise_match], metadata={"model": "rules-v1"})
+export default defineEval({
+  dataset: 'tagging-golden',
+  metadata: { model: 'rules-v1' },
+  task: async (item) => tagTranscript(item.input.transcript),
+  scores: [(item, output) => ({ name: 'exercise_match', value: output.exercise === item.expected.exercise ? 1 : 0 })],
+})
 ```
 
 ```
-copper-evals run evals/tagging.py            # runs, posts, prints the summary table
-copper-evals run evals/tagging.py --no-send  # prints only
-copper-evals compare <run_a> <run_b>         # summary with diffs
+spotter run evals/tagging.ts              # runs, posts, prints the summary table
+spotter run evals/tagging.ts --no-send    # prints only
+spotter compare <run_a> <run_b>           # summary with diffs
 ```
 
 The summary table shows each score name with mean, diff versus the previous run, improvements, and regressions.
@@ -100,15 +103,36 @@ One screen, one trace at a time.
 
 A judge whose TPR or TNR is unknown shows as `pending` in the UI and its scores do not enter run aggregates.
 
+## Judge versioning
+
+A judge is a name with an immutable version history and one active version.
+
+- **Auto-versioning.** Any change to `prompt`, `model`, `params`, or `examples` creates a new `judge_version` with `number = max + 1` and `parent_id` pointing at the version it was derived from. `content_hash` is the SHA-256 of those four fields; a proposal whose hash already exists returns the existing version instead of creating one.
+- **Immutability.** Versions are never updated or deleted. Every judge score records `judge_version_id`, so any aggregate can be recomputed for any version.
+- **Active version.** `judge.active_version_id` is the only mutable field. Activating an older version is the rollback. The SDK and CLI resolve `--version active` to it by default.
+- **Human verdict on the judge.** A human score on a trace with the same `name` as a judge score is the ground truth for that trace. A disagreement is a trace where `human.value != judge.value` for the same name and version. Calibration for a version is computed from these pairs on the dev and test splits.
+- **Where judges run.** The server stores definitions and results; it never calls a model. `spotter judge run <name> --version N --run <run_id>` fetches the version definition, calls the model, and writes scores tagged with the version. An agent can do the same through the SDK.
+
+MCP operations for the loop:
+
+| Call | Effect |
+|---|---|
+| `read {type: "judge", id: name}` | Versions with calibration per version, the active marker, and `url` |
+| `list {type: "disagreements", judge, version}` | Traces where human and judge differ, each with `url` |
+| `write {op: "judge.propose", judge, from_version, prompt?, model?, params?, examples?, note}` | New inactive version, or the existing one if the hash matches |
+| `write {op: "judge.activate", judge, version}` | Sets the active version; the previous active is recorded in `note` for the audit trail |
+
+Deep links: `/judges/{name}` (timeline), `/judges/{name}/versions/{n}` (definition and calibration), `/judges/{name}/disagreements?version={n}` (review queue filtered to the disagreements, so a person can re-label or confirm).
+
 ## MCP tools
 
 Four tools over the same API, added after the CLI works.
 
 | Tool | Purpose |
 |---|---|
-| `list` | Datasets, runs, traces with filters |
+| `list` | Datasets, runs, traces, judges, disagreements with filters |
 | `read` | One run with aggregates, or one trace with spans and scores in a single call |
-| `write` | Scores, traces, runs; validates against a schema first |
+| `write` | Scores, traces, runs, judge versions, judge activation; validates against a schema first |
 | `compare` | The pivoted compare table for two or more runs |
 
 Every result carries a URL into the UI.
@@ -120,4 +144,4 @@ Every result carries a URL into the UI.
 
 ## Non-goals
 
-Prompt management, playgrounds, dashboards, alerts, sessions, multi-user access control, server-side code execution.
+Prompt management for the task under test (git owns those prompts), playgrounds, dashboards, alerts, sessions, multi-user access control, server-side code or model execution.

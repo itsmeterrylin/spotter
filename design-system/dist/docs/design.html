@@ -361,10 +361,11 @@ textarea.input { min-height: 120px; padding-block: var(--space-3); resize: verti
 <li><strong>Binary verdicts.</strong> A score is a name and a number. Human review is Pass or Fail with a note. No 1 to 5 scales.</li>
 <li><strong>Error analysis before judges.</strong> Read traces, write notes, group notes into failure modes, then write one judge per failure mode.</li>
 <li><strong>Judges are validated, not trusted.</strong> Every LLM judge is measured against human labels before its output counts.</li>
-<li><strong>One process, one file.</strong> SQLite and a single Python service. No containers.</li>
+<li><strong>One process, one file.</strong> SQLite and a single Bun process serving pages, REST, and MCP. Docker is for distribution, not a requirement.</li>
+<li><strong>Judges are versioned, never edited.</strong> Any change to a judge&#39;s prompt, model, or parameters creates a new immutable version. One version is active. Rollback is activating an older one.</li>
 </ol>
 <h2>Data model</h2>
-<p>Six tables. A trace with a <code>run_id</code> is an experiment result. A trace without one is a production log.</p>
+<p>Nine tables. A trace with a <code>run_id</code> is an experiment result. A trace without one is a production log.</p>
 <div class="scroll"><table>
 <thead>
 <tr>
@@ -394,7 +395,19 @@ textarea.input { min-height: 120px; padding-block: var(--space-3); resize: verti
 </tr>
 <tr>
 <td><code>score</code></td>
-<td><code>id</code>, <code>trace_id</code>, <code>name</code>, <code>value</code> REAL, <code>label</code> nullable, <code>reason</code> nullable, <code>source</code> (<code>sdk</code>, <code>judge</code>, <code>human</code>)</td>
+<td><code>id</code>, <code>trace_id</code>, <code>name</code>, <code>value</code> REAL, <code>label</code> nullable, <code>reason</code> nullable, <code>source</code> (<code>sdk</code>, <code>judge</code>, <code>human</code>), <code>judge_version_id</code> nullable</td>
+</tr>
+<tr>
+<td><code>judge</code></td>
+<td><code>name</code> PK, <code>active_version_id</code>, <code>description</code></td>
+</tr>
+<tr>
+<td><code>judge_version</code></td>
+<td><code>id</code>, <code>judge_name</code>, <code>number</code>, <code>parent_id</code> nullable, <code>prompt</code>, <code>model</code>, <code>params</code> JSON, <code>examples</code> JSON, <code>content_hash</code> UNIQUE per judge, <code>created_by</code> (<code>human</code>, <code>agent</code>), <code>note</code>, <code>created_at</code></td>
+</tr>
+<tr>
+<td><code>judge_calibration</code></td>
+<td><code>judge_version_id</code>, <code>split</code> (<code>dev</code>, <code>test</code>), <code>n</code>, <code>tpr</code>, <code>tnr</code>, <code>created_at</code></td>
 </tr>
 </tbody></table></div>
 <p>Relationship chain:</p>
@@ -466,19 +479,18 @@ textarea.input { min-height: 120px; padding-block: var(--space-3); resize: verti
 </tbody></table></div>
 <p>Filter operators: <code>=</code>, <code>!=</code>, <code>&lt;</code>, <code>&lt;=</code>, <code>&gt;</code>, <code>&gt;=</code>, <code>contains</code>, <code>starts_with</code>, <code>in</code>, <code>is_empty</code>.</p>
 <h2>SDK and CLI</h2>
-<pre><code class="language-python">from spotter import Eval
+<pre><code class="language-ts">import { defineEval } from &#39;@spotter/evals&#39;
 
-def task(item):
-    return my_pipeline(item.input[&quot;transcript&quot;])
-
-def exercise_match(item, output):
-    return {&quot;name&quot;: &quot;exercise_match&quot;, &quot;value&quot;: float(output[&quot;exercise&quot;] == item.expected[&quot;exercise&quot;])}
-
-Eval(&quot;tagging-golden&quot;, task=task, scores=[exercise_match], metadata={&quot;model&quot;: &quot;rules-v1&quot;})
+export default defineEval({
+  dataset: &#39;tagging-golden&#39;,
+  metadata: { model: &#39;rules-v1&#39; },
+  task: async (item) =&gt; tagTranscript(item.input.transcript),
+  scores: [(item, output) =&gt; ({ name: &#39;exercise_match&#39;, value: output.exercise === item.expected.exercise ? 1 : 0 })],
+})
 </code></pre>
-<pre><code>copper-evals run evals/tagging.py            # runs, posts, prints the summary table
-copper-evals run evals/tagging.py --no-send  # prints only
-copper-evals compare &lt;run_a&gt; &lt;run_b&gt;         # summary with diffs
+<pre><code>spotter run evals/tagging.ts              # runs, posts, prints the summary table
+spotter run evals/tagging.ts --no-send    # prints only
+spotter compare &lt;run_a&gt; &lt;run_b&gt;           # summary with diffs
 </code></pre>
 <p>The summary table shows each score name with mean, diff versus the previous run, improvements, and regressions.</p>
 <h2>Review interface</h2>
@@ -500,6 +512,41 @@ copper-evals compare &lt;run_a&gt; &lt;run_b&gt;         # summary with diffs
 <li>Report production pass rates corrected for judge error, with a bootstrapped confidence interval.</li>
 </ol>
 <p>A judge whose TPR or TNR is unknown shows as <code>pending</code> in the UI and its scores do not enter run aggregates.</p>
+<h2>Judge versioning</h2>
+<p>A judge is a name with an immutable version history and one active version.</p>
+<ul>
+<li><strong>Auto-versioning.</strong> Any change to <code>prompt</code>, <code>model</code>, <code>params</code>, or <code>examples</code> creates a new <code>judge_version</code> with <code>number = max + 1</code> and <code>parent_id</code> pointing at the version it was derived from. <code>content_hash</code> is the SHA-256 of those four fields; a proposal whose hash already exists returns the existing version instead of creating one.</li>
+<li><strong>Immutability.</strong> Versions are never updated or deleted. Every judge score records <code>judge_version_id</code>, so any aggregate can be recomputed for any version.</li>
+<li><strong>Active version.</strong> <code>judge.active_version_id</code> is the only mutable field. Activating an older version is the rollback. The SDK and CLI resolve <code>--version active</code> to it by default.</li>
+<li><strong>Human verdict on the judge.</strong> A human score on a trace with the same <code>name</code> as a judge score is the ground truth for that trace. A disagreement is a trace where <code>human.value != judge.value</code> for the same name and version. Calibration for a version is computed from these pairs on the dev and test splits.</li>
+<li><strong>Where judges run.</strong> The server stores definitions and results; it never calls a model. <code>spotter judge run &lt;name&gt; --version N --run &lt;run_id&gt;</code> fetches the version definition, calls the model, and writes scores tagged with the version. An agent can do the same through the SDK.</li>
+</ul>
+<p>MCP operations for the loop:</p>
+<div class="scroll"><table>
+<thead>
+<tr>
+<th>Call</th>
+<th>Effect</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>read {type: &quot;judge&quot;, id: name}</code></td>
+<td>Versions with calibration per version, the active marker, and <code>url</code></td>
+</tr>
+<tr>
+<td><code>list {type: &quot;disagreements&quot;, judge, version}</code></td>
+<td>Traces where human and judge differ, each with <code>url</code></td>
+</tr>
+<tr>
+<td><code>write {op: &quot;judge.propose&quot;, judge, from_version, prompt?, model?, params?, examples?, note}</code></td>
+<td>New inactive version, or the existing one if the hash matches</td>
+</tr>
+<tr>
+<td><code>write {op: &quot;judge.activate&quot;, judge, version}</code></td>
+<td>Sets the active version; the previous active is recorded in <code>note</code> for the audit trail</td>
+</tr>
+</tbody></table></div>
+<p>Deep links: <code>/judges/{name}</code> (timeline), <code>/judges/{name}/versions/{n}</code> (definition and calibration), <code>/judges/{name}/disagreements?version={n}</code> (review queue filtered to the disagreements, so a person can re-label or confirm).</p>
 <h2>MCP tools</h2>
 <p>Four tools over the same API, added after the CLI works.</p>
 <div class="scroll"><table>
@@ -511,7 +558,7 @@ copper-evals compare &lt;run_a&gt; &lt;run_b&gt;         # summary with diffs
 </thead>
 <tbody><tr>
 <td><code>list</code></td>
-<td>Datasets, runs, traces with filters</td>
+<td>Datasets, runs, traces, judges, disagreements with filters</td>
 </tr>
 <tr>
 <td><code>read</code></td>
@@ -519,7 +566,7 @@ copper-evals compare &lt;run_a&gt; &lt;run_b&gt;         # summary with diffs
 </tr>
 <tr>
 <td><code>write</code></td>
-<td>Scores, traces, runs; validates against a schema first</td>
+<td>Scores, traces, runs, judge versions, judge activation; validates against a schema first</td>
 </tr>
 <tr>
 <td><code>compare</code></td>
@@ -533,7 +580,7 @@ copper-evals compare &lt;run_a&gt; &lt;run_b&gt;         # summary with diffs
 <li>Compare page in the UI. Until then the CLI table is the compare view.</li>
 </ul>
 <h2>Non-goals</h2>
-<p>Prompt management, playgrounds, dashboards, alerts, sessions, multi-user access control, server-side code execution.</p>
+<p>Prompt management for the task under test (git owns those prompts), playgrounds, dashboards, alerts, sessions, multi-user access control, server-side code or model execution.</p>
 
 </main>
 <div class="zoom" id="zoom" role="dialog" aria-label="Diagram">

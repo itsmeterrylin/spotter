@@ -4,6 +4,7 @@
 **Type**: feature
 **Status**: Draft, awaiting review
 **Depends on**: `docs/design/eval-tool-design.md`, `design-system/`
+**Repo**: `github.com/itsmeterrylin/spotter`
 
 ## Summary
 
@@ -154,6 +155,16 @@ Scenario: Judge scores are gated by calibration
   Then judge scores are included
   And a judge with no calibration record shows "Needs labels" and its scores are excluded from aggregates
 
+Scenario: Agent improves a judge without editing it in place
+  Given judge "exercise_match" version 3 is active with TNR 0.72
+  When the agent lists disagreements for version 3, proposes a prompt change, and runs version 4 on the labeled traces
+  Then version 4 exists with its own TPR and TNR, version 3 is unchanged, and nothing is active until judge.activate is called
+
+Scenario: Roll back a judge
+  Given version 4 is active and its TNR on new labels drops below 0.9
+  When the person or agent calls judge.activate with version 3
+  Then version 3 is active again and its stored calibration applies
+
 Scenario: MCP compare
   Given runs A and B share a dataset
   When an agent calls the MCP tool compare with run_ids [A, B]
@@ -174,6 +185,7 @@ Scenario: MCP compare
 10. FR10 Pages: runs list, run detail, compare, trace detail, review, judges; every filter and selection lives in the URL.
 11. FR11 SDK and CLI: `defineEval({ dataset, task, scores, metadata })`; `spotter run`, `spotter compare`; `--no-send` prints only.
 12. FR12 Judge calibration: store human-vs-judge agreement per judge version; compute TPR, TNR, and a bias-corrected pass rate with a bootstrap interval.
+13. FR13 Judge versioning: judges are immutable versions with one active pointer; any definition change creates a version (hash-deduplicated); `judge.propose` and `judge.activate` through REST and MCP; rollback is activation of an older version; disagreements listable per version.
 
 ## Deep link contract
 
@@ -186,7 +198,9 @@ Scenario: MCP compare
 | Dataset item across runs | `/datasets/{dataset_id}/items/{item_id}` | |
 | Review queue | `/review?run={run_id}&filter=unlabeled` | run, filter |
 | Review one trace | `/review/{trace_id}?run={run_id}` | queue context |
-| Judge | `/judges/{name}` | |
+| Judge timeline | `/judges/{name}` | |
+| Judge version | `/judges/{name}/versions/{n}` | |
+| Judge disagreements | `/judges/{name}/disagreements?version={n}` | version, opens the review queue filtered to disagreements |
 
 Rule: a URL, opened fresh in a new tab, shows the same thing it showed when it was copied. Client code reads state from the URL on load and writes it back on change with `history.replaceState`.
 
@@ -198,8 +212,10 @@ CREATE TABLE dataset      (id TEXT PRIMARY KEY, project_id TEXT NOT NULL REFEREN
 CREATE TABLE dataset_item (id TEXT PRIMARY KEY, dataset_id TEXT NOT NULL REFERENCES dataset(id), input TEXT NOT NULL, expected TEXT, metadata TEXT, created_at TEXT NOT NULL);
 CREATE TABLE run          (id TEXT PRIMARY KEY, dataset_id TEXT NOT NULL REFERENCES dataset(id), name TEXT NOT NULL, metadata TEXT, started_at TEXT NOT NULL, ended_at TEXT);
 CREATE TABLE trace        (id TEXT PRIMARY KEY, project_id TEXT NOT NULL REFERENCES project(id), run_id TEXT REFERENCES run(id), dataset_item_id TEXT REFERENCES dataset_item(id), input TEXT, output TEXT, expected TEXT, metadata TEXT, tags TEXT, start TEXT NOT NULL, "end" TEXT, metrics TEXT, spans TEXT, created_at TEXT NOT NULL);
-CREATE TABLE score        (id TEXT PRIMARY KEY, trace_id TEXT NOT NULL REFERENCES trace(id), name TEXT NOT NULL, value REAL NOT NULL, label TEXT, reason TEXT, source TEXT NOT NULL CHECK (source IN ('sdk','judge','human')), judge_version TEXT, created_at TEXT NOT NULL);
-CREATE TABLE judge_calibration (judge_name TEXT NOT NULL, judge_version TEXT NOT NULL, n INTEGER NOT NULL, tpr REAL NOT NULL, tnr REAL NOT NULL, split TEXT NOT NULL CHECK (split IN ('dev','test')), created_at TEXT NOT NULL, PRIMARY KEY (judge_name, judge_version, split));
+CREATE TABLE judge        (name TEXT PRIMARY KEY, active_version_id TEXT REFERENCES judge_version(id), description TEXT, created_at TEXT NOT NULL);
+CREATE TABLE judge_version (id TEXT PRIMARY KEY, judge_name TEXT NOT NULL REFERENCES judge(name), number INTEGER NOT NULL, parent_id TEXT REFERENCES judge_version(id), prompt TEXT NOT NULL, model TEXT NOT NULL, params TEXT, examples TEXT, content_hash TEXT NOT NULL, created_by TEXT NOT NULL CHECK (created_by IN ('human','agent')), note TEXT, created_at TEXT NOT NULL, UNIQUE (judge_name, number), UNIQUE (judge_name, content_hash));
+CREATE TABLE score        (id TEXT PRIMARY KEY, trace_id TEXT NOT NULL REFERENCES trace(id), name TEXT NOT NULL, value REAL NOT NULL, label TEXT, reason TEXT, source TEXT NOT NULL CHECK (source IN ('sdk','judge','human')), judge_version_id TEXT REFERENCES judge_version(id), created_at TEXT NOT NULL);
+CREATE TABLE judge_calibration (judge_version_id TEXT NOT NULL REFERENCES judge_version(id), split TEXT NOT NULL CHECK (split IN ('dev','test')), n INTEGER NOT NULL, tpr REAL NOT NULL, tnr REAL NOT NULL, created_at TEXT NOT NULL, PRIMARY KEY (judge_version_id, split));
 CREATE INDEX trace_run ON trace(run_id);
 CREATE INDEX trace_item ON trace(dataset_item_id);
 CREATE INDEX score_trace ON score(trace_id, name);
@@ -221,6 +237,10 @@ JSON columns (`input`, `expected`, `metadata`, `tags`, `metrics`, `spans`) are s
 | GET | `/api/datasets/{id}/compare` | `runs`, `only` | items with per-run cells, summary, `url` |
 | GET | `/api/traces` | `filters`, `run_id`, `limit`, `cursor` | page of traces with `url` each |
 | POST | `/api/query` | `{sql}` | rows; SELECT only |
+| GET | `/api/judges/{name}` | | versions with calibration, active marker, `url` |
+| POST | `/api/judges/{name}/versions` | `{from_version, prompt?, model?, params?, examples?, note, created_by}` | new or existing version with `url` |
+| POST | `/api/judges/{name}/activate` | `{version}` | judge with `url` |
+| GET | `/api/judges/{name}/disagreements` | `version` | traces where human and judge differ, `url` |
 
 Errors: `{error: {code, message}}` with 400 for validation, 404 for unknown ids, 409 for id conflicts with different content.
 
@@ -230,9 +250,9 @@ Mounted at `/mcp` with `@hono/mcp`. Same service layer as REST, so behavior cann
 
 | Tool | Input | Output |
 |---|---|---|
-| `list` | `{type: 'datasets' \| 'runs' \| 'traces' \| 'judges', filters?, limit?}` | rows, each with `url` |
+| `list` | `{type: 'datasets' \| 'runs' \| 'traces' \| 'judges' \| 'disagreements', filters?, judge?, version?, limit?}` | rows, each with `url` |
 | `read` | `{type: 'run' \| 'trace' \| 'dataset' \| 'judge', id}` | one object; a run includes aggregates, a trace includes scores and spans |
-| `write` | `{op: 'dataset.create' \| 'items.upsert' \| 'run.create' \| 'traces.insert' \| 'scores.put', data, dry_run?}` | `{ok, ids, url}` |
+| `write` | `{op: 'dataset.create' \| 'items.upsert' \| 'run.create' \| 'traces.insert' \| 'scores.put' \| 'judge.propose' \| 'judge.activate', data, dry_run?}` | `{ok, ids, url}` |
 | `compare` | `{dataset_id, run_ids, only?: 'changes'}` | items with per-run cells, per-score summary, `url` |
 
 ## SDK and CLI (`packages/evals`)
@@ -442,10 +462,10 @@ Each phase: at most three tasks, type-check and tests after each task, commit at
 2. `spotter run` and `spotter compare` commands; `--no-send`.
 3. Sample eval with seeded items; seed script.
 
-**Phase 6: Judge calibration**
-1. `spotter calibrate <judge> --labels <file>`: splits, TPR, TNR, store.
-2. Bias-corrected pass rate with bootstrap interval in run aggregates.
-3. Aggregates exclude uncalibrated judges; judges page shows status.
+**Phase 6: Judges**
+1. `judge` and `judge_version` tables, hash-deduplicated `propose`, `activate` with audit note; REST and MCP ops; `spotter judge run <name> --version N --run <id>` writes scores tagged with the version.
+2. Calibration per version from human-vs-judge pairs: splits, TPR, TNR, bias-corrected pass rate with bootstrap interval; aggregates exclude uncalibrated versions.
+3. Judges pages: timeline with calibration per version and active marker, version detail, disagreements queue that reuses the review screen.
 
 **Phase 7: Distribution**
 1. Dockerfile with digest-pinned base, `.dockerignore`, `SPOTTER_*` config, health check; `docker run` smoke test.

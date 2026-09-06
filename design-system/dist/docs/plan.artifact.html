@@ -350,7 +350,8 @@ textarea.input { min-height: 120px; padding-block: var(--space-3); resize: verti
 <p><strong>Date</strong>: 2026-09-06
 <strong>Type</strong>: feature
 <strong>Status</strong>: Draft, awaiting review
-<strong>Depends on</strong>: <code>docs/design/eval-tool-design.md</code>, <code>design-system/</code></p>
+<strong>Depends on</strong>: <code>docs/design/eval-tool-design.md</code>, <code>design-system/</code>
+<strong>Repo</strong>: <code>github.com/itsmeterrylin/spotter</code></p>
 <h2>Summary</h2>
 <p>Build the first runnable version of Spotter, the human in the loop for agent-run evals: one Bun process that serves the REST API, the MCP endpoint, and server-rendered pages, backed by SQLite. Agents run evals through the SDK and MCP. A person opens deep links to verify results, label traces, and calibrate judges.</p>
 <h2>Goals</h2>
@@ -553,6 +554,16 @@ Scenario: Judge scores are gated by calibration
   Then judge scores are included
   And a judge with no calibration record shows &quot;Needs labels&quot; and its scores are excluded from aggregates
 
+Scenario: Agent improves a judge without editing it in place
+  Given judge &quot;exercise_match&quot; version 3 is active with TNR 0.72
+  When the agent lists disagreements for version 3, proposes a prompt change, and runs version 4 on the labeled traces
+  Then version 4 exists with its own TPR and TNR, version 3 is unchanged, and nothing is active until judge.activate is called
+
+Scenario: Roll back a judge
+  Given version 4 is active and its TNR on new labels drops below 0.9
+  When the person or agent calls judge.activate with version 3
+  Then version 3 is active again and its stored calibration applies
+
 Scenario: MCP compare
   Given runs A and B share a dataset
   When an agent calls the MCP tool compare with run_ids [A, B]
@@ -572,6 +583,7 @@ Scenario: MCP compare
 <li>FR10 Pages: runs list, run detail, compare, trace detail, review, judges; every filter and selection lives in the URL.</li>
 <li>FR11 SDK and CLI: <code>defineEval({ dataset, task, scores, metadata })</code>; <code>spotter run</code>, <code>spotter compare</code>; <code>--no-send</code> prints only.</li>
 <li>FR12 Judge calibration: store human-vs-judge agreement per judge version; compute TPR, TNR, and a bias-corrected pass rate with a bootstrap interval.</li>
+<li>FR13 Judge versioning: judges are immutable versions with one active pointer; any definition change creates a version (hash-deduplicated); <code>judge.propose</code> and <code>judge.activate</code> through REST and MCP; rollback is activation of an older version; disagreements listable per version.</li>
 </ol>
 <h2>Deep link contract</h2>
 <div class="scroll"><table>
@@ -618,9 +630,19 @@ Scenario: MCP compare
 <td>queue context</td>
 </tr>
 <tr>
-<td>Judge</td>
+<td>Judge timeline</td>
 <td><code>/judges/{name}</code></td>
 <td></td>
+</tr>
+<tr>
+<td>Judge version</td>
+<td><code>/judges/{name}/versions/{n}</code></td>
+<td></td>
+</tr>
+<tr>
+<td>Judge disagreements</td>
+<td><code>/judges/{name}/disagreements?version={n}</code></td>
+<td>version, opens the review queue filtered to disagreements</td>
 </tr>
 </tbody></table></div>
 <p>Rule: a URL, opened fresh in a new tab, shows the same thing it showed when it was copied. Client code reads state from the URL on load and writes it back on change with <code>history.replaceState</code>.</p>
@@ -630,8 +652,10 @@ CREATE TABLE dataset      (id TEXT PRIMARY KEY, project_id TEXT NOT NULL REFEREN
 CREATE TABLE dataset_item (id TEXT PRIMARY KEY, dataset_id TEXT NOT NULL REFERENCES dataset(id), input TEXT NOT NULL, expected TEXT, metadata TEXT, created_at TEXT NOT NULL);
 CREATE TABLE run          (id TEXT PRIMARY KEY, dataset_id TEXT NOT NULL REFERENCES dataset(id), name TEXT NOT NULL, metadata TEXT, started_at TEXT NOT NULL, ended_at TEXT);
 CREATE TABLE trace        (id TEXT PRIMARY KEY, project_id TEXT NOT NULL REFERENCES project(id), run_id TEXT REFERENCES run(id), dataset_item_id TEXT REFERENCES dataset_item(id), input TEXT, output TEXT, expected TEXT, metadata TEXT, tags TEXT, start TEXT NOT NULL, &quot;end&quot; TEXT, metrics TEXT, spans TEXT, created_at TEXT NOT NULL);
-CREATE TABLE score        (id TEXT PRIMARY KEY, trace_id TEXT NOT NULL REFERENCES trace(id), name TEXT NOT NULL, value REAL NOT NULL, label TEXT, reason TEXT, source TEXT NOT NULL CHECK (source IN (&#39;sdk&#39;,&#39;judge&#39;,&#39;human&#39;)), judge_version TEXT, created_at TEXT NOT NULL);
-CREATE TABLE judge_calibration (judge_name TEXT NOT NULL, judge_version TEXT NOT NULL, n INTEGER NOT NULL, tpr REAL NOT NULL, tnr REAL NOT NULL, split TEXT NOT NULL CHECK (split IN (&#39;dev&#39;,&#39;test&#39;)), created_at TEXT NOT NULL, PRIMARY KEY (judge_name, judge_version, split));
+CREATE TABLE judge        (name TEXT PRIMARY KEY, active_version_id TEXT REFERENCES judge_version(id), description TEXT, created_at TEXT NOT NULL);
+CREATE TABLE judge_version (id TEXT PRIMARY KEY, judge_name TEXT NOT NULL REFERENCES judge(name), number INTEGER NOT NULL, parent_id TEXT REFERENCES judge_version(id), prompt TEXT NOT NULL, model TEXT NOT NULL, params TEXT, examples TEXT, content_hash TEXT NOT NULL, created_by TEXT NOT NULL CHECK (created_by IN (&#39;human&#39;,&#39;agent&#39;)), note TEXT, created_at TEXT NOT NULL, UNIQUE (judge_name, number), UNIQUE (judge_name, content_hash));
+CREATE TABLE score        (id TEXT PRIMARY KEY, trace_id TEXT NOT NULL REFERENCES trace(id), name TEXT NOT NULL, value REAL NOT NULL, label TEXT, reason TEXT, source TEXT NOT NULL CHECK (source IN (&#39;sdk&#39;,&#39;judge&#39;,&#39;human&#39;)), judge_version_id TEXT REFERENCES judge_version(id), created_at TEXT NOT NULL);
+CREATE TABLE judge_calibration (judge_version_id TEXT NOT NULL REFERENCES judge_version(id), split TEXT NOT NULL CHECK (split IN (&#39;dev&#39;,&#39;test&#39;)), n INTEGER NOT NULL, tpr REAL NOT NULL, tnr REAL NOT NULL, created_at TEXT NOT NULL, PRIMARY KEY (judge_version_id, split));
 CREATE INDEX trace_run ON trace(run_id);
 CREATE INDEX trace_item ON trace(dataset_item_id);
 CREATE INDEX score_trace ON score(trace_id, name);
@@ -707,6 +731,30 @@ CREATE INDEX score_trace ON score(trace_id, name);
 <td><code>{sql}</code></td>
 <td>rows; SELECT only</td>
 </tr>
+<tr>
+<td>GET</td>
+<td><code>/api/judges/{name}</code></td>
+<td></td>
+<td>versions with calibration, active marker, <code>url</code></td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/judges/{name}/versions</code></td>
+<td><code>{from_version, prompt?, model?, params?, examples?, note, created_by}</code></td>
+<td>new or existing version with <code>url</code></td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/judges/{name}/activate</code></td>
+<td><code>{version}</code></td>
+<td>judge with <code>url</code></td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/judges/{name}/disagreements</code></td>
+<td><code>version</code></td>
+<td>traces where human and judge differ, <code>url</code></td>
+</tr>
 </tbody></table></div>
 <p>Errors: <code>{error: {code, message}}</code> with 400 for validation, 404 for unknown ids, 409 for id conflicts with different content.</p>
 <h2>MCP tools</h2>
@@ -721,7 +769,7 @@ CREATE INDEX score_trace ON score(trace_id, name);
 </thead>
 <tbody><tr>
 <td><code>list</code></td>
-<td><code>{type: &#39;datasets&#39; | &#39;runs&#39; | &#39;traces&#39; | &#39;judges&#39;, filters?, limit?}</code></td>
+<td><code>{type: &#39;datasets&#39; | &#39;runs&#39; | &#39;traces&#39; | &#39;judges&#39; | &#39;disagreements&#39;, filters?, judge?, version?, limit?}</code></td>
 <td>rows, each with <code>url</code></td>
 </tr>
 <tr>
@@ -731,7 +779,7 @@ CREATE INDEX score_trace ON score(trace_id, name);
 </tr>
 <tr>
 <td><code>write</code></td>
-<td><code>{op: &#39;dataset.create&#39; | &#39;items.upsert&#39; | &#39;run.create&#39; | &#39;traces.insert&#39; | &#39;scores.put&#39;, data, dry_run?}</code></td>
+<td><code>{op: &#39;dataset.create&#39; | &#39;items.upsert&#39; | &#39;run.create&#39; | &#39;traces.insert&#39; | &#39;scores.put&#39; | &#39;judge.propose&#39; | &#39;judge.activate&#39;, data, dry_run?}</code></td>
 <td><code>{ok, ids, url}</code></td>
 </tr>
 <tr>
@@ -996,11 +1044,11 @@ evals/
 <li><code>spotter run</code> and <code>spotter compare</code> commands; <code>--no-send</code>.</li>
 <li>Sample eval with seeded items; seed script.</li>
 </ol>
-<p><strong>Phase 6: Judge calibration</strong></p>
+<p><strong>Phase 6: Judges</strong></p>
 <ol>
-<li><code>spotter calibrate &lt;judge&gt; --labels &lt;file&gt;</code>: splits, TPR, TNR, store.</li>
-<li>Bias-corrected pass rate with bootstrap interval in run aggregates.</li>
-<li>Aggregates exclude uncalibrated judges; judges page shows status.</li>
+<li><code>judge</code> and <code>judge_version</code> tables, hash-deduplicated <code>propose</code>, <code>activate</code> with audit note; REST and MCP ops; <code>spotter judge run &lt;name&gt; --version N --run &lt;id&gt;</code> writes scores tagged with the version.</li>
+<li>Calibration per version from human-vs-judge pairs: splits, TPR, TNR, bias-corrected pass rate with bootstrap interval; aggregates exclude uncalibrated versions.</li>
+<li>Judges pages: timeline with calibration per version and active marker, version detail, disagreements queue that reuses the review screen.</li>
 </ol>
 <p><strong>Phase 7: Distribution</strong></p>
 <ol>
