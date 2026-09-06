@@ -103,17 +103,18 @@ const monoFallback = `ui-monospace, SFMono-Regular, Menlo, Consolas, monospace`;
 
 /**
  * Candidate font pairs. Pick one; the others stay for comparison.
- * `brand` uses the Cooper Hewitt faces the Copper iOS app ships.
+ * San Francisco is the Apple system face. It has no web download, so the
+ * stack resolves to SF on Apple devices and to the platform sans elsewhere.
+ * Cooper Hewitt is the face the Copper iOS app ships.
  */
 export const fontPairs: readonly FontPair[] = [
   {
-    id: 'brand',
-    label: 'Cooper Hewitt + Inter',
+    id: 'brand-sf',
+    label: 'Cooper Hewitt + San Francisco',
     heading: `"Cooper Hewitt", ${sansFallback}`,
-    body: `Inter, ${sansFallback}`,
-    mono: `"JetBrains Mono", ${monoFallback}`,
-    googleFontsUrl:
-      'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap',
+    body: `-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", system-ui, "Segoe UI", Roboto, sans-serif`,
+    mono: `ui-monospace, "SF Mono", Menlo, Consolas, monospace`,
+    googleFontsUrl: null,
     fontFace: `
 @font-face { font-family: "Cooper Hewitt"; font-weight: 400; src: url("fonts/CooperHewitt-Book.otf") format("opentype"); }
 @font-face { font-family: "Cooper Hewitt"; font-weight: 500; src: url("fonts/CooperHewitt-Medium.otf") format("opentype"); }
@@ -122,13 +123,42 @@ export const fontPairs: readonly FontPair[] = [
     headingWeight: 'bold',
   },
   {
-    id: 'jakarta',
-    label: 'Plus Jakarta Sans + Inter',
-    heading: `"Plus Jakarta Sans", ${sansFallback}`,
-    body: `Inter, ${sansFallback}`,
+    id: 'sf',
+    label: 'San Francisco',
+    heading: `-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", system-ui, "Segoe UI", Roboto, sans-serif`,
+    body: `-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", system-ui, "Segoe UI", Roboto, sans-serif`,
+    mono: `ui-monospace, "SF Mono", Menlo, Consolas, monospace`,
+    googleFontsUrl: null,
+    headingWeight: 'bold',
+  },
+  {
+    id: 'cooper-figtree',
+    label: 'Cooper Hewitt + Figtree',
+    heading: `"Cooper Hewitt", ${sansFallback}`,
+    body: `Figtree, ${sansFallback}`,
     mono: `"JetBrains Mono", ${monoFallback}`,
     googleFontsUrl:
-      'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap',
+      'https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap',
+    headingWeight: 'bold',
+  },
+  {
+    id: 'jakarta',
+    label: 'Plus Jakarta Sans + Figtree',
+    heading: `"Plus Jakarta Sans", ${sansFallback}`,
+    body: `Figtree, ${sansFallback}`,
+    mono: `"JetBrains Mono", ${monoFallback}`,
+    googleFontsUrl:
+      'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Figtree:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap',
+    headingWeight: 'bold',
+  },
+  {
+    id: 'outfit',
+    label: 'Outfit + Source Sans 3',
+    heading: `Outfit, ${sansFallback}`,
+    body: `"Source Sans 3", ${sansFallback}`,
+    mono: `"Source Code Pro", ${monoFallback}`,
+    googleFontsUrl:
+      'https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&family=Source+Sans+3:wght@400;500;600&family=Source+Code+Pro:wght@400;500&display=swap',
     headingWeight: 'bold',
   },
   {
@@ -163,7 +193,7 @@ export const fontPairs: readonly FontPair[] = [
   },
 ] as const;
 
-export const defaultFontPairId = 'brand';
+export const defaultFontPairId = 'brand-sf';
 
 export const fontFeatures = {
   /** Tabular, lining numerals for any number that sits in a column. */

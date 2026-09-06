@@ -2,8 +2,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Copper Evaluations</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Figtree:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&family=Source+Sans+3:wght@400;500;600&family=Source+Code+Pro:wght@400;500&display=swap">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=DM+Mono:wght@400;500&display=swap">
@@ -119,8 +120,8 @@
   --font-features-numeric: "tnum" 1, "lnum" 1;
   --font-features-default: "kern" 1, "liga" 1;
   --font-heading: "Cooper Hewitt", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-body: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --font-body: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", system-ui, "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   --font-heading-weight: 700;
   color-scheme: light;
 }
@@ -192,16 +193,34 @@
   --color-overlay: rgba(0, 0, 0, 0.6);
   color-scheme: dark;
 }
-:root[data-font="brand"] {
+:root[data-font="brand-sf"] {
   --font-heading: "Cooper Hewitt", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-body: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-body: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", system-ui, "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --font-heading-weight: 700;
+}
+:root[data-font="sf"] {
+  --font-heading: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", system-ui, "Segoe UI", Roboto, sans-serif;
+  --font-body: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", system-ui, "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --font-heading-weight: 700;
+}
+:root[data-font="cooper-figtree"] {
+  --font-heading: "Cooper Hewitt", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-body: Figtree, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   --font-heading-weight: 700;
 }
 :root[data-font="jakarta"] {
   --font-heading: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-body: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-body: Figtree, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --font-heading-weight: 700;
+}
+:root[data-font="outfit"] {
+  --font-heading: Outfit, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-body: "Source Sans 3", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: "Source Code Pro", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   --font-heading-weight: 700;
 }
 :root[data-font="grotesk"] {
@@ -374,6 +393,7 @@ textarea.input { min-height: 120px; padding-block: var(--space-3); resize: verti
 .ic-sm { width: var(--icon-sm); height: var(--icon-sm); }
 .ic-lg { width: var(--icon-lg); height: var(--icon-lg); }
 .topbar { position: sticky; top: 0; z-index: 10; background: color-mix(in srgb, var(--color-canvas) 88%, transparent); backdrop-filter: blur(12px); border-bottom: 1px solid var(--color-border); }
+.segmented { flex-wrap: wrap; }
 .topbar .container { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-4); min-height: 88px; padding-block: var(--space-3); }
 .brand { display: flex; align-items: center; gap: var(--space-3); font-family: var(--font-heading); font-weight: var(--font-heading-weight); font-size: var(--text-lead); }
 .brand .ic { color: var(--color-brand); }
@@ -644,7 +664,7 @@ textarea.input { min-height: 120px; padding-block: var(--space-3); resize: verti
 
 <script>
 (function () {
-  var pairs = [{"id":"brand","label":"Cooper Hewitt + Inter"},{"id":"jakarta","label":"Plus Jakarta Sans + Inter"},{"id":"grotesk","label":"Space Grotesk + IBM Plex Sans"},{"id":"fraunces","label":"Fraunces + Work Sans"},{"id":"dm","label":"DM Sans + DM Mono"}];
+  var pairs = [{"id":"brand-sf","label":"Cooper Hewitt + San Francisco"},{"id":"sf","label":"San Francisco"},{"id":"cooper-figtree","label":"Cooper Hewitt + Figtree"},{"id":"jakarta","label":"Plus Jakarta Sans + Figtree"},{"id":"outfit","label":"Outfit + Source Sans 3"},{"id":"grotesk","label":"Space Grotesk + IBM Plex Sans"},{"id":"fraunces","label":"Fraunces + Work Sans"},{"id":"dm","label":"DM Sans + DM Mono"}];
   var root = document.documentElement;
   var store = { get: function (k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set: function (k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
 
