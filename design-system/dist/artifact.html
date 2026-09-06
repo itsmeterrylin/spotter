@@ -2,13 +2,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Copper Evaluations</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=DM+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@500;600;700&family=Lexend:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Figtree:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&family=Source+Sans+3:wght@400;500;600&family=Source+Code+Pro:wght@400;500&display=swap">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700;800&display=swap">
 <style>
 
 :root {
@@ -48,27 +42,12 @@
   --text-body: 18px;
   --leading-body: 1.6;
   --tracking-body: 0;
-  --text-lead: 22px;
-  --leading-lead: 1.5;
-  --tracking-lead: 0;
   --text-title: 28px;
   --leading-title: 1.3;
   --tracking-title: -0.01em;
-  --text-heading: 36px;
-  --leading-heading: 1.2;
-  --tracking-heading: -0.015em;
-  --text-display: 44px;
-  --leading-display: 1.1;
-  --tracking-display: -0.02em;
-  --text-hero: 56px;
-  --leading-hero: 1.05;
-  --tracking-hero: -0.025em;
-  --text-stat: 72px;
+  --text-stat: 64px;
   --leading-stat: 1;
   --tracking-stat: -0.03em;
-  --text-giant: 96px;
-  --leading-giant: 1;
-  --tracking-giant: -0.035em;
   --space-0: 0px;
   --space-1: 4px;
   --space-2: 8px;
@@ -114,10 +93,9 @@
   --ease-exit: cubic-bezier(0.4, 0, 1, 1);
   --font-features-numeric: "tnum" 1, "lnum" 1;
   --font-features-default: "kern" 1, "liga" 1;
-  --font-heading: "DM Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-body: "DM Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-mono: "DM Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  --font-heading-weight: 700;
+  --font-heading: "Open Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-body: "Open Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
@@ -188,47 +166,10 @@
   --color-overlay: rgba(0, 0, 0, 0.6);
   color-scheme: dark;
 }
-:root[data-font="dm"] {
-  --font-heading: "DM Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-body: "DM Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-mono: "DM Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  --font-heading-weight: 700;
-}
-:root[data-font="sora"] {
-  --font-heading: Sora, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-body: Manrope, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  --font-heading-weight: 700;
-}
-:root[data-font="rubik"] {
-  --font-heading: Rubik, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-body: Lexend, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  --font-heading-weight: 700;
-}
 :root[data-font="open"] {
   --font-heading: "Open Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --font-body: "Open Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  --font-heading-weight: 700;
-}
-:root[data-font="jakarta"] {
-  --font-heading: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-body: Figtree, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  --font-heading-weight: 700;
-}
-:root[data-font="outfit"] {
-  --font-heading: Outfit, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-body: "Source Sans 3", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-mono: "Source Code Pro", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  --font-heading-weight: 700;
-}
-:root[data-font="grotesk"] {
-  --font-heading: "Space Grotesk", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  --font-heading-weight: 700;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -248,8 +189,12 @@ h1, h2, h3, h4 { text-wrap: balance; }
 a { color: inherit; }
 button, input, select, textarea { font: inherit; color: inherit; }
 img, svg { display: block; max-width: 100%; }
+[hidden] { display: none !important; }
 :focus-visible { outline: none; box-shadow: var(--shadow-focus); border-radius: var(--radius-sm); }
 .num { font-variant-numeric: tabular-nums lining-nums; font-feature-settings: var(--font-features-numeric); }
+.mono { font-family: var(--font-mono); }
+.strong { font-weight: 600; }
+.heavy { font-weight: 800; }
 .muted { color: var(--color-ink2); }
 .faint { color: var(--color-ink3); }
 .stack { display: flex; flex-direction: column; gap: var(--stack-gap, var(--space-4)); }
@@ -260,18 +205,10 @@ img, svg { display: block; max-width: 100%; }
 .container-wide { max-width: var(--container-wide); }
 .scroll-x { overflow-x: auto; }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; } }
-.t-caption { font-family: var(--font-body); font-size: var(--text-caption); line-height: var(--leading-caption); letter-spacing: var(--tracking-caption); font-weight: 500; }
+.t-caption { font-family: var(--font-body); font-size: var(--text-caption); line-height: var(--leading-caption); letter-spacing: var(--tracking-caption); font-weight: 600; }
 .t-body { font-family: var(--font-body); font-size: var(--text-body); line-height: var(--leading-body); letter-spacing: var(--tracking-body); font-weight: 400; }
-.t-bodyStrong { font-family: var(--font-body); font-size: var(--text-body); line-height: var(--leading-body); letter-spacing: var(--tracking-body); font-weight: 600; }
-.t-lead { font-family: var(--font-body); font-size: var(--text-lead); line-height: var(--leading-lead); letter-spacing: var(--tracking-lead); font-weight: 400; }
-.t-title { font-family: var(--font-heading); font-size: var(--text-title); line-height: var(--leading-title); letter-spacing: var(--tracking-title); font-weight: var(--font-heading-weight); }
-.t-heading { font-family: var(--font-heading); font-size: var(--text-heading); line-height: var(--leading-heading); letter-spacing: var(--tracking-heading); font-weight: var(--font-heading-weight); }
-.t-display { font-family: var(--font-heading); font-size: var(--text-display); line-height: var(--leading-display); letter-spacing: var(--tracking-display); font-weight: var(--font-heading-weight); }
-.t-hero { font-family: var(--font-heading); font-size: var(--text-hero); line-height: var(--leading-hero); letter-spacing: var(--tracking-hero); font-weight: var(--font-heading-weight); }
-.t-stat { font-family: var(--font-heading); font-size: var(--text-stat); line-height: var(--leading-stat); letter-spacing: var(--tracking-stat); font-weight: var(--font-heading-weight); }
-.t-giant { font-family: var(--font-heading); font-size: var(--text-giant); line-height: var(--leading-giant); letter-spacing: var(--tracking-giant); font-weight: var(--font-heading-weight); }
-.t-code { font-family: var(--font-mono); font-size: var(--text-caption); line-height: var(--leading-caption); letter-spacing: var(--tracking-caption); font-weight: 400; }
-.t-codeBlock { font-family: var(--font-mono); font-size: var(--text-body); line-height: var(--leading-body); letter-spacing: var(--tracking-body); font-weight: 400; }
+.t-title { font-family: var(--font-heading); font-size: var(--text-title); line-height: var(--leading-title); letter-spacing: var(--tracking-title); font-weight: 600; }
+.t-stat { font-family: var(--font-heading); font-size: var(--text-stat); line-height: var(--leading-stat); letter-spacing: var(--tracking-stat); font-weight: 800; }
 
 
 /* Button */
@@ -313,13 +250,13 @@ img, svg { display: block; max-width: 100%; }
 .verdict-fail { background: var(--color-fail-soft); color: var(--color-fail-ink); }
 .verdict-defer { background: var(--color-defer-soft); color: var(--color-defer-ink); }
 .verdict-pending { background: var(--color-surface-sunken); color: var(--color-ink2); }
-.verdict-lg { min-height: 56px; padding-inline: var(--space-6); font-size: var(--text-lead); }
+.verdict-lg { min-height: 56px; padding-inline: var(--space-6); font-size: var(--text-body); }
 
 /* Stat tile */
 .stat { display: flex; flex-direction: column; gap: var(--space-2); }
-.stat-value { font-family: var(--font-heading); font-weight: var(--font-heading-weight); font-size: var(--text-stat); line-height: var(--leading-stat); letter-spacing: var(--tracking-stat); font-variant-numeric: tabular-nums lining-nums; }
+.stat-value { font-family: var(--font-heading); font-weight: 800; font-size: var(--text-stat); line-height: var(--leading-stat); letter-spacing: var(--tracking-stat); font-variant-numeric: tabular-nums lining-nums; }
 .stat-label { display: inline-flex; align-items: center; gap: var(--space-2); font-size: var(--text-caption); font-weight: 500; color: var(--color-ink2); }
-.delta { display: inline-flex; align-items: center; gap: var(--space-1); font-size: var(--text-lead); font-weight: 600; font-variant-numeric: tabular-nums; }
+.delta { display: inline-flex; align-items: center; gap: var(--space-1); font-size: var(--text-body); font-weight: 600; font-variant-numeric: tabular-nums; }
 .delta-up { color: var(--color-pass-ink); }
 .delta-down { color: var(--color-fail-ink); }
 .delta-flat { color: var(--color-ink3); }
@@ -384,7 +321,7 @@ textarea.input { min-height: 120px; padding-block: var(--space-3); resize: verti
 .topbar { position: sticky; top: 0; z-index: 10; background: color-mix(in srgb, var(--color-canvas) 88%, transparent); backdrop-filter: blur(12px); border-bottom: 1px solid var(--color-border); }
 .segmented { flex-wrap: wrap; }
 .topbar .container { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-4); min-height: 88px; padding-block: var(--space-3); }
-.brand { display: flex; align-items: center; gap: var(--space-3); font-family: var(--font-heading); font-weight: var(--font-heading-weight); font-size: var(--text-lead); }
+.brand { display: flex; align-items: center; gap: var(--space-3); font-family: var(--font-heading); font-weight: 800; font-size: var(--text-body); }
 .brand .ic { color: var(--color-brand); }
 .section { padding-block: var(--space-16); }
 .section + .section { border-top: 1px solid var(--color-border); }
@@ -403,13 +340,13 @@ textarea.input { min-height: 120px; padding-block: var(--space-3); resize: verti
 .review { display: grid; grid-template-columns: 1fr; gap: var(--space-8); }
 .block { display: flex; flex-direction: column; gap: var(--space-2); }
 .block-label { display: inline-flex; align-items: center; gap: var(--space-2); font-size: var(--text-caption); font-weight: 600; color: var(--color-ink2); letter-spacing: 0.02em; text-transform: uppercase; }
-.transcript { font-size: var(--text-lead); line-height: 1.5; padding: var(--space-6); border-radius: var(--radius-md); background: var(--color-surface-sunken); }
+.transcript { font-size: var(--text-body); line-height: 1.6; padding: var(--space-6); border-radius: var(--radius-md); background: var(--color-surface-sunken); }
 .kv { display: grid; grid-template-columns: max-content 1fr; gap: var(--space-2) var(--space-6); font-size: var(--text-body); }
 .kv dd { font-weight: 600; }
 .kv dt { color: var(--color-ink3); }
 .kv dd { margin: 0; }
 .verdict-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: var(--space-4); }
-.verdict-row .btn { min-height: 72px; font-size: var(--text-lead); }
+.verdict-row .btn { min-height: 72px; }
 .verdict-row .kbd { margin-left: var(--space-2); }
 .judge { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-8); align-items: center; }
 .icons { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: var(--space-4); }
@@ -445,25 +382,22 @@ textarea.input { min-height: 120px; padding-block: var(--space-3); resize: verti
 
 <section class="section">
   <div class="container">
-    <div class="section-head"><svg class="ic ic-lg"><use href="#i-keyboard"/></svg><h2 class="t-heading" id="pairName">Type</h2></div>
+    <div class="section-head"><svg class="ic ic-lg"><use href="#i-keyboard"/></svg><h2 class="t-title heavy" id="pairName">Type</h2></div>
     <div class="specimen">
-      <div><span class="faint">giant 96</span><span class="t-giant num">87%</span></div>
-      <div><span class="faint">stat 72</span><span class="t-stat num">1,204</span></div>
-      <div><span class="faint">hero 56</span><span class="t-hero">Bench press, 3 × 5 at 225</span></div>
-      <div><span class="faint">display 44</span><span class="t-display">Runs this week</span></div>
-      <div><span class="faint">heading 36</span><span class="t-heading">Compare rules-v2 to rules-v1</span></div>
-      <div><span class="faint">title 28</span><span class="t-title">exercise_match</span></div>
-      <div><span class="faint">lead 22</span><span class="t-lead">Squats, five sets of five, two twenty five. Then some light rows.</span></div>
-      <div><span class="faint">body 18</span><span class="t-body">Every score is a name and a number. Humans say Pass or Fail. A judge counts once it agrees with them.</span></div>
-      <div><span class="faint">caption 16</span><span class="t-caption muted">120 items · 4 regressions · 1.2 s p50</span></div>
-      <div><span class="faint">code 16</span><span class="t-code">01991c2e-7f3a-7d2b-9c1e-3f5a8b2d4e10</span></div>
+      <div><span class="faint">stat 64 · 800</span><span class="t-stat num">87%</span></div>
+      <div><span class="faint">title 28 · 800</span><span class="t-title heavy">Runs this week</span></div>
+      <div><span class="faint">title 28 · 600</span><span class="t-title">Compare rules-v2 to rules-v1</span></div>
+      <div><span class="faint">body 18 · 400</span><span class="t-body">Every score is a name and a number. Humans say Pass or Fail. A judge counts once it agrees with them.</span></div>
+      <div><span class="faint">body 18 · 600</span><span class="t-body strong">bench-01</span></div>
+      <div><span class="faint">caption 16 · 600</span><span class="t-caption muted">120 items · 4 regressions · 1.2 s p50</span></div>
+      <div><span class="faint">body · mono</span><span class="t-body mono">01991c2e-7f3a-7d2b-9c1e-3f5a8b2d4e10</span></div>
     </div>
   </div>
 </section>
 
 <section class="section">
   <div class="container">
-    <div class="section-head"><svg class="ic ic-lg"><use href="#i-score"/></svg><h2 class="t-heading">Color</h2></div>
+    <div class="section-head"><svg class="ic ic-lg"><use href="#i-score"/></svg><h2 class="t-title heavy">Color</h2></div>
     <div class="swatches">
       <div class="swatch" style="background: var(--color-canvas)">canvas</div>
       <div class="swatch" style="background: var(--color-surface)">surface</div>
@@ -484,7 +418,7 @@ textarea.input { min-height: 120px; padding-block: var(--space-3); resize: verti
 
 <section class="section">
   <div class="container container-wide">
-    <div class="section-head"><svg class="ic ic-lg"><use href="#i-run"/></svg><h2 class="t-heading">Runs</h2></div>
+    <div class="section-head"><svg class="ic ic-lg"><use href="#i-run"/></svg><h2 class="t-title heavy">Runs</h2></div>
     <div class="shell">
       <aside>
         <nav class="nav" aria-label="Sections">
@@ -498,7 +432,7 @@ textarea.input { min-height: 120px; padding-block: var(--space-3); resize: verti
       </aside>
       <div class="stack" style="--stack-gap: var(--space-8)">
         <div class="page-head">
-          <h1 class="t-display">tagging-golden</h1>
+          <h1 class="t-title heavy">tagging-golden</h1>
           <button class="btn btn-primary" type="button"><svg class="ic"><use href="#i-run"/></svg>New run</button>
         </div>
         <div class="stats">
@@ -511,9 +445,9 @@ textarea.input { min-height: 120px; padding-block: var(--space-3); resize: verti
           <table class="table">
             <thead><tr><th>Run</th><th>Model</th><th class="num">exercise_match</th><th class="num">weight_found</th><th class="num">p50</th><th></th></tr></thead>
             <tbody>
-              <tr><td class="t-bodyStrong">rules-v2</td><td class="muted">gemini-2.5-flash</td><td class="num"><div class="stack" style="--stack-gap: 6px"><span>0.87</span><div class="bar bar-pass"><i style="width:87%"></i></div></div></td><td class="num"><div class="stack" style="--stack-gap: 6px"><span>0.93</span><div class="bar bar-pass"><i style="width:93%"></i></div></div></td><td class="num">1.2s</td><td><span class="verdict verdict-pass"><svg class="ic ic-sm"><use href="#i-pass"/></svg>Best</span></td></tr>
-              <tr><td class="t-bodyStrong">rules-v1</td><td class="muted">gemini-2.5-flash</td><td class="num"><div class="stack" style="--stack-gap: 6px"><span>0.81</span><div class="bar"><i style="width:81%"></i></div></div></td><td class="num"><div class="stack" style="--stack-gap: 6px"><span>0.90</span><div class="bar"><i style="width:90%"></i></div></div></td><td class="num">1.5s</td><td><span class="verdict verdict-pending"><svg class="ic ic-sm"><use href="#i-time"/></svg>Baseline</span></td></tr>
-              <tr><td class="t-bodyStrong">judge-only</td><td class="muted">gpt-4.1-mini</td><td class="num"><div class="stack" style="--stack-gap: 6px"><span>0.74</span><div class="bar bar-fail"><i style="width:74%"></i></div></div></td><td class="num"><div class="stack" style="--stack-gap: 6px"><span>0.88</span><div class="bar"><i style="width:88%"></i></div></div></td><td class="num">2.4s</td><td><span class="verdict verdict-fail"><svg class="ic ic-sm"><use href="#i-down"/></svg>4 regressions</span></td></tr>
+              <tr><td class="t-body strong">rules-v2</td><td class="muted">gemini-2.5-flash</td><td class="num"><div class="stack" style="--stack-gap: 6px"><span>0.87</span><div class="bar bar-pass"><i style="width:87%"></i></div></div></td><td class="num"><div class="stack" style="--stack-gap: 6px"><span>0.93</span><div class="bar bar-pass"><i style="width:93%"></i></div></div></td><td class="num">1.2s</td><td><span class="verdict verdict-pass"><svg class="ic ic-sm"><use href="#i-pass"/></svg>Best</span></td></tr>
+              <tr><td class="t-body strong">rules-v1</td><td class="muted">gemini-2.5-flash</td><td class="num"><div class="stack" style="--stack-gap: 6px"><span>0.81</span><div class="bar"><i style="width:81%"></i></div></div></td><td class="num"><div class="stack" style="--stack-gap: 6px"><span>0.90</span><div class="bar"><i style="width:90%"></i></div></div></td><td class="num">1.5s</td><td><span class="verdict verdict-pending"><svg class="ic ic-sm"><use href="#i-time"/></svg>Baseline</span></td></tr>
+              <tr><td class="t-body strong">judge-only</td><td class="muted">gpt-4.1-mini</td><td class="num"><div class="stack" style="--stack-gap: 6px"><span>0.74</span><div class="bar bar-fail"><i style="width:74%"></i></div></div></td><td class="num"><div class="stack" style="--stack-gap: 6px"><span>0.88</span><div class="bar"><i style="width:88%"></i></div></div></td><td class="num">2.4s</td><td><span class="verdict verdict-fail"><svg class="ic ic-sm"><use href="#i-down"/></svg>4 regressions</span></td></tr>
             </tbody>
           </table>
         </div>
@@ -524,7 +458,7 @@ textarea.input { min-height: 120px; padding-block: var(--space-3); resize: verti
 
 <section class="section">
   <div class="container container-wide">
-    <div class="section-head"><svg class="ic ic-lg"><use href="#i-compare"/></svg><h2 class="t-heading">Compare</h2></div>
+    <div class="section-head"><svg class="ic ic-lg"><use href="#i-compare"/></svg><h2 class="t-title heavy">Compare</h2></div>
     <div class="stack" style="--stack-gap: var(--space-6)">
       <div class="cluster" style="justify-content: space-between">
         <div class="cluster">
@@ -538,9 +472,9 @@ textarea.input { min-height: 120px; padding-block: var(--space-3); resize: verti
         <table class="table">
           <thead><tr><th>Item</th><th>rules-v1</th><th>rules-v2</th><th class="num">exercise_match</th><th class="num">weight_found</th></tr></thead>
           <tbody>
-            <tr class="improved"><td><div class="stack" style="--stack-gap: 4px"><span class="t-bodyStrong">bench-01</span><span class="t-caption muted">“bench press three by five at two twenty five”</span></div></td><td class="out">Bench Press · 3×5 · 225</td><td class="out">Bench Press · 3×5 · 225</td><td class="num"><span class="cell-diff diff-pos"><svg class="ic ic-sm"><use href="#i-up"/></svg>0 → 1</span></td><td class="num"><span class="cell-diff"><svg class="ic ic-sm"><use href="#i-flat"/></svg>1</span></td></tr>
-            <tr class="changed"><td><div class="stack" style="--stack-gap: 4px"><span class="t-bodyStrong">row-07</span><span class="t-caption muted">“then some light rows, ten reps”</span></div></td><td class="out">Barbell Row · 1×10</td><td class="out">Cable Row · 1×10</td><td class="num"><span class="cell-diff diff-neg"><svg class="ic ic-sm"><use href="#i-down"/></svg>1 → 0</span></td><td class="num"><span class="cell-diff"><svg class="ic ic-sm"><use href="#i-flat"/></svg>0</span></td></tr>
-            <tr class="improved"><td><div class="stack" style="--stack-gap: 4px"><span class="t-bodyStrong">squat-12</span><span class="t-caption muted">“squats five by five two twenty five”</span></div></td><td class="out">Squat · 5×5</td><td class="out">Squat · 5×5 · 225</td><td class="num"><span class="cell-diff"><svg class="ic ic-sm"><use href="#i-flat"/></svg>1</span></td><td class="num"><span class="cell-diff diff-pos"><svg class="ic ic-sm"><use href="#i-up"/></svg>0 → 1</span></td></tr>
+            <tr class="improved"><td><div class="stack" style="--stack-gap: 4px"><span class="t-body strong">bench-01</span><span class="t-caption muted">“bench press three by five at two twenty five”</span></div></td><td class="out">Bench Press · 3×5 · 225</td><td class="out">Bench Press · 3×5 · 225</td><td class="num"><span class="cell-diff diff-pos"><svg class="ic ic-sm"><use href="#i-up"/></svg>0 → 1</span></td><td class="num"><span class="cell-diff"><svg class="ic ic-sm"><use href="#i-flat"/></svg>1</span></td></tr>
+            <tr class="changed"><td><div class="stack" style="--stack-gap: 4px"><span class="t-body strong">row-07</span><span class="t-caption muted">“then some light rows, ten reps”</span></div></td><td class="out">Barbell Row · 1×10</td><td class="out">Cable Row · 1×10</td><td class="num"><span class="cell-diff diff-neg"><svg class="ic ic-sm"><use href="#i-down"/></svg>1 → 0</span></td><td class="num"><span class="cell-diff"><svg class="ic ic-sm"><use href="#i-flat"/></svg>0</span></td></tr>
+            <tr class="improved"><td><div class="stack" style="--stack-gap: 4px"><span class="t-body strong">squat-12</span><span class="t-caption muted">“squats five by five two twenty five”</span></div></td><td class="out">Squat · 5×5</td><td class="out">Squat · 5×5 · 225</td><td class="num"><span class="cell-diff"><svg class="ic ic-sm"><use href="#i-flat"/></svg>1</span></td><td class="num"><span class="cell-diff diff-pos"><svg class="ic ic-sm"><use href="#i-up"/></svg>0 → 1</span></td></tr>
           </tbody>
         </table>
       </div>
@@ -550,7 +484,7 @@ textarea.input { min-height: 120px; padding-block: var(--space-3); resize: verti
 
 <section class="section">
   <div class="container" style="max-width: var(--container-narrow)">
-    <div class="section-head"><svg class="ic ic-lg"><use href="#i-human"/></svg><h2 class="t-heading">Review</h2></div>
+    <div class="section-head"><svg class="ic ic-lg"><use href="#i-human"/></svg><h2 class="t-title heavy">Review</h2></div>
     <div class="card card-raised review">
       <div class="cluster" style="justify-content: space-between">
         <span class="t-title num">12 <span class="muted">of</span> 87</span>
@@ -575,7 +509,7 @@ textarea.input { min-height: 120px; padding-block: var(--space-3); resize: verti
 
 <section class="section">
   <div class="container">
-    <div class="section-head"><svg class="ic ic-lg"><use href="#i-judge"/></svg><h2 class="t-heading">Judges</h2></div>
+    <div class="section-head"><svg class="ic ic-lg"><use href="#i-judge"/></svg><h2 class="t-title heavy">Judges</h2></div>
     <div class="demo-grid">
       <div class="card judge">
         <div class="stack">
@@ -584,8 +518,8 @@ textarea.input { min-height: 120px; padding-block: var(--space-3); resize: verti
           <span class="t-caption muted num">n = 104 · v3</span>
         </div>
         <div class="stack" style="--stack-gap: var(--space-4)">
-          <div class="stat"><span class="stat-label">TPR</span><span class="t-display num">94%</span><div class="bar bar-pass"><i style="width:94%"></i></div></div>
-          <div class="stat"><span class="stat-label">TNR</span><span class="t-display num">91%</span><div class="bar bar-pass"><i style="width:91%"></i></div></div>
+          <div class="stat"><span class="stat-label">TPR</span><span class="t-stat num">94%</span><div class="bar bar-pass"><i style="width:94%"></i></div></div>
+          <div class="stat"><span class="stat-label">TNR</span><span class="t-stat num">91%</span><div class="bar bar-pass"><i style="width:91%"></i></div></div>
         </div>
       </div>
       <div class="card judge">
@@ -595,8 +529,8 @@ textarea.input { min-height: 120px; padding-block: var(--space-3); resize: verti
           <span class="t-caption muted num">n = 31 · v1</span>
         </div>
         <div class="stack" style="--stack-gap: var(--space-4)">
-          <div class="stat"><span class="stat-label">TPR</span><span class="t-display num">88%</span><div class="bar bar-fail"><i style="width:88%"></i></div></div>
-          <div class="stat"><span class="stat-label">TNR</span><span class="t-display num">72%</span><div class="bar bar-fail"><i style="width:72%"></i></div></div>
+          <div class="stat"><span class="stat-label">TPR</span><span class="t-stat num">88%</span><div class="bar bar-fail"><i style="width:88%"></i></div></div>
+          <div class="stat"><span class="stat-label">TNR</span><span class="t-stat num">72%</span><div class="bar bar-fail"><i style="width:72%"></i></div></div>
         </div>
       </div>
     </div>
@@ -605,7 +539,7 @@ textarea.input { min-height: 120px; padding-block: var(--space-3); resize: verti
 
 <section class="section">
   <div class="container">
-    <div class="section-head"><svg class="ic ic-lg"><use href="#i-settings"/></svg><h2 class="t-heading">Components</h2></div>
+    <div class="section-head"><svg class="ic ic-lg"><use href="#i-settings"/></svg><h2 class="t-title heavy">Components</h2></div>
     <div class="stack" style="--stack-gap: var(--space-12)">
       <div class="cluster" style="--cluster-gap: var(--space-4)">
         <button class="btn btn-primary" type="button"><svg class="ic"><use href="#i-run"/></svg>New run</button>
@@ -636,7 +570,7 @@ textarea.input { min-height: 120px; padding-block: var(--space-3); resize: verti
 
 <section class="section">
   <div class="container">
-    <div class="section-head"><svg class="ic ic-lg"><use href="#i-tokens"/></svg><h2 class="t-heading">Spacing</h2></div>
+    <div class="section-head"><svg class="ic ic-lg"><use href="#i-tokens"/></svg><h2 class="t-title heavy">Spacing</h2></div>
     <div class="ruler scroll-x">
       <div style="width:8px;height:8px"></div>
       <div style="width:16px;height:16px"></div>
@@ -654,7 +588,7 @@ textarea.input { min-height: 120px; padding-block: var(--space-3); resize: verti
 
 <script>
 (function () {
-  var pairs = [{"id":"dm","label":"DM Sans + DM Mono"},{"id":"sora","label":"Sora + Manrope"},{"id":"rubik","label":"Rubik + Lexend"},{"id":"open","label":"Open Sans"},{"id":"jakarta","label":"Plus Jakarta Sans + Figtree"},{"id":"outfit","label":"Outfit + Source Sans 3"},{"id":"grotesk","label":"Space Grotesk + IBM Plex Sans"}];
+  var pairs = [{"id":"open","label":"Open Sans"}];
   var root = document.documentElement;
   var store = { get: function (k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set: function (k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
 
@@ -672,7 +606,8 @@ textarea.input { min-height: 120px; padding-block: var(--space-3); resize: verti
     b.addEventListener('click', function () { setFont(p.id); });
     picker.appendChild(b);
   });
-  setFont(store.get('font') || pairs[0].id);
+  if (pairs.length < 2) picker.hidden = true;
+  setFont(pairs.some(function (p) { return p.id === store.get('font'); }) ? store.get('font') : pairs[0].id);
 
   var themePicker = document.getElementById('themePicker');
   function setTheme(choice) {

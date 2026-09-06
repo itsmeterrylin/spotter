@@ -1,45 +1,28 @@
-# Font pairs
+# Type decision
 
-Seven candidates, all sans-serif and all on Google Fonts, so they render the same on every platform. Toggle between them in `design-system/preview/index.html`. Screenshots are 1440px wide, light theme. One dark capture for the default pair.
+**Decision (2026-09-06)**: one family, Open Sans, weights 400 to 800. No display face. Mono is the system monospace stack, used only for raw JSON and ids.
 
-| Id | Heading | Body | Character |
-|---|---|---|---|
-| `sora` | Sora | Manrope | Airy geometric headings, calm wide body. |
-| `rubik` | Rubik | Lexend | Rounded headings, body built for reading ease. |
-| `open` | Open Sans | Open Sans | Humanist, neutral, one variable family. |
-| `jakarta` | Plus Jakarta Sans | Figtree | Rounded, consumer feel. |
-| `outfit` | Outfit | Source Sans 3 | Geometric display, humanist body. |
-| `grotesk` | Space Grotesk | IBM Plex Sans | Quirky terminals on the headings, sober body. |
-| `dm` | DM Sans | DM Mono | One family. Calm, compact, easiest to scan in tables. Default. |
+Why one family: the screens are tables, numbers, and verdicts. Size and weight carry the hierarchy. One family keeps x-height and widths consistent from a 96px stat down to a 16px caption, loads one file, and cannot clash.
 
-## Type specimen
+Why Open Sans: humanist letterforms with open apertures, a tall x-height, distinct `1` `l` `I`, and a real 800 weight for stat numbers. It reads as neutral and calm rather than technical.
 
-![Sora + Manrope](../../design-system/preview/screenshots/type-sora.png)
+![Open Sans, light](../../design-system/preview/screenshots/type-open.png)
 
-![Rubik + Lexend](../../design-system/preview/screenshots/type-rubik.png)
+Full page: [light](../../design-system/preview/screenshots/font-open-light.png), [dark](../../design-system/preview/screenshots/font-open-dark.png).
 
-![Open Sans](../../design-system/preview/screenshots/type-open.png)
+## Candidates compared
 
-![Plus Jakarta Sans + Figtree](../../design-system/preview/screenshots/type-jakarta.png)
-
-![Outfit + Source Sans 3](../../design-system/preview/screenshots/type-outfit.png)
-
-![Space Grotesk + IBM Plex Sans](../../design-system/preview/screenshots/type-grotesk.png)
-
-![DM Sans + DM Mono](../../design-system/preview/screenshots/type-dm.png)
-
-## Full page
-
-| Pair | Light | Dark |
+| Heading | Body | Outcome |
 |---|---|---|
-| sora | [light](../../design-system/preview/screenshots/font-sora-light.png) | |
-| rubik | [light](../../design-system/preview/screenshots/font-rubik-light.png) | |
-| open | [light](../../design-system/preview/screenshots/font-open-light.png) | |
-| jakarta | [light](../../design-system/preview/screenshots/font-jakarta-light.png) | |
-| outfit | [light](../../design-system/preview/screenshots/font-outfit-light.png) | |
-| grotesk | [light](../../design-system/preview/screenshots/font-grotesk-light.png) | |
-| dm | [light](../../design-system/preview/screenshots/font-dm-light.png) | [dark](../../design-system/preview/screenshots/font-dm-dark.png) |
+| Open Sans | Open Sans | Chosen |
+| DM Sans | DM Sans | Close second. Geometric `0` and `O` sit near each other. |
+| Sora | Manrope | Airy, but wide letterforms cost table columns. |
+| Rubik | Lexend | Friendly. Lexend spacing is tuned for prose, not tables. |
+| Plus Jakarta Sans | Figtree | Rounded shapes blur at 16px in dense rows. |
+| Outfit | Source Sans 3 | Strong for data, more display voice than needed. |
+| Space Grotesk | IBM Plex Sans | Best digits, most engineering in tone. |
+| Cooper Hewitt | San Francisco, Figtree | Dropped: too serious, and San Francisco has no web download. |
+| Fraunces | Work Sans | Dropped: no serifs. |
+| Plus Jakarta Sans, Cooper Hewitt | Inter | Dropped: no Inter. |
 
-## Recommendation
-
-`dm` is the default: compact digits and calm tone for tables. Mono is used only for raw JSON and ids. Change `defaultFontPairId` in `design-system/src/tokens/typography.ts` to lock the choice.
+To compare another family, add an entry to `fontPairs` in `design-system/src/tokens/typography.ts`; the preview shows a switcher when more than one entry exists.

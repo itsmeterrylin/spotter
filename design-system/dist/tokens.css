@@ -36,27 +36,12 @@
   --text-body: 18px;
   --leading-body: 1.6;
   --tracking-body: 0;
-  --text-lead: 22px;
-  --leading-lead: 1.5;
-  --tracking-lead: 0;
   --text-title: 28px;
   --leading-title: 1.3;
   --tracking-title: -0.01em;
-  --text-heading: 36px;
-  --leading-heading: 1.2;
-  --tracking-heading: -0.015em;
-  --text-display: 44px;
-  --leading-display: 1.1;
-  --tracking-display: -0.02em;
-  --text-hero: 56px;
-  --leading-hero: 1.05;
-  --tracking-hero: -0.025em;
-  --text-stat: 72px;
+  --text-stat: 64px;
   --leading-stat: 1;
   --tracking-stat: -0.03em;
-  --text-giant: 96px;
-  --leading-giant: 1;
-  --tracking-giant: -0.035em;
   --space-0: 0px;
   --space-1: 4px;
   --space-2: 8px;
@@ -102,10 +87,9 @@
   --ease-exit: cubic-bezier(0.4, 0, 1, 1);
   --font-features-numeric: "tnum" 1, "lnum" 1;
   --font-features-default: "kern" 1, "liga" 1;
-  --font-heading: "DM Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-body: "DM Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-mono: "DM Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  --font-heading-weight: 700;
+  --font-heading: "Open Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-body: "Open Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
@@ -176,45 +160,8 @@
   --color-overlay: rgba(0, 0, 0, 0.6);
   color-scheme: dark;
 }
-:root[data-font="dm"] {
-  --font-heading: "DM Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-body: "DM Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-mono: "DM Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  --font-heading-weight: 700;
-}
-:root[data-font="sora"] {
-  --font-heading: Sora, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-body: Manrope, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  --font-heading-weight: 700;
-}
-:root[data-font="rubik"] {
-  --font-heading: Rubik, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-body: Lexend, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  --font-heading-weight: 700;
-}
 :root[data-font="open"] {
   --font-heading: "Open Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --font-body: "Open Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  --font-heading-weight: 700;
-}
-:root[data-font="jakarta"] {
-  --font-heading: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-body: Figtree, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  --font-heading-weight: 700;
-}
-:root[data-font="outfit"] {
-  --font-heading: Outfit, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-body: "Source Sans 3", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-mono: "Source Code Pro", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  --font-heading-weight: 700;
-}
-:root[data-font="grotesk"] {
-  --font-heading: "Space Grotesk", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  --font-heading-weight: 700;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }

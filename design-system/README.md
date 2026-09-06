@@ -18,7 +18,9 @@ open preview/index.html
 | Rule | Value |
 |---|---|
 | Smallest text | 16px |
-| Type steps | 16, 18, 22, 28, 36, 44, 56, 72, 96 |
+| Type steps | 16, 18, 28, 64. One token per job: caption, body, title, stat. |
+| Weights | 400, 600, 800. The page heading is title at 800. |
+| Modifiers | `.strong` 600, `.heavy` 800, `.mono`, `.num` tabular figures |
 | Control height | 56px (48px inside table rows) |
 | Table row | 72px |
 | Card padding | 32px |
@@ -39,14 +41,8 @@ open preview/index.html
 | `src/css.ts` | Token, base, and component CSS generators |
 | `src/build.ts` | Writes `dist/` and the preview page |
 
-## Font pairs
+## Type
 
-| Id | Heading | Body |
-|---|---|---|
-| `dm` (default) | DM Sans | DM Sans |
-| `sora` | Sora | Manrope |
-| `rubik` | Rubik | Lexend |
-| `open` | Open Sans | Open Sans |
-| `jakarta` | Plus Jakarta Sans | Figtree |
-| `outfit` | Outfit | Source Sans 3 |
-| `grotesk` | Space Grotesk | IBM Plex Sans |
+One family: **Open Sans**, weights 400 to 800. Headings and body share it; hierarchy comes from size and weight. Stat numbers use 800. Mono is the system monospace stack and appears only on raw JSON and ids.
+
+Candidates compared before this choice: `docs/design/font-pairs.md`.

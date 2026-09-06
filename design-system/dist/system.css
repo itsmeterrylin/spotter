@@ -36,27 +36,12 @@
   --text-body: 18px;
   --leading-body: 1.6;
   --tracking-body: 0;
-  --text-lead: 22px;
-  --leading-lead: 1.5;
-  --tracking-lead: 0;
   --text-title: 28px;
   --leading-title: 1.3;
   --tracking-title: -0.01em;
-  --text-heading: 36px;
-  --leading-heading: 1.2;
-  --tracking-heading: -0.015em;
-  --text-display: 44px;
-  --leading-display: 1.1;
-  --tracking-display: -0.02em;
-  --text-hero: 56px;
-  --leading-hero: 1.05;
-  --tracking-hero: -0.025em;
-  --text-stat: 72px;
+  --text-stat: 64px;
   --leading-stat: 1;
   --tracking-stat: -0.03em;
-  --text-giant: 96px;
-  --leading-giant: 1;
-  --tracking-giant: -0.035em;
   --space-0: 0px;
   --space-1: 4px;
   --space-2: 8px;
@@ -102,10 +87,9 @@
   --ease-exit: cubic-bezier(0.4, 0, 1, 1);
   --font-features-numeric: "tnum" 1, "lnum" 1;
   --font-features-default: "kern" 1, "liga" 1;
-  --font-heading: "DM Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-body: "DM Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-mono: "DM Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  --font-heading-weight: 700;
+  --font-heading: "Open Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-body: "Open Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
@@ -176,47 +160,10 @@
   --color-overlay: rgba(0, 0, 0, 0.6);
   color-scheme: dark;
 }
-:root[data-font="dm"] {
-  --font-heading: "DM Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-body: "DM Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-mono: "DM Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  --font-heading-weight: 700;
-}
-:root[data-font="sora"] {
-  --font-heading: Sora, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-body: Manrope, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  --font-heading-weight: 700;
-}
-:root[data-font="rubik"] {
-  --font-heading: Rubik, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-body: Lexend, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  --font-heading-weight: 700;
-}
 :root[data-font="open"] {
   --font-heading: "Open Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --font-body: "Open Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  --font-heading-weight: 700;
-}
-:root[data-font="jakarta"] {
-  --font-heading: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-body: Figtree, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  --font-heading-weight: 700;
-}
-:root[data-font="outfit"] {
-  --font-heading: Outfit, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-body: "Source Sans 3", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-mono: "Source Code Pro", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  --font-heading-weight: 700;
-}
-:root[data-font="grotesk"] {
-  --font-heading: "Space Grotesk", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  --font-heading-weight: 700;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -236,8 +183,12 @@ h1, h2, h3, h4 { text-wrap: balance; }
 a { color: inherit; }
 button, input, select, textarea { font: inherit; color: inherit; }
 img, svg { display: block; max-width: 100%; }
+[hidden] { display: none !important; }
 :focus-visible { outline: none; box-shadow: var(--shadow-focus); border-radius: var(--radius-sm); }
 .num { font-variant-numeric: tabular-nums lining-nums; font-feature-settings: var(--font-features-numeric); }
+.mono { font-family: var(--font-mono); }
+.strong { font-weight: 600; }
+.heavy { font-weight: 800; }
 .muted { color: var(--color-ink2); }
 .faint { color: var(--color-ink3); }
 .stack { display: flex; flex-direction: column; gap: var(--stack-gap, var(--space-4)); }
@@ -248,18 +199,10 @@ img, svg { display: block; max-width: 100%; }
 .container-wide { max-width: var(--container-wide); }
 .scroll-x { overflow-x: auto; }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; } }
-.t-caption { font-family: var(--font-body); font-size: var(--text-caption); line-height: var(--leading-caption); letter-spacing: var(--tracking-caption); font-weight: 500; }
+.t-caption { font-family: var(--font-body); font-size: var(--text-caption); line-height: var(--leading-caption); letter-spacing: var(--tracking-caption); font-weight: 600; }
 .t-body { font-family: var(--font-body); font-size: var(--text-body); line-height: var(--leading-body); letter-spacing: var(--tracking-body); font-weight: 400; }
-.t-bodyStrong { font-family: var(--font-body); font-size: var(--text-body); line-height: var(--leading-body); letter-spacing: var(--tracking-body); font-weight: 600; }
-.t-lead { font-family: var(--font-body); font-size: var(--text-lead); line-height: var(--leading-lead); letter-spacing: var(--tracking-lead); font-weight: 400; }
-.t-title { font-family: var(--font-heading); font-size: var(--text-title); line-height: var(--leading-title); letter-spacing: var(--tracking-title); font-weight: var(--font-heading-weight); }
-.t-heading { font-family: var(--font-heading); font-size: var(--text-heading); line-height: var(--leading-heading); letter-spacing: var(--tracking-heading); font-weight: var(--font-heading-weight); }
-.t-display { font-family: var(--font-heading); font-size: var(--text-display); line-height: var(--leading-display); letter-spacing: var(--tracking-display); font-weight: var(--font-heading-weight); }
-.t-hero { font-family: var(--font-heading); font-size: var(--text-hero); line-height: var(--leading-hero); letter-spacing: var(--tracking-hero); font-weight: var(--font-heading-weight); }
-.t-stat { font-family: var(--font-heading); font-size: var(--text-stat); line-height: var(--leading-stat); letter-spacing: var(--tracking-stat); font-weight: var(--font-heading-weight); }
-.t-giant { font-family: var(--font-heading); font-size: var(--text-giant); line-height: var(--leading-giant); letter-spacing: var(--tracking-giant); font-weight: var(--font-heading-weight); }
-.t-code { font-family: var(--font-mono); font-size: var(--text-caption); line-height: var(--leading-caption); letter-spacing: var(--tracking-caption); font-weight: 400; }
-.t-codeBlock { font-family: var(--font-mono); font-size: var(--text-body); line-height: var(--leading-body); letter-spacing: var(--tracking-body); font-weight: 400; }
+.t-title { font-family: var(--font-heading); font-size: var(--text-title); line-height: var(--leading-title); letter-spacing: var(--tracking-title); font-weight: 600; }
+.t-stat { font-family: var(--font-heading); font-size: var(--text-stat); line-height: var(--leading-stat); letter-spacing: var(--tracking-stat); font-weight: 800; }
 
 
 /* Button */
@@ -301,13 +244,13 @@ img, svg { display: block; max-width: 100%; }
 .verdict-fail { background: var(--color-fail-soft); color: var(--color-fail-ink); }
 .verdict-defer { background: var(--color-defer-soft); color: var(--color-defer-ink); }
 .verdict-pending { background: var(--color-surface-sunken); color: var(--color-ink2); }
-.verdict-lg { min-height: 56px; padding-inline: var(--space-6); font-size: var(--text-lead); }
+.verdict-lg { min-height: 56px; padding-inline: var(--space-6); font-size: var(--text-body); }
 
 /* Stat tile */
 .stat { display: flex; flex-direction: column; gap: var(--space-2); }
-.stat-value { font-family: var(--font-heading); font-weight: var(--font-heading-weight); font-size: var(--text-stat); line-height: var(--leading-stat); letter-spacing: var(--tracking-stat); font-variant-numeric: tabular-nums lining-nums; }
+.stat-value { font-family: var(--font-heading); font-weight: 800; font-size: var(--text-stat); line-height: var(--leading-stat); letter-spacing: var(--tracking-stat); font-variant-numeric: tabular-nums lining-nums; }
 .stat-label { display: inline-flex; align-items: center; gap: var(--space-2); font-size: var(--text-caption); font-weight: 500; color: var(--color-ink2); }
-.delta { display: inline-flex; align-items: center; gap: var(--space-1); font-size: var(--text-lead); font-weight: 600; font-variant-numeric: tabular-nums; }
+.delta { display: inline-flex; align-items: center; gap: var(--space-1); font-size: var(--text-body); font-weight: 600; font-variant-numeric: tabular-nums; }
 .delta-up { color: var(--color-pass-ink); }
 .delta-down { color: var(--color-fail-ink); }
 .delta-flat { color: var(--color-ink3); }
