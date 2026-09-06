@@ -1,4 +1,4 @@
-# Copper Evaluations: system design
+# Spotter: system design
 
 **Status**: Draft, 2026-09-06
 **Scope**: A local, single-user tool for running and comparing LLM evaluations, with a human review loop and calibrated LLM judges.
@@ -60,7 +60,7 @@ Filter operators: `=`, `!=`, `<`, `<=`, `>`, `>=`, `contains`, `starts_with`, `i
 ## SDK and CLI
 
 ```python
-from copper_evals import Eval
+from spotter import Eval
 
 def task(item):
     return my_pipeline(item.input["transcript"])

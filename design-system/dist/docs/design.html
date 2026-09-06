@@ -2,7 +2,7 @@
 <html lang="en">
 <head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Copper Evaluations design</title>
+<title>Spotter design</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700;800&display=swap">
 <style>
 
@@ -350,7 +350,7 @@ textarea.input { min-height: 120px; padding-block: var(--space-3); resize: verti
 </head>
 <body>
 <main class="doc">
-<h1>Copper Evaluations: system design</h1>
+<h1>Spotter: system design</h1>
 <p><strong>Status</strong>: Draft, 2026-09-06
 <strong>Scope</strong>: A local, single-user tool for running and comparing LLM evaluations, with a human review loop and calibrated LLM judges.</p>
 <h2>Goal</h2>
@@ -466,7 +466,7 @@ textarea.input { min-height: 120px; padding-block: var(--space-3); resize: verti
 </tbody></table></div>
 <p>Filter operators: <code>=</code>, <code>!=</code>, <code>&lt;</code>, <code>&lt;=</code>, <code>&gt;</code>, <code>&gt;=</code>, <code>contains</code>, <code>starts_with</code>, <code>in</code>, <code>is_empty</code>.</p>
 <h2>SDK and CLI</h2>
-<pre><code class="language-python">from copper_evals import Eval
+<pre><code class="language-python">from spotter import Eval
 
 def task(item):
     return my_pipeline(item.input[&quot;transcript&quot;])

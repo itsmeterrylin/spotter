@@ -1,4 +1,4 @@
-# Implementation plan: Copper Evaluations skeleton
+# Implementation plan: Spotter skeleton
 
 **Date**: 2026-09-06
 **Type**: feature
@@ -7,7 +7,7 @@
 
 ## Summary
 
-Build the first runnable version of Copper Evaluations: one Bun process that serves the REST API, the MCP endpoint, and server-rendered pages, backed by SQLite. Agents run evals through the SDK and MCP. A person opens deep links to verify results, label traces, and calibrate judges.
+Build the first runnable version of Spotter, the human in the loop for agent-run evals: one Bun process that serves the REST API, the MCP endpoint, and server-rendered pages, backed by SQLite. Agents run evals through the SDK and MCP. A person opens deep links to verify results, label traces, and calibrate judges.
 
 ## Goals
 
@@ -54,7 +54,7 @@ One Bun process. Three entry points share one service layer and one SQLite file.
 flowchart TB
   subgraph Agent side
     A[Coding agent]
-    SDK[evals SDK and CLI<br/>runs task and scorers locally]
+    SDK[spotter SDK and CLI<br/>runs task and scorers locally]
   end
   subgraph Person side
     B[Browser]
@@ -88,14 +88,14 @@ Data flow for one eval loop:
 sequenceDiagram
   autonumber
   participant Agent
-  participant CLI as evals CLI
+  participant CLI as spotter CLI
   participant REST as /api
   participant DB as SQLite
   participant MCP as /mcp
   participant Person
   participant Pages
 
-  Agent->>CLI: bun evals run tagging.ts --baseline A
+  Agent->>CLI: spotter run tagging.ts --baseline A
   CLI->>REST: POST /runs {dataset, name, metadata}
   REST->>DB: insert run
   REST-->>CLI: run B + url
@@ -133,7 +133,7 @@ Three rules keep this simple:
 ```gherkin
 Scenario: Agent runs an eval and hands over links
   Given a dataset "tagging-golden" with 120 items exists
-  When the agent runs `bun evals run evals/tagging.ts --dataset tagging-golden`
+  When the agent runs `spotter run evals/tagging.ts --dataset tagging-golden`
   Then a run is created with one trace per item and scores per trace
   And the CLI prints a summary table with mean, diff, improvements, regressions per score
   And the CLI prints the run URL and the compare URL against the previous run
@@ -172,7 +172,7 @@ Scenario: MCP compare
 8. FR8 Query: read-only SQL over the tables, rejects anything that is not a single SELECT.
 9. FR9 MCP: `list`, `read`, `write`, `compare`; every result includes `url`.
 10. FR10 Pages: runs list, run detail, compare, trace detail, review, judges; every filter and selection lives in the URL.
-11. FR11 SDK and CLI: `defineEval({ dataset, task, scores, metadata })`; `evals run`, `evals compare`; `--no-send` prints only.
+11. FR11 SDK and CLI: `defineEval({ dataset, task, scores, metadata })`; `spotter run`, `spotter compare`; `--no-send` prints only.
 12. FR12 Judge calibration: store human-vs-judge agreement per judge version; compute TPR, TNR, and a bias-corrected pass rate with a bootstrap interval.
 
 ## Deep link contract
@@ -238,7 +238,7 @@ Mounted at `/mcp` with `@hono/mcp`. Same service layer as REST, so behavior cann
 ## SDK and CLI (`packages/evals`)
 
 ```ts
-import { defineEval } from '@copper/evals'
+import { defineEval } from '@spotter/evals'
 
 export default defineEval({
   dataset: 'tagging-golden',
@@ -250,7 +250,7 @@ export default defineEval({
 })
 ```
 
-`bun evals run evals/tagging.ts [--baseline <run_id>] [--no-send]` creates the run, executes task and scores locally, posts traces in batches of 50, prints the summary table and the URLs. `bun evals compare <a> <b>` prints the summary with diffs.
+`spotter run evals/tagging.ts [--baseline <run_id>] [--no-send]` creates the run, executes task and scores locally, posts traces in batches of 50, prints the summary table and the URLs. `spotter compare <a> <b>` prints the summary with diffs.
 
 ## Screens
 
@@ -312,7 +312,7 @@ FROM oven/bun:1.3.9-alpine@sha256:<digest>
 WORKDIR /app
 COPY --from=build /src/app /app
 COPY --from=build /src/node_modules /app/node_modules
-ENV COPPER_DB=/data/copper.sqlite COPPER_PORT=3000 COPPER_BASE_URL=http://localhost:3000
+ENV SPOTTER_DB=/data/spotter.sqlite SPOTTER_PORT=3000 SPOTTER_BASE_URL=http://localhost:3000
 VOLUME /data
 EXPOSE 3000
 USER bun
@@ -323,23 +323,23 @@ CMD ["bun", "src/server.ts"]
 Run it:
 
 ```bash
-docker run -d --name copper-evals -p 3000:3000 -v copper-evals:/data ghcr.io/itsmeterrylin/copper-evaluations:0.1.0
+docker run -d --name spotter -p 3000:3000 -v spotter:/data ghcr.io/itsmeterrylin/spotter:0.1.0
 ```
 
-`COPPER_BASE_URL` matters: every deep link is built from it, so a user behind a reverse proxy sets it to their public origin and the agent's links stay correct.
+`SPOTTER_BASE_URL` matters: every deep link is built from it, so a user behind a reverse proxy sets it to their public origin and the agent's links stay correct.
 
 ### Configuration
 
 | Variable | Default | Purpose |
 |---|---|---|
-| `COPPER_DB` | `/data/copper.sqlite` | SQLite path; the only state |
-| `COPPER_PORT` | `3000` | Listen port |
-| `COPPER_BASE_URL` | `http://localhost:3000` | Origin used in every `url` field |
-| `COPPER_AUTH_TOKEN` | unset | If set, REST and MCP require `Authorization: Bearer`; pages stay open on localhost. Needed before anyone exposes the container beyond their machine. |
+| `SPOTTER_DB` | `/data/spotter.sqlite` | SQLite path; the only state |
+| `SPOTTER_PORT` | `3000` | Listen port |
+| `SPOTTER_BASE_URL` | `http://localhost:3000` | Origin used in every `url` field |
+| `SPOTTER_AUTH_TOKEN` | unset | If set, REST and MCP require `Authorization: Bearer`; pages stay open on localhost. Needed before anyone exposes the container beyond their machine. |
 
 ### Build and publish (GitHub Actions)
 
-1. On a version tag `v*`: `docker buildx build --platform linux/amd64,linux/arm64`, push to `ghcr.io/itsmeterrylin/copper-evaluations` with tags `0.1.0` and `0.1`. No `latest` tag, so consumers pin.
+1. On a version tag `v*`: `docker buildx build --platform linux/amd64,linux/arm64`, push to `ghcr.io/itsmeterrylin/spotter` with tags `0.1.0` and `0.1`. No `latest` tag, so consumers pin.
 2. Generate an SBOM and sign the image with cosign keyless. Both are one action step each.
 3. The same job runs `bun install --frozen-lockfile` with `minimumReleaseAge`, so a poisoned fresh release cannot enter the image.
 4. Renovate or Dependabot opens bump PRs but never merges; the 60-day gate applies to the base image tag too.
@@ -439,22 +439,22 @@ Each phase: at most three tasks, type-check and tests after each task, commit at
 
 **Phase 5: SDK and CLI**
 1. `defineEval`, runner, batch posting, summary table.
-2. `evals run` and `evals compare` commands; `--no-send`.
+2. `spotter run` and `spotter compare` commands; `--no-send`.
 3. Sample eval with seeded items; seed script.
 
 **Phase 6: Judge calibration**
-1. `evals calibrate <judge> --labels <file>`: splits, TPR, TNR, store.
+1. `spotter calibrate <judge> --labels <file>`: splits, TPR, TNR, store.
 2. Bias-corrected pass rate with bootstrap interval in run aggregates.
 3. Aggregates exclude uncalibrated judges; judges page shows status.
 
 **Phase 7: Distribution**
-1. Dockerfile with digest-pinned base, `.dockerignore`, `COPPER_*` config, health check; `docker run` smoke test.
+1. Dockerfile with digest-pinned base, `.dockerignore`, `SPOTTER_*` config, health check; `docker run` smoke test.
 2. Release workflow: multi-arch build, GHCR push on tag, SBOM, cosign signature.
 3. LICENSE, SECURITY.md, CONTRIBUTING.md, sample dataset in the image, README quick start.
 
 ## Success metrics
 
-- `bun evals run` on the sample eval completes in under 5 seconds for 120 items and prints working URLs.
+- `spotter run` on the sample eval completes in under 5 seconds for 120 items and prints working URLs.
 - Every URL in the contract table restores its state in a fresh tab.
 - Labeling 10 traces by keyboard takes under 30 seconds.
 - All four MCP tools return `url` and round-trip against a fresh database.

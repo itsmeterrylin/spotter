@@ -1,6 +1,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Copper Evaluations skeleton</title>
+<title>Spotter skeleton</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700;800&display=swap">
 <style>
 
@@ -346,13 +346,13 @@ textarea.input { min-height: 120px; padding-block: var(--space-3); resize: verti
 
 </style>
 <main class="doc">
-<h1>Implementation plan: Copper Evaluations skeleton</h1>
+<h1>Implementation plan: Spotter skeleton</h1>
 <p><strong>Date</strong>: 2026-09-06
 <strong>Type</strong>: feature
 <strong>Status</strong>: Draft, awaiting review
 <strong>Depends on</strong>: <code>docs/design/eval-tool-design.md</code>, <code>design-system/</code></p>
 <h2>Summary</h2>
-<p>Build the first runnable version of Copper Evaluations: one Bun process that serves the REST API, the MCP endpoint, and server-rendered pages, backed by SQLite. Agents run evals through the SDK and MCP. A person opens deep links to verify results, label traces, and calibrate judges.</p>
+<p>Build the first runnable version of Spotter, the human in the loop for agent-run evals: one Bun process that serves the REST API, the MCP endpoint, and server-rendered pages, backed by SQLite. Agents run evals through the SDK and MCP. A person opens deep links to verify results, label traces, and calibrate judges.</p>
 <h2>Goals</h2>
 <ol>
 <li>An agent can create a dataset, run a task locally, write traces and scores, and compare two runs without touching the UI.</li>
@@ -459,7 +459,7 @@ textarea.input { min-height: 120px; padding-block: var(--space-3); resize: verti
 <div class="diagram"><script type="text/plain" class="diagram-src">flowchart TB
   subgraph Agent side
     A[Coding agent]
-    SDK[evals SDK and CLI<br/>runs task and scorers locally]
+    SDK[spotter SDK and CLI<br/>runs task and scorers locally]
   end
   subgraph Person side
     B[Browser]
@@ -490,14 +490,14 @@ textarea.input { min-height: 120px; padding-block: var(--space-3); resize: verti
 <div class="diagram"><script type="text/plain" class="diagram-src">sequenceDiagram
   autonumber
   participant Agent
-  participant CLI as evals CLI
+  participant CLI as spotter CLI
   participant REST as /api
   participant DB as SQLite
   participant MCP as /mcp
   participant Person
   participant Pages
 
-  Agent->>CLI: bun evals run tagging.ts --baseline A
+  Agent->>CLI: spotter run tagging.ts --baseline A
   CLI->>REST: POST /runs {dataset, name, metadata}
   REST->>DB: insert run
   REST-->>CLI: run B + url
@@ -532,7 +532,7 @@ textarea.input { min-height: 120px; padding-block: var(--space-3); resize: verti
 <h2>User stories</h2>
 <pre><code class="language-gherkin">Scenario: Agent runs an eval and hands over links
   Given a dataset &quot;tagging-golden&quot; with 120 items exists
-  When the agent runs `bun evals run evals/tagging.ts --dataset tagging-golden`
+  When the agent runs `spotter run evals/tagging.ts --dataset tagging-golden`
   Then a run is created with one trace per item and scores per trace
   And the CLI prints a summary table with mean, diff, improvements, regressions per score
   And the CLI prints the run URL and the compare URL against the previous run
@@ -570,7 +570,7 @@ Scenario: MCP compare
 <li>FR8 Query: read-only SQL over the tables, rejects anything that is not a single SELECT.</li>
 <li>FR9 MCP: <code>list</code>, <code>read</code>, <code>write</code>, <code>compare</code>; every result includes <code>url</code>.</li>
 <li>FR10 Pages: runs list, run detail, compare, trace detail, review, judges; every filter and selection lives in the URL.</li>
-<li>FR11 SDK and CLI: <code>defineEval({ dataset, task, scores, metadata })</code>; <code>evals run</code>, <code>evals compare</code>; <code>--no-send</code> prints only.</li>
+<li>FR11 SDK and CLI: <code>defineEval({ dataset, task, scores, metadata })</code>; <code>spotter run</code>, <code>spotter compare</code>; <code>--no-send</code> prints only.</li>
 <li>FR12 Judge calibration: store human-vs-judge agreement per judge version; compute TPR, TNR, and a bias-corrected pass rate with a bootstrap interval.</li>
 </ol>
 <h2>Deep link contract</h2>
@@ -741,7 +741,7 @@ CREATE INDEX score_trace ON score(trace_id, name);
 </tr>
 </tbody></table></div>
 <h2>SDK and CLI (<code>packages/evals</code>)</h2>
-<pre><code class="language-ts">import { defineEval } from &#39;@copper/evals&#39;
+<pre><code class="language-ts">import { defineEval } from &#39;@spotter/evals&#39;
 
 export default defineEval({
   dataset: &#39;tagging-golden&#39;,
@@ -752,7 +752,7 @@ export default defineEval({
   ],
 })
 </code></pre>
-<p><code>bun evals run evals/tagging.ts [--baseline &lt;run_id&gt;] [--no-send]</code> creates the run, executes task and scores locally, posts traces in batches of 50, prints the summary table and the URLs. <code>bun evals compare &lt;a&gt; &lt;b&gt;</code> prints the summary with diffs.</p>
+<p><code>spotter run evals/tagging.ts [--baseline &lt;run_id&gt;] [--no-send]</code> creates the run, executes task and scores locally, posts traces in batches of 50, prints the summary table and the URLs. <code>spotter compare &lt;a&gt; &lt;b&gt;</code> prints the summary with diffs.</p>
 <h2>Screens</h2>
 <p>Each screen follows the design system: four type sizes, one primary action, 72px rows, icons carry meaning, no helper prose.</p>
 <h3>Runs (<code>/runs</code>, <code>/runs/{id}</code>)</h3>
@@ -813,7 +813,7 @@ FROM oven/bun:1.3.9-alpine@sha256:&lt;digest&gt;
 WORKDIR /app
 COPY --from=build /src/app /app
 COPY --from=build /src/node_modules /app/node_modules
-ENV COPPER_DB=/data/copper.sqlite COPPER_PORT=3000 COPPER_BASE_URL=http://localhost:3000
+ENV SPOTTER_DB=/data/spotter.sqlite SPOTTER_PORT=3000 SPOTTER_BASE_URL=http://localhost:3000
 VOLUME /data
 EXPOSE 3000
 USER bun
@@ -821,9 +821,9 @@ HEALTHCHECK CMD wget -qO- http://127.0.0.1:3000/health || exit 1
 CMD [&quot;bun&quot;, &quot;src/server.ts&quot;]
 </code></pre>
 <p>Run it:</p>
-<pre><code class="language-bash">docker run -d --name copper-evals -p 3000:3000 -v copper-evals:/data ghcr.io/itsmeterrylin/copper-evaluations:0.1.0
+<pre><code class="language-bash">docker run -d --name spotter -p 3000:3000 -v spotter:/data ghcr.io/itsmeterrylin/spotter:0.1.0
 </code></pre>
-<p><code>COPPER_BASE_URL</code> matters: every deep link is built from it, so a user behind a reverse proxy sets it to their public origin and the agent&#39;s links stay correct.</p>
+<p><code>SPOTTER_BASE_URL</code> matters: every deep link is built from it, so a user behind a reverse proxy sets it to their public origin and the agent&#39;s links stay correct.</p>
 <h3>Configuration</h3>
 <div class="scroll"><table>
 <thead>
@@ -834,29 +834,29 @@ CMD [&quot;bun&quot;, &quot;src/server.ts&quot;]
 </tr>
 </thead>
 <tbody><tr>
-<td><code>COPPER_DB</code></td>
-<td><code>/data/copper.sqlite</code></td>
+<td><code>SPOTTER_DB</code></td>
+<td><code>/data/spotter.sqlite</code></td>
 <td>SQLite path; the only state</td>
 </tr>
 <tr>
-<td><code>COPPER_PORT</code></td>
+<td><code>SPOTTER_PORT</code></td>
 <td><code>3000</code></td>
 <td>Listen port</td>
 </tr>
 <tr>
-<td><code>COPPER_BASE_URL</code></td>
+<td><code>SPOTTER_BASE_URL</code></td>
 <td><code>http://localhost:3000</code></td>
 <td>Origin used in every <code>url</code> field</td>
 </tr>
 <tr>
-<td><code>COPPER_AUTH_TOKEN</code></td>
+<td><code>SPOTTER_AUTH_TOKEN</code></td>
 <td>unset</td>
 <td>If set, REST and MCP require <code>Authorization: Bearer</code>; pages stay open on localhost. Needed before anyone exposes the container beyond their machine.</td>
 </tr>
 </tbody></table></div>
 <h3>Build and publish (GitHub Actions)</h3>
 <ol>
-<li>On a version tag <code>v*</code>: <code>docker buildx build --platform linux/amd64,linux/arm64</code>, push to <code>ghcr.io/itsmeterrylin/copper-evaluations</code> with tags <code>0.1.0</code> and <code>0.1</code>. No <code>latest</code> tag, so consumers pin.</li>
+<li>On a version tag <code>v*</code>: <code>docker buildx build --platform linux/amd64,linux/arm64</code>, push to <code>ghcr.io/itsmeterrylin/spotter</code> with tags <code>0.1.0</code> and <code>0.1</code>. No <code>latest</code> tag, so consumers pin.</li>
 <li>Generate an SBOM and sign the image with cosign keyless. Both are one action step each.</li>
 <li>The same job runs <code>bun install --frozen-lockfile</code> with <code>minimumReleaseAge</code>, so a poisoned fresh release cannot enter the image.</li>
 <li>Renovate or Dependabot opens bump PRs but never merges; the 60-day gate applies to the base image tag too.</li>
@@ -993,24 +993,24 @@ evals/
 <p><strong>Phase 5: SDK and CLI</strong></p>
 <ol>
 <li><code>defineEval</code>, runner, batch posting, summary table.</li>
-<li><code>evals run</code> and <code>evals compare</code> commands; <code>--no-send</code>.</li>
+<li><code>spotter run</code> and <code>spotter compare</code> commands; <code>--no-send</code>.</li>
 <li>Sample eval with seeded items; seed script.</li>
 </ol>
 <p><strong>Phase 6: Judge calibration</strong></p>
 <ol>
-<li><code>evals calibrate &lt;judge&gt; --labels &lt;file&gt;</code>: splits, TPR, TNR, store.</li>
+<li><code>spotter calibrate &lt;judge&gt; --labels &lt;file&gt;</code>: splits, TPR, TNR, store.</li>
 <li>Bias-corrected pass rate with bootstrap interval in run aggregates.</li>
 <li>Aggregates exclude uncalibrated judges; judges page shows status.</li>
 </ol>
 <p><strong>Phase 7: Distribution</strong></p>
 <ol>
-<li>Dockerfile with digest-pinned base, <code>.dockerignore</code>, <code>COPPER_*</code> config, health check; <code>docker run</code> smoke test.</li>
+<li>Dockerfile with digest-pinned base, <code>.dockerignore</code>, <code>SPOTTER_*</code> config, health check; <code>docker run</code> smoke test.</li>
 <li>Release workflow: multi-arch build, GHCR push on tag, SBOM, cosign signature.</li>
 <li>LICENSE, SECURITY.md, CONTRIBUTING.md, sample dataset in the image, README quick start.</li>
 </ol>
 <h2>Success metrics</h2>
 <ul>
-<li><code>bun evals run</code> on the sample eval completes in under 5 seconds for 120 items and prints working URLs.</li>
+<li><code>spotter run</code> on the sample eval completes in under 5 seconds for 120 items and prints working URLs.</li>
 <li>Every URL in the contract table restores its state in a fresh tab.</li>
 <li>Labeling 10 traces by keyboard takes under 30 seconds.</li>
 <li>All four MCP tools return <code>url</code> and round-trip against a fresh database.</li>

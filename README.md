@@ -1,6 +1,6 @@
-# Copper Evaluations
+# Spotter
 
-A local eval tool for LLM products: run a test set, score every result, compare runs by test case, and calibrate LLM judges against human review.
+The human in the loop for agent-run evals. Spotter is a local tool for LLM products: run a test set, score every result, compare runs by test case, and calibrate LLM judges against human review.
 
 | Path | Contents |
 |---|---|

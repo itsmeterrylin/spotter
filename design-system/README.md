@@ -1,4 +1,4 @@
-# Copper Evaluations design system
+# Spotter design system
 
 Tokens and component contracts in TypeScript. CSS is generated, never hand-edited.
 
