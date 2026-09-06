@@ -45,7 +45,6 @@ open preview/index.html
 | `sora` | Sora | Manrope |
 | `rubik` | Rubik | Lexend |
 | `open` | Open Sans | Open Sans |
-| `sf` | San Francisco | San Francisco |
 | `jakarta` | Plus Jakarta Sans | Figtree |
 | `outfit` | Outfit | Source Sans 3 |
 | `grotesk` | Space Grotesk | IBM Plex Sans |

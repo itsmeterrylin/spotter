@@ -102,8 +102,6 @@ const monoFallback = `ui-monospace, SFMono-Regular, Menlo, Consolas, monospace`;
 
 /**
  * Candidate font pairs. Pick one; the others stay for comparison.
- * San Francisco is the Apple system face. It has no web download, so the
- * stack resolves to SF on Apple devices and to the platform sans elsewhere.
  */
 export const fontPairs: readonly FontPair[] = [
   {
@@ -134,15 +132,6 @@ export const fontPairs: readonly FontPair[] = [
     mono: `"JetBrains Mono", ${monoFallback}`,
     googleFontsUrl:
       'https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap',
-    headingWeight: 'bold',
-  },
-  {
-    id: 'sf',
-    label: 'San Francisco',
-    heading: `-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", system-ui, "Segoe UI", Roboto, sans-serif`,
-    body: `-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", system-ui, "Segoe UI", Roboto, sans-serif`,
-    mono: `ui-monospace, "SF Mono", Menlo, Consolas, monospace`,
-    googleFontsUrl: null,
     headingWeight: 'bold',
   },
   {

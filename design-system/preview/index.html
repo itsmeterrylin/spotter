@@ -208,12 +208,6 @@
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   --font-heading-weight: 700;
 }
-:root[data-font="sf"] {
-  --font-heading: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", system-ui, "Segoe UI", Roboto, sans-serif;
-  --font-body: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", system-ui, "Segoe UI", Roboto, sans-serif;
-  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-  --font-heading-weight: 700;
-}
 :root[data-font="jakarta"] {
   --font-heading: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --font-body: Figtree, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -661,7 +655,7 @@ textarea.input { min-height: 120px; padding-block: var(--space-3); resize: verti
 
 <script>
 (function () {
-  var pairs = [{"id":"sora","label":"Sora + Manrope"},{"id":"rubik","label":"Rubik + Lexend"},{"id":"open","label":"Open Sans"},{"id":"sf","label":"San Francisco"},{"id":"jakarta","label":"Plus Jakarta Sans + Figtree"},{"id":"outfit","label":"Outfit + Source Sans 3"},{"id":"grotesk","label":"Space Grotesk + IBM Plex Sans"},{"id":"dm","label":"DM Sans + DM Mono"}];
+  var pairs = [{"id":"sora","label":"Sora + Manrope"},{"id":"rubik","label":"Rubik + Lexend"},{"id":"open","label":"Open Sans"},{"id":"jakarta","label":"Plus Jakarta Sans + Figtree"},{"id":"outfit","label":"Outfit + Source Sans 3"},{"id":"grotesk","label":"Space Grotesk + IBM Plex Sans"},{"id":"dm","label":"DM Sans + DM Mono"}];
   var root = document.documentElement;
   var store = { get: function (k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set: function (k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
 
