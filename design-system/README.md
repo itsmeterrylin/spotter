@@ -42,13 +42,11 @@ open preview/index.html
 
 | Id | Heading | Body |
 |---|---|---|
-| `brand-sf` | Cooper Hewitt (self-hosted, OFL) | San Francisco (system) |
+| `sora` | Sora | Manrope |
+| `rubik` | Rubik | Lexend |
 | `sf` | San Francisco | San Francisco |
-| `cooper-figtree` | Cooper Hewitt | Figtree |
 | `jakarta` | Plus Jakarta Sans | Figtree |
 | `outfit` | Outfit | Source Sans 3 |
 | `grotesk` | Space Grotesk | IBM Plex Sans |
 | `fraunces` | Fraunces | Work Sans |
 | `dm` | DM Sans | DM Sans |
-
-Cooper Hewitt files in `preview/fonts/` are licensed under the SIL Open Font License 1.1.

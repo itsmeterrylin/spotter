@@ -4,9 +4,9 @@ Eight candidates. Toggle between them in `design-system/preview/index.html`. Scr
 
 | Id | Heading | Body | Character |
 |---|---|---|---|
-| `brand-sf` | Cooper Hewitt | San Francisco | What the Copper iOS app uses. Default. |
+| `sora` | Sora | Manrope | Airy geometric headings, calm wide body. Default. |
+| `rubik` | Rubik | Lexend | Rounded headings, body built for reading ease. |
 | `sf` | San Francisco | San Francisco | Pure Apple. Segoe or Roboto on other platforms. |
-| `cooper-figtree` | Cooper Hewitt | Figtree | Same look on every platform. |
 | `jakarta` | Plus Jakarta Sans | Figtree | Rounded, consumer feel. |
 | `outfit` | Outfit | Source Sans 3 | Geometric display, humanist body. |
 | `grotesk` | Space Grotesk | IBM Plex Sans | Quirky terminals on the headings, sober body. |
@@ -17,11 +17,11 @@ San Francisco has no web download. The stack is `-apple-system, "SF Pro Text", s
 
 ## Type specimen
 
-![Cooper Hewitt + San Francisco](../../design-system/preview/screenshots/type-brand-sf.png)
+![Sora + Manrope](../../design-system/preview/screenshots/type-sora.png)
+
+![Rubik + Lexend](../../design-system/preview/screenshots/type-rubik.png)
 
 ![San Francisco](../../design-system/preview/screenshots/type-sf.png)
-
-![Cooper Hewitt + Figtree](../../design-system/preview/screenshots/type-cooper-figtree.png)
 
 ![Plus Jakarta Sans + Figtree](../../design-system/preview/screenshots/type-jakarta.png)
 
@@ -37,9 +37,9 @@ San Francisco has no web download. The stack is `-apple-system, "SF Pro Text", s
 
 | Pair | Light | Dark |
 |---|---|---|
-| brand-sf | [light](../../design-system/preview/screenshots/font-brand-sf-light.png) | [dark](../../design-system/preview/screenshots/font-brand-sf-dark.png) |
+| sora | [light](../../design-system/preview/screenshots/font-sora-light.png) | [dark](../../design-system/preview/screenshots/font-sora-dark.png) |
+| rubik | [light](../../design-system/preview/screenshots/font-rubik-light.png) | |
 | sf | [light](../../design-system/preview/screenshots/font-sf-light.png) | |
-| cooper-figtree | [light](../../design-system/preview/screenshots/font-cooper-figtree-light.png) | |
 | jakarta | [light](../../design-system/preview/screenshots/font-jakarta-light.png) | |
 | outfit | [light](../../design-system/preview/screenshots/font-outfit-light.png) | |
 | grotesk | [light](../../design-system/preview/screenshots/font-grotesk-light.png) | |
@@ -48,4 +48,4 @@ San Francisco has no web download. The stack is `-apple-system, "SF Pro Text", s
 
 ## Recommendation
 
-`brand-sf` for continuity with the app, `fraunces` if the eval tool should feel like a different product. Change `defaultFontPairId` in `design-system/src/tokens/typography.ts` to lock the choice.
+`sora` as the default. `rubik` if the review screen needs to feel even lighter. Change `defaultFontPairId` in `design-system/src/tokens/typography.ts` to lock the choice.

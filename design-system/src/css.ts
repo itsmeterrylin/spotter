@@ -62,7 +62,7 @@ export function tokensCss(): string {
     .map(([k, v]) => `  --icon-${k}: ${v}px;`)
     .join('\n');
   const dens = Object.entries(density)
-    .filter(([, v]) => typeof v === 'number')
+    .filter(([k, v]) => typeof v === 'number' && !k.startsWith('max'))
     .map(([k, v]) => `  --${kebab(k)}: ${v}px;`)
     .join('\n');
   const containers = Object.entries(container)

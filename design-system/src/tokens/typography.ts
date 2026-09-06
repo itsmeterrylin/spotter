@@ -105,21 +105,26 @@ const monoFallback = `ui-monospace, SFMono-Regular, Menlo, Consolas, monospace`;
  * Candidate font pairs. Pick one; the others stay for comparison.
  * San Francisco is the Apple system face. It has no web download, so the
  * stack resolves to SF on Apple devices and to the platform sans elsewhere.
- * Cooper Hewitt is the face the Copper iOS app ships.
  */
 export const fontPairs: readonly FontPair[] = [
   {
-    id: 'brand-sf',
-    label: 'Cooper Hewitt + San Francisco',
-    heading: `"Cooper Hewitt", ${sansFallback}`,
-    body: `-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", system-ui, "Segoe UI", Roboto, sans-serif`,
-    mono: `ui-monospace, "SF Mono", Menlo, Consolas, monospace`,
-    googleFontsUrl: null,
-    fontFace: `
-@font-face { font-family: "Cooper Hewitt"; font-weight: 400; src: url("fonts/CooperHewitt-Book.otf") format("opentype"); }
-@font-face { font-family: "Cooper Hewitt"; font-weight: 500; src: url("fonts/CooperHewitt-Medium.otf") format("opentype"); }
-@font-face { font-family: "Cooper Hewitt"; font-weight: 600; src: url("fonts/CooperHewitt-Semibold.otf") format("opentype"); }
-@font-face { font-family: "Cooper Hewitt"; font-weight: 700; src: url("fonts/CooperHewitt-Bold.otf") format("opentype"); }`,
+    id: 'sora',
+    label: 'Sora + Manrope',
+    heading: `Sora, ${sansFallback}`,
+    body: `Manrope, ${sansFallback}`,
+    mono: `"JetBrains Mono", ${monoFallback}`,
+    googleFontsUrl:
+      'https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap',
+    headingWeight: 'bold',
+  },
+  {
+    id: 'rubik',
+    label: 'Rubik + Lexend',
+    heading: `Rubik, ${sansFallback}`,
+    body: `Lexend, ${sansFallback}`,
+    mono: `"JetBrains Mono", ${monoFallback}`,
+    googleFontsUrl:
+      'https://fonts.googleapis.com/css2?family=Rubik:wght@500;600;700&family=Lexend:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap',
     headingWeight: 'bold',
   },
   {
@@ -129,16 +134,6 @@ export const fontPairs: readonly FontPair[] = [
     body: `-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", system-ui, "Segoe UI", Roboto, sans-serif`,
     mono: `ui-monospace, "SF Mono", Menlo, Consolas, monospace`,
     googleFontsUrl: null,
-    headingWeight: 'bold',
-  },
-  {
-    id: 'cooper-figtree',
-    label: 'Cooper Hewitt + Figtree',
-    heading: `"Cooper Hewitt", ${sansFallback}`,
-    body: `Figtree, ${sansFallback}`,
-    mono: `"JetBrains Mono", ${monoFallback}`,
-    googleFontsUrl:
-      'https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap',
     headingWeight: 'bold',
   },
   {
@@ -193,7 +188,7 @@ export const fontPairs: readonly FontPair[] = [
   },
 ] as const;
 
-export const defaultFontPairId = 'brand-sf';
+export const defaultFontPairId = 'sora';
 
 export const fontFeatures = {
   /** Tabular, lining numerals for any number that sits in a column. */
