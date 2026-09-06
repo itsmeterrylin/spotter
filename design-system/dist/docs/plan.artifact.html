@@ -325,7 +325,16 @@ textarea.input { min-height: 120px; padding-block: var(--space-3); resize: verti
 .doc code { font-family: var(--font-mono); font-size: var(--text-caption); background: var(--color-surface-sunken); padding: 2px 6px; border-radius: 6px; }
 .doc pre { background: var(--color-surface-sunken); border-radius: var(--radius-md); padding: var(--space-4) var(--space-6); overflow-x: auto; margin: 0 0 var(--space-6); }
 .doc pre code { background: none; padding: 0; font-size: var(--text-caption); line-height: 1.6; }
-.doc pre.mermaid { background: var(--color-surface); border: 1px solid var(--color-border); padding: var(--space-6); display: flex; justify-content: center; }
+.doc .diagram { position: relative; margin: 0 0 var(--space-6); }
+.doc pre.mermaid { background: var(--color-surface); border: 1px solid var(--color-border); padding: var(--space-6); overflow: auto; margin: 0; cursor: zoom-in; -webkit-overflow-scrolling: touch; }
+.doc pre.mermaid svg { max-width: none !important; display: block; }
+.doc .diagram-open { position: absolute; top: var(--space-3); right: var(--space-3); }
+.zoom { position: fixed; inset: 0; z-index: 100; background: var(--color-canvas); display: none; flex-direction: column; }
+.zoom[data-open] { display: flex; }
+.zoom-bar { display: flex; gap: var(--space-3); align-items: center; padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--color-border); background: var(--color-surface); }
+.zoom-bar .grow { flex: 1; }
+.zoom-body { flex: 1; overflow: auto; padding: var(--space-6); touch-action: pan-x pan-y pinch-zoom; }
+.zoom-body svg { max-width: none !important; display: block; }
 .doc .scroll { overflow-x: auto; margin: 0 0 var(--space-6); }
 .doc table { border-collapse: collapse; width: 100%; font-size: var(--text-caption); }
 .doc th { text-align: left; font-weight: 600; color: var(--color-ink2); padding: var(--space-3) var(--space-4); border-bottom: 2px solid var(--color-border); white-space: nowrap; }
@@ -446,7 +455,7 @@ textarea.input { min-height: 120px; padding-block: var(--space-3); resize: verti
 </ol>
 <h2>Architecture</h2>
 <p>One Bun process. Three entry points share one service layer and one SQLite file. The agent talks to MCP or REST. The person talks to the pages. Nothing talks to the database except the repositories.</p>
-<pre class="mermaid">flowchart LR
+<div class="diagram"><pre class="mermaid">flowchart TB
   subgraph Agent side
     A[Coding agent]
     SDK[evals SDK and CLI<br/>runs task and scorers locally]
@@ -475,9 +484,9 @@ textarea.input { min-height: 120px; padding-block: var(--space-3); resize: verti
   CLIENT -. "shipped with pages" .-> B
   MCP -- "results carry url" --> A
   A -- "sends url" --> B
-</pre>
+</pre><button type="button" class="btn btn-secondary btn-compact diagram-open" data-zoom>Zoom</button></div>
 <p>Data flow for one eval loop:</p>
-<pre class="mermaid">sequenceDiagram
+<div class="diagram"><pre class="mermaid">sequenceDiagram
   autonumber
   participant Agent
   participant CLI as evals CLI
@@ -512,7 +521,7 @@ textarea.input { min-height: 120px; padding-block: var(--space-3); resize: verti
   REST->>DB: insert human score
   Agent->>MCP: list {type: traces, filters: [source = human]}
   MCP-->>Agent: labeled traces + urls, feeds judge calibration
-</pre>
+</pre><button type="button" class="btn btn-secondary btn-compact diagram-open" data-zoom>Zoom</button></div>
 <p>Three rules keep this simple:</p>
 <ol>
 <li><strong>One service layer.</strong> MCP, REST, and pages call the same functions, so a run summary is identical no matter who asked.</li>
@@ -786,8 +795,85 @@ export default defineEval({
 <li>Error: inline line under the control in <code>fail-ink</code>, with what to do.</li>
 <li>Accessibility: every icon has an <code>aria-label</code> or is hidden; verdict buttons are real buttons; focus ring from the tokens; Dynamic Type honored because sizes are in px on a 16px floor and the page reflows.</li>
 </ul>
+<h2>Distribution: open source as a Docker image</h2>
+<p>The app is one process with one SQLite file, so the image is one container with one volume. No external database, no sidecars.</p>
+<h3>Image</h3>
+<pre><code class="language-dockerfile"># Dockerfile (multi-stage; base pinned by digest, not tag)
+FROM oven/bun:1.3.9-alpine@sha256:&lt;digest&gt; AS build
+WORKDIR /src
+COPY bunfig.toml package.json bun.lock ./
+COPY app/package.json app/
+COPY packages/evals/package.json packages/evals/
+RUN bun install --frozen-lockfile
+COPY . .
+RUN bun run build            # copies system.css, type-checks, runs tests
+
+FROM oven/bun:1.3.9-alpine@sha256:&lt;digest&gt;
+WORKDIR /app
+COPY --from=build /src/app /app
+COPY --from=build /src/node_modules /app/node_modules
+ENV COPPER_DB=/data/copper.sqlite COPPER_PORT=3000 COPPER_BASE_URL=http://localhost:3000
+VOLUME /data
+EXPOSE 3000
+USER bun
+HEALTHCHECK CMD wget -qO- http://127.0.0.1:3000/health || exit 1
+CMD [&quot;bun&quot;, &quot;src/server.ts&quot;]
+</code></pre>
+<p>Run it:</p>
+<pre><code class="language-bash">docker run -d --name copper-evals -p 3000:3000 -v copper-evals:/data ghcr.io/itsmeterrylin/copper-evaluations:0.1.0
+</code></pre>
+<p><code>COPPER_BASE_URL</code> matters: every deep link is built from it, so a user behind a reverse proxy sets it to their public origin and the agent&#39;s links stay correct.</p>
+<h3>Configuration</h3>
+<div class="scroll"><table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Default</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>COPPER_DB</code></td>
+<td><code>/data/copper.sqlite</code></td>
+<td>SQLite path; the only state</td>
+</tr>
+<tr>
+<td><code>COPPER_PORT</code></td>
+<td><code>3000</code></td>
+<td>Listen port</td>
+</tr>
+<tr>
+<td><code>COPPER_BASE_URL</code></td>
+<td><code>http://localhost:3000</code></td>
+<td>Origin used in every <code>url</code> field</td>
+</tr>
+<tr>
+<td><code>COPPER_AUTH_TOKEN</code></td>
+<td>unset</td>
+<td>If set, REST and MCP require <code>Authorization: Bearer</code>; pages stay open on localhost. Needed before anyone exposes the container beyond their machine.</td>
+</tr>
+</tbody></table></div>
+<h3>Build and publish (GitHub Actions)</h3>
+<ol>
+<li>On a version tag <code>v*</code>: <code>docker buildx build --platform linux/amd64,linux/arm64</code>, push to <code>ghcr.io/itsmeterrylin/copper-evaluations</code> with tags <code>0.1.0</code> and <code>0.1</code>. No <code>latest</code> tag, so consumers pin.</li>
+<li>Generate an SBOM and sign the image with cosign keyless. Both are one action step each.</li>
+<li>The same job runs <code>bun install --frozen-lockfile</code> with <code>minimumReleaseAge</code>, so a poisoned fresh release cannot enter the image.</li>
+<li>Renovate or Dependabot opens bump PRs but never merges; the 60-day gate applies to the base image tag too.</li>
+</ol>
+<h3>Repo hygiene for open source</h3>
+<ul>
+<li><code>LICENSE</code>: MIT or Apache-2.0. Apache-2.0 if you want the patent grant; MIT if you want the shortest file.</li>
+<li><code>SECURITY.md</code> with a contact for reports, <code>CONTRIBUTING.md</code> with the dependency policy, <code>CODEOWNERS</code> with you.</li>
+<li>No telemetry, no outbound calls except the LLM provider the user configures for judges.</li>
+<li>Sample dataset and sample eval ship in the image so <code>docker run</code> shows a working compare view within a minute.</li>
+<li>Versioning: semver; the REST and MCP surface is the contract. Breaking changes bump the major.</li>
+</ul>
+<h3>Alternative for users without Docker</h3>
+<p><code>bun build --compile</code> produces a single executable per platform. Attach the three binaries (macOS arm64, Linux amd64, Linux arm64) to each GitHub release. Same code, no runtime install.</p>
 <h2>Affected files (all new)</h2>
-<pre><code>app/
+<pre><code>Dockerfile, .dockerignore, .github/workflows/release.yml, LICENSE, SECURITY.md, CONTRIBUTING.md, CODEOWNERS
+bunfig.toml, .bun-version
+app/
   package.json                 bun workspace root
   src/server.ts                Hono app: pages, /api, /mcp, static
   src/db/schema.sql
@@ -915,6 +1001,12 @@ evals/
 <li>Bias-corrected pass rate with bootstrap interval in run aggregates.</li>
 <li>Aggregates exclude uncalibrated judges; judges page shows status.</li>
 </ol>
+<p><strong>Phase 7: Distribution</strong></p>
+<ol>
+<li>Dockerfile with digest-pinned base, <code>.dockerignore</code>, <code>COPPER_*</code> config, health check; <code>docker run</code> smoke test.</li>
+<li>Release workflow: multi-arch build, GHCR push on tag, SBOM, cosign signature.</li>
+<li>LICENSE, SECURITY.md, CONTRIBUTING.md, sample dataset in the image, README quick start.</li>
+</ol>
 <h2>Success metrics</h2>
 <ul>
 <li><code>bun evals run</code> on the sample eval completes in under 5 seconds for 120 items and prints working URLs.</li>
@@ -924,3 +1016,38 @@ evals/
 </ul>
 
 </main>
+<div class="zoom" id="zoom" role="dialog" aria-label="Diagram">
+  <div class="zoom-bar"><button type="button" class="btn btn-secondary btn-compact" data-zoom-out aria-label="Zoom out">−</button><button type="button" class="btn btn-secondary btn-compact" data-zoom-in aria-label="Zoom in">+</button><span class="t-caption muted" id="zoomLevel">100%</span><span class="grow"></span><button type="button" class="btn btn-primary btn-compact" data-zoom-close>Close</button></div>
+  <div class="zoom-body" id="zoomBody"></div>
+</div>
+<script>
+(function () {
+  var MIN_WIDTH = 960;
+  function size(svg, scale) {
+    var vb = svg.viewBox && svg.viewBox.baseVal;
+    if (!vb || !vb.width) return;
+    var base = Math.max(1, MIN_WIDTH / vb.width);
+    svg.setAttribute('width', Math.round(vb.width * base * scale));
+    svg.setAttribute('height', Math.round(vb.height * base * scale));
+    svg.style.maxWidth = 'none';
+  }
+  function fix(root) { root.querySelectorAll('pre.mermaid svg').forEach(function (s) { if (!s.dataset.sized) { s.dataset.sized = '1'; size(s, 1); } }); }
+  fix(document);
+  new MutationObserver(function () { fix(document); }).observe(document.body, { childList: true, subtree: true });
+
+  var zoom = document.getElementById('zoom'), body = document.getElementById('zoomBody'), level = document.getElementById('zoomLevel');
+  var scale = 1, current = null;
+  function render() { if (!current) return; size(current, scale); level.textContent = Math.round(scale * 100) + '%'; }
+  function open(svg) { current = svg.cloneNode(true); current.dataset.sized = '1'; body.innerHTML = ''; body.appendChild(current); scale = 1; render(); zoom.setAttribute('data-open', ''); document.body.style.overflow = 'hidden'; }
+  function close() { zoom.removeAttribute('data-open'); document.body.style.overflow = ''; }
+  document.querySelectorAll('.diagram').forEach(function (d) {
+    var go = function () { var svg = d.querySelector('svg'); if (svg) open(svg); };
+    d.querySelector('[data-zoom]').addEventListener('click', go);
+    d.querySelector('pre.mermaid').addEventListener('click', go);
+  });
+  document.querySelector('[data-zoom-in]').addEventListener('click', function () { scale = Math.min(4, scale * 1.25); render(); });
+  document.querySelector('[data-zoom-out]').addEventListener('click', function () { scale = Math.max(0.5, scale / 1.25); render(); });
+  document.querySelector('[data-zoom-close]').addEventListener('click', close);
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
+})();
+</script>

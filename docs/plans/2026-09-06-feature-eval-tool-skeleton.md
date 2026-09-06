@@ -51,7 +51,7 @@ Pinned to exact versions. A version is adopted only after it has been public for
 One Bun process. Three entry points share one service layer and one SQLite file. The agent talks to MCP or REST. The person talks to the pages. Nothing talks to the database except the repositories.
 
 ```mermaid
-flowchart LR
+flowchart TB
   subgraph Agent side
     A[Coding agent]
     SDK[evals SDK and CLI<br/>runs task and scorers locally]
@@ -291,9 +291,76 @@ Each screen follows the design system: four type sizes, one primary action, 72px
 - Error: inline line under the control in `fail-ink`, with what to do.
 - Accessibility: every icon has an `aria-label` or is hidden; verdict buttons are real buttons; focus ring from the tokens; Dynamic Type honored because sizes are in px on a 16px floor and the page reflows.
 
+## Distribution: open source as a Docker image
+
+The app is one process with one SQLite file, so the image is one container with one volume. No external database, no sidecars.
+
+### Image
+
+```dockerfile
+# Dockerfile (multi-stage; base pinned by digest, not tag)
+FROM oven/bun:1.3.9-alpine@sha256:<digest> AS build
+WORKDIR /src
+COPY bunfig.toml package.json bun.lock ./
+COPY app/package.json app/
+COPY packages/evals/package.json packages/evals/
+RUN bun install --frozen-lockfile
+COPY . .
+RUN bun run build            # copies system.css, type-checks, runs tests
+
+FROM oven/bun:1.3.9-alpine@sha256:<digest>
+WORKDIR /app
+COPY --from=build /src/app /app
+COPY --from=build /src/node_modules /app/node_modules
+ENV COPPER_DB=/data/copper.sqlite COPPER_PORT=3000 COPPER_BASE_URL=http://localhost:3000
+VOLUME /data
+EXPOSE 3000
+USER bun
+HEALTHCHECK CMD wget -qO- http://127.0.0.1:3000/health || exit 1
+CMD ["bun", "src/server.ts"]
+```
+
+Run it:
+
+```bash
+docker run -d --name copper-evals -p 3000:3000 -v copper-evals:/data ghcr.io/itsmeterrylin/copper-evaluations:0.1.0
+```
+
+`COPPER_BASE_URL` matters: every deep link is built from it, so a user behind a reverse proxy sets it to their public origin and the agent's links stay correct.
+
+### Configuration
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `COPPER_DB` | `/data/copper.sqlite` | SQLite path; the only state |
+| `COPPER_PORT` | `3000` | Listen port |
+| `COPPER_BASE_URL` | `http://localhost:3000` | Origin used in every `url` field |
+| `COPPER_AUTH_TOKEN` | unset | If set, REST and MCP require `Authorization: Bearer`; pages stay open on localhost. Needed before anyone exposes the container beyond their machine. |
+
+### Build and publish (GitHub Actions)
+
+1. On a version tag `v*`: `docker buildx build --platform linux/amd64,linux/arm64`, push to `ghcr.io/itsmeterrylin/copper-evaluations` with tags `0.1.0` and `0.1`. No `latest` tag, so consumers pin.
+2. Generate an SBOM and sign the image with cosign keyless. Both are one action step each.
+3. The same job runs `bun install --frozen-lockfile` with `minimumReleaseAge`, so a poisoned fresh release cannot enter the image.
+4. Renovate or Dependabot opens bump PRs but never merges; the 60-day gate applies to the base image tag too.
+
+### Repo hygiene for open source
+
+- `LICENSE`: MIT or Apache-2.0. Apache-2.0 if you want the patent grant; MIT if you want the shortest file.
+- `SECURITY.md` with a contact for reports, `CONTRIBUTING.md` with the dependency policy, `CODEOWNERS` with you.
+- No telemetry, no outbound calls except the LLM provider the user configures for judges.
+- Sample dataset and sample eval ship in the image so `docker run` shows a working compare view within a minute.
+- Versioning: semver; the REST and MCP surface is the contract. Breaking changes bump the major.
+
+### Alternative for users without Docker
+
+`bun build --compile` produces a single executable per platform. Attach the three binaries (macOS arm64, Linux amd64, Linux arm64) to each GitHub release. Same code, no runtime install.
+
 ## Affected files (all new)
 
 ```
+Dockerfile, .dockerignore, .github/workflows/release.yml, LICENSE, SECURITY.md, CONTRIBUTING.md, CODEOWNERS
+bunfig.toml, .bun-version
 app/
   package.json                 bun workspace root
   src/server.ts                Hono app: pages, /api, /mcp, static
@@ -379,6 +446,11 @@ Each phase: at most three tasks, type-check and tests after each task, commit at
 1. `evals calibrate <judge> --labels <file>`: splits, TPR, TNR, store.
 2. Bias-corrected pass rate with bootstrap interval in run aggregates.
 3. Aggregates exclude uncalibrated judges; judges page shows status.
+
+**Phase 7: Distribution**
+1. Dockerfile with digest-pinned base, `.dockerignore`, `COPPER_*` config, health check; `docker run` smoke test.
+2. Release workflow: multi-arch build, GHCR push on tag, SBOM, cosign signature.
+3. LICENSE, SECURITY.md, CONTRIBUTING.md, sample dataset in the image, README quick start.
 
 ## Success metrics
 
