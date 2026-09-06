@@ -64,14 +64,17 @@ const inlineFonts = (css: string): string =>
     return `url("data:font/otf;base64,${bytes.toString('base64')}")`;
   });
 
+const PLAN_URL_LOCAL = '../dist/docs/plan.html';
+const PLAN_URL_PUBLISHED = 'https://claude.ai/code/artifact/c631c3f9-3e70-41a4-93af-4ec80c604329';
+
 const body = template
   .replace('<!-- FONT_LINKS -->', fontLinks)
   .replace('/* SYSTEM_CSS */', inlineFonts(allCss()))
   .replace('/* FONT_PAIRS_JSON */', fontPairJson)
   .replace('<!-- ICON_SPRITE -->', iconSprite);
 
-writeFileSync(join(root, 'preview', 'index.html'), `<!doctype html>\n<html lang="en">\n${body}\n</html>\n`);
-writeFileSync(join(dist, 'artifact.html'), body.replace(/<head>|<\/head>|<body>|<\/body>/g, ''));
+writeFileSync(join(root, 'preview', 'index.html'), `<!doctype html>\n<html lang="en">\n${body.replace('<!-- PLAN_URL -->', PLAN_URL_LOCAL)}\n</html>\n`);
+writeFileSync(join(dist, 'artifact.html'), body.replace('<!-- PLAN_URL -->', PLAN_URL_PUBLISHED).replace(/<head>|<\/head>|<body>|<\/body>/g, ''));
 
 const used = new Set<IconName>();
 for (const m of template.matchAll(/#i-([a-z]+)/g)) used.add(m[1] as IconName);

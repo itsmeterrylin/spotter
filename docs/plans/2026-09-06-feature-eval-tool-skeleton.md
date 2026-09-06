@@ -22,15 +22,29 @@ Prompt management, playgrounds, dashboards, alerts, sessions or threads, multi-u
 
 ## Stack
 
-| Layer | Choice | Version verified |
-|---|---|---|
-| Runtime | Bun | 1.3.9 installed |
-| HTTP, pages, routing | Hono with server-rendered TSX | 4.13.7 |
-| MCP transport | `@hono/mcp` middleware over `@modelcontextprotocol/sdk` | 0.3.2, 1.30.0 |
-| Validation | Zod | 4.5.4 |
-| Database | SQLite via `bun:sqlite` | built into Bun |
-| Client code | Vanilla TypeScript modules, no framework | |
-| Styles | `design-system/dist/system.css` | built from tokens |
+Pinned to exact versions. A version is adopted only after it has been public for 60 days, which is the age gate for supply-chain worms that spread through fresh releases. Newer versions listed for reference are not used.
+
+| Layer | Package | Pinned | Published | Newest, not adopted |
+|---|---|---|---|---|
+| Runtime | Bun | 1.3.9 | 2026-02-08 | 1.4.2 (2026-09-05) |
+| HTTP, pages, routing | `hono` | 4.12.28 | 2026-07-06 | 4.13.7 (2026-09-04) |
+| MCP transport | `@hono/mcp` | 0.3.0 | 2026-05-16 | 0.3.2 (2026-08-18) |
+| MCP server | `@modelcontextprotocol/sdk` | 1.29.0 | 2026-03-30 | 1.30.0 (2026-07-27) |
+| Validation | `zod` | 4.4.3 | 2026-05-04 | 4.5.4 (2026-08-29) |
+| Types | `typescript` | 5.9.3 | see registry | 7.0.2 (2026-07-08, new compiler, not adopted yet) |
+| Node types | `@types/node` | 25.9.5 | see registry | 26.4.1 (2026-09-01) |
+| Database | `bun:sqlite` | built into Bun 1.3.9 | | |
+| Client code | Vanilla TypeScript modules, no framework | | | |
+| Styles | `design-system/dist/system.css` | built from tokens | | |
+
+### Dependency policy
+
+1. **Exact pins.** No `^` or `~` anywhere. `.npmrc` sets `save-exact=true`; `bunfig.toml` sets `exact = true`.
+2. **60-day age gate.** `bunfig.toml` sets `[install] minimumReleaseAge = 5184000` (seconds), so `bun install` refuses versions younger than 60 days. `design-system/scripts/check-release-age.mjs` runs the same check against `package.json` for the npm-managed package and fails CI if any pin is too new or not exact.
+3. **Lockfiles committed.** `bun.lock` for the app, `package-lock.json` for the design system. Install with `bun install --frozen-lockfile` and `npm ci`.
+4. **No lifecycle scripts from dependencies.** `bunfig.toml` keeps the default `trustedDependencies` empty; `npm` runs with `ignore-scripts=true` in CI.
+5. **Runtime pinned.** `.bun-version` holds `1.3.9`; `engines.bun` matches. Upgrades are a deliberate commit, never automatic.
+6. **Review before bumping.** A bump PR lists the changelog and the publish date. Nothing is bumped inside 60 days of publish, even for a fix, unless the fix is a security advisory that affects this code.
 
 ## Architecture
 
@@ -307,9 +321,11 @@ evals/
 | Assumption | Confidence | How to verify |
 |---|---|---|
 | `bun:sqlite` supports WAL mode and prepared statements needed here | CERTAIN | Bun docs; smoke test in phase 1 |
-| `@hono/mcp` 0.3.2 exposes a Streamable HTTP transport that works with SDK 1.30 `McpServer` | LIKELY | Read its README; wire one tool in phase 3 |
+| `bunfig.toml` `[install] minimumReleaseAge` is honored by Bun 1.3.9 | LIKELY | `bun install --help` lists `--minimum-release-age`; confirm the config key in phase 0 |
+| `hono` 4.12.28 and `@hono/mcp` 0.3.0 work with `@modelcontextprotocol/sdk` 1.29.0 | LIKELY | Wire one tool in phase 3; all three predate the cutoff by months |
+| `@hono/mcp` 0.3.0 exposes a Streamable HTTP transport that works with SDK 1.29 `McpServer` | LIKELY | Read its README; wire one tool in phase 3 |
 | Hono TSX renders without a client runtime when using `c.html()` | CERTAIN | Hono docs |
-| Zod 4 schemas convert to MCP tool input schemas via the SDK helpers | LIKELY | SDK 1.30 supports Zod 4 input; verify on first tool |
+| Zod 4.4 schemas convert to MCP tool input schemas via the SDK helpers | LIKELY | Verify on first tool in phase 3 |
 | Node-free: no `node:` imports needed beyond `node:fs` for CSS copy | LIKELY | Bun implements `node:fs` |
 | Bootstrap bias correction can be computed in TS in under 100 ms for n=200 | CERTAIN | Trivial loop |
 | Google Fonts link for Open Sans is acceptable in the local app | ASSUMED | Confirm; otherwise self-host |
@@ -330,7 +346,7 @@ Branch `feat/skeleton` off `main`. One commit per phase. PR to `main` after phas
 Each phase: at most three tasks, type-check and tests after each task, commit at the end, then pause for confirmation.
 
 **Phase 0: Scaffold**
-1. `app/` and `packages/evals` workspaces, Bun scripts (`dev`, `test`, `typecheck`, `build:css`).
+1. `app/` and `packages/evals` workspaces, Bun scripts (`dev`, `test`, `typecheck`, `build:css`); `bunfig.toml` with `exact = true` and `minimumReleaseAge = 5184000`; `.bun-version` 1.3.9; exact pins from the Stack table; `bun.lock` committed.
 2. Copy `design-system/dist/system.css` into `app/public` at build.
 3. Hono app serving `/health` and a Layout page with the top bar.
 

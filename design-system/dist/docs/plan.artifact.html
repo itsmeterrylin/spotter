@@ -1,0 +1,926 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Copper Evaluations skeleton</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700;800&display=swap">
+<style>
+
+:root {
+  --color-canvas: #FBF8F3;
+  --color-surface: #FFFFFF;
+  --color-surface-sunken: #F3EEE6;
+  --color-surface-hover: #FFFBF3;
+  --color-border: #E7E0D6;
+  --color-border-strong: #CFC5B7;
+  --color-ink: #1A1613;
+  --color-ink2: #4A433C;
+  --color-ink3: #6F675F;
+  --color-ink-inverse: #FFFFFF;
+  --color-brand: #C25A44;
+  --color-brand-hover: #A8472F;
+  --color-brand-soft: #FDF1EC;
+  --color-brand-ink: #8A3824;
+  --color-accent: #F5D398;
+  --color-accent-soft: #FFF6E5;
+  --color-pass: #1E8E5A;
+  --color-pass-soft: #DDF5E8;
+  --color-pass-ink: #146A42;
+  --color-fail: #D6453D;
+  --color-fail-soft: #FDE3E1;
+  --color-fail-ink: #A83229;
+  --color-defer: #B57400;
+  --color-defer-soft: #FFF1D6;
+  --color-defer-ink: #8A5800;
+  --color-info: #2F6FD6;
+  --color-info-soft: #E3ECFB;
+  --color-info-ink: #1F4F9E;
+  --color-focus-ring: #E8927A;
+  --color-overlay: rgba(26, 22, 19, 0.5);
+  --text-caption: 16px;
+  --leading-caption: 1.5;
+  --tracking-caption: 0.01em;
+  --text-body: 18px;
+  --leading-body: 1.6;
+  --tracking-body: 0;
+  --text-title: 28px;
+  --leading-title: 1.3;
+  --tracking-title: -0.01em;
+  --text-stat: 64px;
+  --leading-stat: 1;
+  --tracking-stat: -0.03em;
+  --space-0: 0px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-24: 96px;
+  --space-32: 128px;
+  --radius-sm: 12px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-xl: 32px;
+  --radius-pill: 999px;
+  --shadow-none: none;
+  --shadow-sm: 0 1px 2px rgba(26, 22, 19, 0.06);
+  --shadow-md: 0 4px 16px rgba(26, 22, 19, 0.08);
+  --shadow-lg: 0 12px 40px rgba(26, 22, 19, 0.12);
+  --shadow-focus: 0 0 0 4px var(--color-focus-ring);
+  --icon-sm: 20px;
+  --icon-md: 24px;
+  --icon-lg: 32px;
+  --icon-xl: 48px;
+  --touch-target: 48px;
+  --control-height: 56px;
+  --control-height-compact: 48px;
+  --table-row: 72px;
+  --card-padding: 32px;
+  --card-gap: 24px;
+  --section-gap: 64px;
+  --page-gutter: 48px;
+  --page-gutter-sm: 24px;
+  --container-narrow: 720px;
+  --container-default: 1200px;
+  --container-wide: 1440px;
+  --duration-fast: 150ms;
+  --duration-base: 250ms;
+  --duration-slow: 400ms;
+  --ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-enter: cubic-bezier(0, 0, 0.2, 1);
+  --ease-exit: cubic-bezier(0.4, 0, 1, 1);
+  --font-features-numeric: "tnum" 1, "lnum" 1;
+  --font-features-default: "kern" 1, "liga" 1;
+  --font-heading: "Open Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-body: "Open Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+  --color-canvas: #141210;
+  --color-surface: #1E1B18;
+  --color-surface-sunken: #1A1613;
+  --color-surface-hover: #302B26;
+  --color-border: #302B26;
+  --color-border-strong: #4A433C;
+  --color-ink: #F5F1EB;
+  --color-ink2: #CFC7BD;
+  --color-ink3: #A29A8F;
+  --color-ink-inverse: #1A1613;
+  --color-brand: #E8927A;
+  --color-brand-hover: #F2B9A6;
+  --color-brand-soft: rgba(194, 90, 68, 0.18);
+  --color-brand-ink: #F2B9A6;
+  --color-accent: #E9BC6E;
+  --color-accent-soft: rgba(245, 211, 152, 0.14);
+  --color-pass: #4FCB8B;
+  --color-pass-soft: rgba(30, 142, 90, 0.22);
+  --color-pass-ink: #7FD6A8;
+  --color-fail: #F07067;
+  --color-fail-soft: rgba(214, 69, 61, 0.22);
+  --color-fail-ink: #F4A19B;
+  --color-defer: #F2B84B;
+  --color-defer-soft: rgba(181, 116, 0, 0.22);
+  --color-defer-ink: #F2B84B;
+  --color-info: #8FB2EC;
+  --color-info-soft: rgba(47, 111, 214, 0.22);
+  --color-info-ink: #8FB2EC;
+  --color-focus-ring: #E8927A;
+  --color-overlay: rgba(0, 0, 0, 0.6);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --color-canvas: #141210;
+  --color-surface: #1E1B18;
+  --color-surface-sunken: #1A1613;
+  --color-surface-hover: #302B26;
+  --color-border: #302B26;
+  --color-border-strong: #4A433C;
+  --color-ink: #F5F1EB;
+  --color-ink2: #CFC7BD;
+  --color-ink3: #A29A8F;
+  --color-ink-inverse: #1A1613;
+  --color-brand: #E8927A;
+  --color-brand-hover: #F2B9A6;
+  --color-brand-soft: rgba(194, 90, 68, 0.18);
+  --color-brand-ink: #F2B9A6;
+  --color-accent: #E9BC6E;
+  --color-accent-soft: rgba(245, 211, 152, 0.14);
+  --color-pass: #4FCB8B;
+  --color-pass-soft: rgba(30, 142, 90, 0.22);
+  --color-pass-ink: #7FD6A8;
+  --color-fail: #F07067;
+  --color-fail-soft: rgba(214, 69, 61, 0.22);
+  --color-fail-ink: #F4A19B;
+  --color-defer: #F2B84B;
+  --color-defer-soft: rgba(181, 116, 0, 0.22);
+  --color-defer-ink: #F2B84B;
+  --color-info: #8FB2EC;
+  --color-info-soft: rgba(47, 111, 214, 0.22);
+  --color-info-ink: #8FB2EC;
+  --color-focus-ring: #E8927A;
+  --color-overlay: rgba(0, 0, 0, 0.6);
+  color-scheme: dark;
+}
+:root[data-font="open"] {
+  --font-heading: "Open Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-body: "Open Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+  font-feature-settings: var(--font-features-default);
+  -webkit-font-smoothing: antialiased;
+}
+h1, h2, h3, h4, p { margin: 0; }
+h1, h2, h3, h4 { text-wrap: balance; }
+a { color: inherit; }
+button, input, select, textarea { font: inherit; color: inherit; }
+img, svg { display: block; max-width: 100%; }
+[hidden] { display: none !important; }
+:focus-visible { outline: none; box-shadow: var(--shadow-focus); border-radius: var(--radius-sm); }
+.num { font-variant-numeric: tabular-nums lining-nums; font-feature-settings: var(--font-features-numeric); }
+.mono { font-family: var(--font-mono); }
+.strong { font-weight: 600; }
+.heavy { font-weight: 800; }
+.muted { color: var(--color-ink2); }
+.faint { color: var(--color-ink3); }
+.stack { display: flex; flex-direction: column; gap: var(--stack-gap, var(--space-4)); }
+.cluster { display: flex; flex-wrap: wrap; align-items: center; gap: var(--cluster-gap, var(--space-3)); }
+.grid { display: grid; gap: var(--card-gap); grid-template-columns: repeat(auto-fit, minmax(var(--grid-min, 260px), 1fr)); }
+.container { width: 100%; max-width: var(--container-default); margin-inline: auto; padding-inline: var(--page-gutter-sm); }
+@media (min-width: 900px) { .container { padding-inline: var(--page-gutter); } }
+.container-wide { max-width: var(--container-wide); }
+.scroll-x { overflow-x: auto; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; } }
+.t-caption { font-family: var(--font-body); font-size: var(--text-caption); line-height: var(--leading-caption); letter-spacing: var(--tracking-caption); font-weight: 600; }
+.t-body { font-family: var(--font-body); font-size: var(--text-body); line-height: var(--leading-body); letter-spacing: var(--tracking-body); font-weight: 400; }
+.t-title { font-family: var(--font-heading); font-size: var(--text-title); line-height: var(--leading-title); letter-spacing: var(--tracking-title); font-weight: 600; }
+.t-stat { font-family: var(--font-heading); font-size: var(--text-stat); line-height: var(--leading-stat); letter-spacing: var(--tracking-stat); font-weight: 800; }
+
+
+/* Button */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--space-3);
+  min-height: var(--control-height); padding-inline: var(--space-6);
+  border-radius: var(--radius-pill); border: 2px solid transparent;
+  font-family: var(--font-body); font-size: var(--text-body); font-weight: 600;
+  cursor: pointer; text-decoration: none; white-space: nowrap;
+  transition: background var(--duration-fast) var(--ease-standard), transform var(--duration-fast) var(--ease-standard), border-color var(--duration-fast) var(--ease-standard);
+}
+.btn:active { transform: translateY(1px); }
+.btn-primary { background: var(--color-brand); color: var(--color-ink-inverse); }
+.btn-primary:hover { background: var(--color-brand-hover); }
+.btn-secondary { background: var(--color-surface); color: var(--color-ink); border-color: var(--color-border-strong); }
+.btn-secondary:hover { background: var(--color-surface-hover); }
+.btn-ghost { background: transparent; color: var(--color-ink2); }
+.btn-ghost:hover { background: var(--color-surface-sunken); color: var(--color-ink); }
+.btn-pass { background: var(--color-pass); color: var(--color-ink-inverse); }
+.btn-fail { background: var(--color-fail); color: var(--color-ink-inverse); }
+.btn-defer { background: var(--color-defer-soft); color: var(--color-defer-ink); }
+.btn-compact { min-height: var(--control-height-compact); padding-inline: var(--space-4); font-size: var(--text-caption); }
+.btn-icon { width: var(--control-height); padding: 0; }
+.btn[disabled] { opacity: 0.45; cursor: not-allowed; }
+
+/* Card */
+.card { background: var(--color-surface); border-radius: var(--radius-lg); padding: var(--card-padding); border: 1px solid var(--color-border); }
+.card-raised { box-shadow: var(--shadow-md); border-color: transparent; }
+.card-brand { background: var(--color-brand); color: var(--color-ink-inverse); border-color: transparent; }
+.card-accent { background: var(--color-accent-soft); border-color: transparent; }
+
+/* Verdict pill */
+.verdict {
+  display: inline-flex; align-items: center; gap: var(--space-2);
+  min-height: 40px; padding-inline: var(--space-4); border-radius: var(--radius-pill);
+  font-size: var(--text-caption); font-weight: 600; letter-spacing: 0.01em;
+}
+.verdict-pass { background: var(--color-pass-soft); color: var(--color-pass-ink); }
+.verdict-fail { background: var(--color-fail-soft); color: var(--color-fail-ink); }
+.verdict-defer { background: var(--color-defer-soft); color: var(--color-defer-ink); }
+.verdict-pending { background: var(--color-surface-sunken); color: var(--color-ink2); }
+.verdict-lg { min-height: 56px; padding-inline: var(--space-6); font-size: var(--text-body); }
+
+/* Stat tile */
+.stat { display: flex; flex-direction: column; gap: var(--space-2); }
+.stat-value { font-family: var(--font-heading); font-weight: 800; font-size: var(--text-stat); line-height: var(--leading-stat); letter-spacing: var(--tracking-stat); font-variant-numeric: tabular-nums lining-nums; }
+.stat-label { display: inline-flex; align-items: center; gap: var(--space-2); font-size: var(--text-caption); font-weight: 500; color: var(--color-ink2); }
+.delta { display: inline-flex; align-items: center; gap: var(--space-1); font-size: var(--text-body); font-weight: 600; font-variant-numeric: tabular-nums; }
+.delta-up { color: var(--color-pass-ink); }
+.delta-down { color: var(--color-fail-ink); }
+.delta-flat { color: var(--color-ink3); }
+
+/* Score bar */
+.bar { position: relative; height: 12px; border-radius: var(--radius-pill); background: var(--color-surface-sunken); overflow: hidden; }
+.bar > i { position: absolute; inset: 0 auto 0 0; border-radius: inherit; background: var(--color-brand); }
+.bar-pass > i { background: var(--color-pass); }
+.bar-fail > i { background: var(--color-fail); }
+
+/* Table */
+.table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: var(--text-body); }
+.table th { text-align: left; font-size: var(--text-caption); font-weight: 600; color: var(--color-ink2); letter-spacing: 0.01em; padding: var(--space-4) var(--space-6); border-bottom: 2px solid var(--color-border); white-space: nowrap; }
+.table td { height: var(--table-row); padding: var(--space-4) var(--space-6); border-bottom: 1px solid var(--color-border); vertical-align: middle; }
+.table tr:last-child td { border-bottom: 0; }
+.table tbody tr:hover td { background: var(--color-surface-hover); }
+.table .num { text-align: right; }
+.table .baseline th, .table .baseline td { background: var(--color-surface-sunken); }
+.cell-diff { display: inline-flex; align-items: center; gap: var(--space-2); font-weight: 600; }
+
+/* Nav */
+.nav { display: flex; flex-direction: column; gap: var(--space-1); }
+.nav a { display: flex; align-items: center; gap: var(--space-3); min-height: var(--control-height); padding-inline: var(--space-4); border-radius: var(--radius-md); text-decoration: none; color: var(--color-ink2); font-weight: 500; }
+.nav a:hover { background: var(--color-surface-sunken); color: var(--color-ink); }
+.nav a[aria-current="page"] { background: var(--color-brand-soft); color: var(--color-brand-ink); font-weight: 600; }
+
+/* Tabs */
+.tabs { display: flex; gap: var(--space-2); border-bottom: 2px solid var(--color-border); }
+.tabs button { min-height: var(--control-height); padding-inline: var(--space-4); border: 0; background: none; color: var(--color-ink2); font-weight: 600; border-bottom: 3px solid transparent; margin-bottom: -2px; cursor: pointer; }
+.tabs button[aria-selected="true"] { color: var(--color-ink); border-color: var(--color-brand); }
+
+/* Inputs */
+.field { display: flex; flex-direction: column; gap: var(--space-2); }
+.field label { font-size: var(--text-caption); font-weight: 600; color: var(--color-ink2); }
+.input { min-height: var(--control-height); padding-inline: var(--space-4); border-radius: var(--radius-md); border: 2px solid var(--color-border-strong); background: var(--color-surface); width: 100%; }
+.input:focus { border-color: var(--color-brand); box-shadow: none; outline: none; }
+textarea.input { min-height: 120px; padding-block: var(--space-3); resize: vertical; }
+
+/* Toggle */
+.toggle { position: relative; width: 64px; height: 36px; border-radius: var(--radius-pill); background: var(--color-border-strong); border: 0; cursor: pointer; transition: background var(--duration-fast); }
+.toggle::after { content: ""; position: absolute; top: 4px; left: 4px; width: 28px; height: 28px; border-radius: 50%; background: var(--color-surface); box-shadow: var(--shadow-sm); transition: transform var(--duration-fast) var(--ease-standard); }
+.toggle[aria-checked="true"] { background: var(--color-brand); }
+.toggle[aria-checked="true"]::after { transform: translateX(28px); }
+
+/* Keyboard key */
+.kbd { display: inline-flex; align-items: center; justify-content: center; min-width: 40px; height: 40px; padding-inline: var(--space-3); border-radius: var(--radius-sm); border: 2px solid var(--color-border-strong); border-bottom-width: 4px; background: var(--color-surface); font-family: var(--font-mono); font-size: var(--text-caption); font-weight: 600; }
+
+/* Segmented control */
+.segmented { display: inline-flex; padding: 4px; border-radius: var(--radius-pill); background: var(--color-surface-sunken); gap: 4px; }
+.segmented button { min-height: 48px; padding-inline: var(--space-4); border: 0; border-radius: var(--radius-pill); background: transparent; color: var(--color-ink2); font-weight: 600; cursor: pointer; }
+.segmented button[aria-pressed="true"] { background: var(--color-surface); color: var(--color-ink); box-shadow: var(--shadow-sm); }
+
+/* Empty state */
+.empty { display: flex; flex-direction: column; align-items: center; text-align: center; gap: var(--space-6); padding: var(--space-16) var(--space-8); }
+.empty svg { width: var(--icon-xl); height: var(--icon-xl); color: var(--color-brand); }
+
+
+.doc { max-width: var(--container-narrow); margin-inline: auto; padding: var(--space-12) var(--space-6) var(--space-24); }
+.doc h1 { font-size: var(--text-title); font-weight: 800; letter-spacing: var(--tracking-title); line-height: var(--leading-title); margin-bottom: var(--space-6); }
+.doc h2 { font-size: var(--text-title); font-weight: 600; letter-spacing: var(--tracking-title); line-height: var(--leading-title); margin: var(--space-16) 0 var(--space-4); padding-top: var(--space-6); border-top: 1px solid var(--color-border); }
+.doc h3 { font-size: var(--text-body); font-weight: 600; margin: var(--space-8) 0 var(--space-2); color: var(--color-ink2); }
+.doc p, .doc li { max-width: 68ch; }
+.doc p { margin: 0 0 var(--space-4); }
+.doc ul, .doc ol { padding-left: var(--space-6); margin: 0 0 var(--space-4); }
+.doc li { margin-bottom: var(--space-2); }
+.doc strong { font-weight: 600; }
+.doc code { font-family: var(--font-mono); font-size: var(--text-caption); background: var(--color-surface-sunken); padding: 2px 6px; border-radius: 6px; }
+.doc pre { background: var(--color-surface-sunken); border-radius: var(--radius-md); padding: var(--space-4) var(--space-6); overflow-x: auto; margin: 0 0 var(--space-6); }
+.doc pre code { background: none; padding: 0; font-size: var(--text-caption); line-height: 1.6; }
+.doc pre.mermaid { background: var(--color-surface); border: 1px solid var(--color-border); padding: var(--space-6); display: flex; justify-content: center; }
+.doc .scroll { overflow-x: auto; margin: 0 0 var(--space-6); }
+.doc table { border-collapse: collapse; width: 100%; font-size: var(--text-caption); }
+.doc th { text-align: left; font-weight: 600; color: var(--color-ink2); padding: var(--space-3) var(--space-4); border-bottom: 2px solid var(--color-border); white-space: nowrap; }
+.doc td { padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--color-border); vertical-align: top; }
+.doc td code { white-space: nowrap; }
+.doc blockquote { margin: 0 0 var(--space-4); padding-left: var(--space-4); border-left: 4px solid var(--color-brand); color: var(--color-ink2); }
+.doc .meta { color: var(--color-ink3); font-size: var(--text-caption); margin-bottom: var(--space-8); }
+
+</style>
+<main class="doc">
+<h1>Implementation plan: Copper Evaluations skeleton</h1>
+<p><strong>Date</strong>: 2026-09-06
+<strong>Type</strong>: feature
+<strong>Status</strong>: Draft, awaiting review
+<strong>Depends on</strong>: <code>docs/design/eval-tool-design.md</code>, <code>design-system/</code></p>
+<h2>Summary</h2>
+<p>Build the first runnable version of Copper Evaluations: one Bun process that serves the REST API, the MCP endpoint, and server-rendered pages, backed by SQLite. Agents run evals through the SDK and MCP. A person opens deep links to verify results, label traces, and calibrate judges.</p>
+<h2>Goals</h2>
+<ol>
+<li>An agent can create a dataset, run a task locally, write traces and scores, and compare two runs without touching the UI.</li>
+<li>Every REST and MCP response carries a <code>url</code> that opens the exact state it describes.</li>
+<li>A person can review traces with the keyboard and label them Pass, Fail, or Defer in under two seconds per trace.</li>
+<li>A judge&#39;s scores count only after it is calibrated against human labels.</li>
+</ol>
+<h2>Non-goals</h2>
+<p>Prompt management, playgrounds, dashboards, alerts, sessions or threads, multi-user auth, server-side task execution, OTLP ingestion, a Python SDK. Each can be added later; none blocks the loop above.</p>
+<h2>Stack</h2>
+<p>Pinned to exact versions. A version is adopted only after it has been public for 60 days, which is the age gate for supply-chain worms that spread through fresh releases. Newer versions listed for reference are not used.</p>
+<div class="scroll"><table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Package</th>
+<th>Pinned</th>
+<th>Published</th>
+<th>Newest, not adopted</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Runtime</td>
+<td>Bun</td>
+<td>1.3.9</td>
+<td>2026-02-08</td>
+<td>1.4.2 (2026-09-05)</td>
+</tr>
+<tr>
+<td>HTTP, pages, routing</td>
+<td><code>hono</code></td>
+<td>4.12.28</td>
+<td>2026-07-06</td>
+<td>4.13.7 (2026-09-04)</td>
+</tr>
+<tr>
+<td>MCP transport</td>
+<td><code>@hono/mcp</code></td>
+<td>0.3.0</td>
+<td>2026-05-16</td>
+<td>0.3.2 (2026-08-18)</td>
+</tr>
+<tr>
+<td>MCP server</td>
+<td><code>@modelcontextprotocol/sdk</code></td>
+<td>1.29.0</td>
+<td>2026-03-30</td>
+<td>1.30.0 (2026-07-27)</td>
+</tr>
+<tr>
+<td>Validation</td>
+<td><code>zod</code></td>
+<td>4.4.3</td>
+<td>2026-05-04</td>
+<td>4.5.4 (2026-08-29)</td>
+</tr>
+<tr>
+<td>Types</td>
+<td><code>typescript</code></td>
+<td>5.9.3</td>
+<td>see registry</td>
+<td>7.0.2 (2026-07-08, new compiler, not adopted yet)</td>
+</tr>
+<tr>
+<td>Node types</td>
+<td><code>@types/node</code></td>
+<td>25.9.5</td>
+<td>see registry</td>
+<td>26.4.1 (2026-09-01)</td>
+</tr>
+<tr>
+<td>Database</td>
+<td><code>bun:sqlite</code></td>
+<td>built into Bun 1.3.9</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Client code</td>
+<td>Vanilla TypeScript modules, no framework</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Styles</td>
+<td><code>design-system/dist/system.css</code></td>
+<td>built from tokens</td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table></div>
+<h3>Dependency policy</h3>
+<ol>
+<li><strong>Exact pins.</strong> No <code>^</code> or <code>~</code> anywhere. <code>.npmrc</code> sets <code>save-exact=true</code>; <code>bunfig.toml</code> sets <code>exact = true</code>.</li>
+<li><strong>60-day age gate.</strong> <code>bunfig.toml</code> sets <code>[install] minimumReleaseAge = 5184000</code> (seconds), so <code>bun install</code> refuses versions younger than 60 days. <code>design-system/scripts/check-release-age.mjs</code> runs the same check against <code>package.json</code> for the npm-managed package and fails CI if any pin is too new or not exact.</li>
+<li><strong>Lockfiles committed.</strong> <code>bun.lock</code> for the app, <code>package-lock.json</code> for the design system. Install with <code>bun install --frozen-lockfile</code> and <code>npm ci</code>.</li>
+<li><strong>No lifecycle scripts from dependencies.</strong> <code>bunfig.toml</code> keeps the default <code>trustedDependencies</code> empty; <code>npm</code> runs with <code>ignore-scripts=true</code> in CI.</li>
+<li><strong>Runtime pinned.</strong> <code>.bun-version</code> holds <code>1.3.9</code>; <code>engines.bun</code> matches. Upgrades are a deliberate commit, never automatic.</li>
+<li><strong>Review before bumping.</strong> A bump PR lists the changelog and the publish date. Nothing is bumped inside 60 days of publish, even for a fix, unless the fix is a security advisory that affects this code.</li>
+</ol>
+<h2>Architecture</h2>
+<p>One Bun process. Three entry points share one service layer and one SQLite file. The agent talks to MCP or REST. The person talks to the pages. Nothing talks to the database except the repositories.</p>
+<pre class="mermaid">flowchart LR
+  subgraph Agent side
+    A[Coding agent]
+    SDK[evals SDK and CLI<br/>runs task and scorers locally]
+  end
+  subgraph Person side
+    B[Browser]
+  end
+  subgraph Bun process
+    MCP["/mcp<br/>list · read · write · compare"]
+    REST["/api<br/>datasets · runs · traces · scores · summary · compare · query"]
+    PAGES["Pages<br/>runs · compare · trace · review · judges"]
+    CLIENT["client modules<br/>review.ts · compare.ts"]
+    SVC[Service layer<br/>aggregates · summary · compare · filters · urls]
+    REPO[Repositories]
+    DB[(SQLite)]
+  end
+  A -- "MCP tool calls" --> MCP
+  A -- "runs" --> SDK
+  SDK -- "HTTP JSON" --> REST
+  MCP --> SVC
+  REST --> SVC
+  PAGES --> SVC
+  SVC --> REPO --> DB
+  PAGES -- "HTML + system.css" --> B
+  B -- "verdicts, notes (fetch)" --> REST
+  CLIENT -. "shipped with pages" .-> B
+  MCP -- "results carry url" --> A
+  A -- "sends url" --> B
+</pre>
+<p>Data flow for one eval loop:</p>
+<pre class="mermaid">sequenceDiagram
+  autonumber
+  participant Agent
+  participant CLI as evals CLI
+  participant REST as /api
+  participant DB as SQLite
+  participant MCP as /mcp
+  participant Person
+  participant Pages
+
+  Agent->>CLI: bun evals run tagging.ts --baseline A
+  CLI->>REST: POST /runs {dataset, name, metadata}
+  REST->>DB: insert run
+  REST-->>CLI: run B + url
+  loop each dataset item
+    CLI->>CLI: task(item) then scores(item, output)
+  end
+  CLI->>REST: POST /traces/batch (50 at a time, scores inline)
+  REST->>DB: insert traces and scores
+  CLI->>REST: GET /runs/B/summary?compare_to=A
+  REST->>DB: aggregate on read
+  REST-->>CLI: mean, diff, improvements, regressions + urls
+  CLI-->>Agent: summary table, run url, compare url
+  Agent->>MCP: compare {dataset, run_ids:[A,B], only:changes}
+  MCP->>DB: via service layer
+  MCP-->>Agent: 4 changed items + url
+  Agent->>Person: "4 regressions: /datasets/{d}/compare?runs=A,B&only=changes"
+  Person->>Pages: open url
+  Pages->>DB: via service layer
+  Pages-->>Person: server-rendered compare, state from URL
+  Person->>Pages: open /review?run=B&filter=unlabeled, press 2, note, Cmd+Enter
+  Pages->>REST: PUT /traces/{id}/scores {source: human, verdict: fail, note}
+  REST->>DB: insert human score
+  Agent->>MCP: list {type: traces, filters: [source = human]}
+  MCP-->>Agent: labeled traces + urls, feeds judge calibration
+</pre>
+<p>Three rules keep this simple:</p>
+<ol>
+<li><strong>One service layer.</strong> MCP, REST, and pages call the same functions, so a run summary is identical no matter who asked.</li>
+<li><strong>URLs are built in one place.</strong> <code>src/urls.ts</code> is the only code that knows the route shapes. REST, MCP, CLI, and pages import it.</li>
+<li><strong>The browser writes only human input.</strong> Verdicts and notes go through the same REST endpoint the SDK uses. Everything else on a page is server-rendered from the URL.</li>
+</ol>
+<h2>User stories</h2>
+<pre><code class="language-gherkin">Scenario: Agent runs an eval and hands over links
+  Given a dataset &quot;tagging-golden&quot; with 120 items exists
+  When the agent runs `bun evals run evals/tagging.ts --dataset tagging-golden`
+  Then a run is created with one trace per item and scores per trace
+  And the CLI prints a summary table with mean, diff, improvements, regressions per score
+  And the CLI prints the run URL and the compare URL against the previous run
+
+Scenario: Person verifies a regression from a deep link
+  Given run B regressed on 4 items versus run A
+  When the person opens /datasets/{id}/compare?runs=A,B&amp;only=changes
+  Then only the 4 changed items are shown, each with both outputs and per-score deltas
+
+Scenario: Person labels traces with the keyboard
+  Given the review queue /review?run=B&amp;filter=unlabeled has 12 traces
+  When the person presses 2, types a note, and presses Cmd+Enter
+  Then the trace gets a human score {verdict: fail, note}, the page advances, and the counter reads &quot;11 remaining&quot;
+
+Scenario: Judge scores are gated by calibration
+  Given a judge &quot;exercise_match&quot; has TPR 0.94 and TNR 0.91 on the held-out set
+  When a run&#39;s aggregates are computed
+  Then judge scores are included
+  And a judge with no calibration record shows &quot;Needs labels&quot; and its scores are excluded from aggregates
+
+Scenario: MCP compare
+  Given runs A and B share a dataset
+  When an agent calls the MCP tool compare with run_ids [A, B]
+  Then it receives per-item rows with outputs and scores per run, a per-score summary, and a url to the compare page
+</code></pre>
+<h2>Functional requirements</h2>
+<ol>
+<li>FR1 Datasets: create; upsert items by client id with <code>input</code>, <code>expected</code>, <code>metadata</code>.</li>
+<li>FR2 Runs: create with <code>dataset_id</code>, <code>name</code>, <code>metadata</code>; aggregates computed on read.</li>
+<li>FR3 Traces: batch insert with optional <code>run_id</code>, <code>dataset_item_id</code>, inline <code>scores[]</code>; ids are client-generated UUIDv7.</li>
+<li>FR4 Scores: add or replace on a trace; <code>source</code> in <code>sdk</code>, <code>judge</code>, <code>human</code>; human scores carry <code>verdict</code> and <code>note</code>.</li>
+<li>FR5 Summary: per score name, mean, diff versus a comparison run, counts of improvements and regressions.</li>
+<li>FR6 Compare: items with nested per-run cells; filter <code>only=changes</code>.</li>
+<li>FR7 Filters: <code>[{field, key, operator, value}]</code> with symbol operators on the trace list.</li>
+<li>FR8 Query: read-only SQL over the tables, rejects anything that is not a single SELECT.</li>
+<li>FR9 MCP: <code>list</code>, <code>read</code>, <code>write</code>, <code>compare</code>; every result includes <code>url</code>.</li>
+<li>FR10 Pages: runs list, run detail, compare, trace detail, review, judges; every filter and selection lives in the URL.</li>
+<li>FR11 SDK and CLI: <code>defineEval({ dataset, task, scores, metadata })</code>; <code>evals run</code>, <code>evals compare</code>; <code>--no-send</code> prints only.</li>
+<li>FR12 Judge calibration: store human-vs-judge agreement per judge version; compute TPR, TNR, and a bias-corrected pass rate with a bootstrap interval.</li>
+</ol>
+<h2>Deep link contract</h2>
+<div class="scroll"><table>
+<thead>
+<tr>
+<th>Object</th>
+<th>URL</th>
+<th>State in query</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Runs list</td>
+<td><code>/runs?dataset={id}</code></td>
+<td>dataset</td>
+</tr>
+<tr>
+<td>Run</td>
+<td><code>/runs/{run_id}?score={name}</code></td>
+<td>selected score column</td>
+</tr>
+<tr>
+<td>Compare</td>
+<td><code>/datasets/{dataset_id}/compare?runs={a},{b}&amp;only=changes&amp;score={name}</code></td>
+<td>runs, filter, score</td>
+</tr>
+<tr>
+<td>Trace</td>
+<td><code>/traces/{trace_id}</code></td>
+<td></td>
+</tr>
+<tr>
+<td>Dataset item across runs</td>
+<td><code>/datasets/{dataset_id}/items/{item_id}</code></td>
+<td></td>
+</tr>
+<tr>
+<td>Review queue</td>
+<td><code>/review?run={run_id}&amp;filter=unlabeled</code></td>
+<td>run, filter</td>
+</tr>
+<tr>
+<td>Review one trace</td>
+<td><code>/review/{trace_id}?run={run_id}</code></td>
+<td>queue context</td>
+</tr>
+<tr>
+<td>Judge</td>
+<td><code>/judges/{name}</code></td>
+<td></td>
+</tr>
+</tbody></table></div>
+<p>Rule: a URL, opened fresh in a new tab, shows the same thing it showed when it was copied. Client code reads state from the URL on load and writes it back on change with <code>history.replaceState</code>.</p>
+<h2>Data schema</h2>
+<pre><code class="language-sql">CREATE TABLE project      (id TEXT PRIMARY KEY, name TEXT NOT NULL UNIQUE, created_at TEXT NOT NULL);
+CREATE TABLE dataset      (id TEXT PRIMARY KEY, project_id TEXT NOT NULL REFERENCES project(id), name TEXT NOT NULL, description TEXT, created_at TEXT NOT NULL, UNIQUE(project_id, name));
+CREATE TABLE dataset_item (id TEXT PRIMARY KEY, dataset_id TEXT NOT NULL REFERENCES dataset(id), input TEXT NOT NULL, expected TEXT, metadata TEXT, created_at TEXT NOT NULL);
+CREATE TABLE run          (id TEXT PRIMARY KEY, dataset_id TEXT NOT NULL REFERENCES dataset(id), name TEXT NOT NULL, metadata TEXT, started_at TEXT NOT NULL, ended_at TEXT);
+CREATE TABLE trace        (id TEXT PRIMARY KEY, project_id TEXT NOT NULL REFERENCES project(id), run_id TEXT REFERENCES run(id), dataset_item_id TEXT REFERENCES dataset_item(id), input TEXT, output TEXT, expected TEXT, metadata TEXT, tags TEXT, start TEXT NOT NULL, &quot;end&quot; TEXT, metrics TEXT, spans TEXT, created_at TEXT NOT NULL);
+CREATE TABLE score        (id TEXT PRIMARY KEY, trace_id TEXT NOT NULL REFERENCES trace(id), name TEXT NOT NULL, value REAL NOT NULL, label TEXT, reason TEXT, source TEXT NOT NULL CHECK (source IN (&#39;sdk&#39;,&#39;judge&#39;,&#39;human&#39;)), judge_version TEXT, created_at TEXT NOT NULL);
+CREATE TABLE judge_calibration (judge_name TEXT NOT NULL, judge_version TEXT NOT NULL, n INTEGER NOT NULL, tpr REAL NOT NULL, tnr REAL NOT NULL, split TEXT NOT NULL CHECK (split IN (&#39;dev&#39;,&#39;test&#39;)), created_at TEXT NOT NULL, PRIMARY KEY (judge_name, judge_version, split));
+CREATE INDEX trace_run ON trace(run_id);
+CREATE INDEX trace_item ON trace(dataset_item_id);
+CREATE INDEX score_trace ON score(trace_id, name);
+</code></pre>
+<p>JSON columns (<code>input</code>, <code>expected</code>, <code>metadata</code>, <code>tags</code>, <code>metrics</code>, <code>spans</code>) are stored as text and parsed at the repository boundary. Timestamps are ISO 8601 UTC.</p>
+<h2>API</h2>
+<div class="scroll"><table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>Body or params</th>
+<th>Returns</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>POST</td>
+<td><code>/api/datasets</code></td>
+<td><code>{project, name, description?}</code></td>
+<td>dataset with <code>url</code></td>
+</tr>
+<tr>
+<td>PUT</td>
+<td><code>/api/datasets/{id}/items</code></td>
+<td><code>{items: [{id, input, expected?, metadata?}]}</code></td>
+<td><code>{upserted}</code></td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/runs</code></td>
+<td><code>{dataset_id, name, metadata?}</code></td>
+<td>run with <code>url</code></td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/traces/batch</code></td>
+<td><code>{traces: [{id, project, run_id?, dataset_item_id?, input, output, expected?, metadata?, tags?, start, end?, metrics?, spans?, scores?: [{name, value, label?, reason?, source}]}]}</code></td>
+<td><code>{inserted, urls}</code></td>
+</tr>
+<tr>
+<td>PUT</td>
+<td><code>/api/traces/{id}/scores</code></td>
+<td><code>{scores: [...]}</code></td>
+<td>trace with <code>url</code></td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/runs/{id}</code></td>
+<td></td>
+<td>run, aggregates, <code>url</code></td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/runs/{id}/summary</code></td>
+<td><code>compare_to</code></td>
+<td>per-score mean, diff, improvements, regressions, <code>url</code></td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/datasets/{id}/compare</code></td>
+<td><code>runs</code>, <code>only</code></td>
+<td>items with per-run cells, summary, <code>url</code></td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/traces</code></td>
+<td><code>filters</code>, <code>run_id</code>, <code>limit</code>, <code>cursor</code></td>
+<td>page of traces with <code>url</code> each</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/query</code></td>
+<td><code>{sql}</code></td>
+<td>rows; SELECT only</td>
+</tr>
+</tbody></table></div>
+<p>Errors: <code>{error: {code, message}}</code> with 400 for validation, 404 for unknown ids, 409 for id conflicts with different content.</p>
+<h2>MCP tools</h2>
+<p>Mounted at <code>/mcp</code> with <code>@hono/mcp</code>. Same service layer as REST, so behavior cannot drift.</p>
+<div class="scroll"><table>
+<thead>
+<tr>
+<th>Tool</th>
+<th>Input</th>
+<th>Output</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>list</code></td>
+<td><code>{type: &#39;datasets&#39; | &#39;runs&#39; | &#39;traces&#39; | &#39;judges&#39;, filters?, limit?}</code></td>
+<td>rows, each with <code>url</code></td>
+</tr>
+<tr>
+<td><code>read</code></td>
+<td><code>{type: &#39;run&#39; | &#39;trace&#39; | &#39;dataset&#39; | &#39;judge&#39;, id}</code></td>
+<td>one object; a run includes aggregates, a trace includes scores and spans</td>
+</tr>
+<tr>
+<td><code>write</code></td>
+<td><code>{op: &#39;dataset.create&#39; | &#39;items.upsert&#39; | &#39;run.create&#39; | &#39;traces.insert&#39; | &#39;scores.put&#39;, data, dry_run?}</code></td>
+<td><code>{ok, ids, url}</code></td>
+</tr>
+<tr>
+<td><code>compare</code></td>
+<td><code>{dataset_id, run_ids, only?: &#39;changes&#39;}</code></td>
+<td>items with per-run cells, per-score summary, <code>url</code></td>
+</tr>
+</tbody></table></div>
+<h2>SDK and CLI (<code>packages/evals</code>)</h2>
+<pre><code class="language-ts">import { defineEval } from &#39;@copper/evals&#39;
+
+export default defineEval({
+  dataset: &#39;tagging-golden&#39;,
+  metadata: { model: &#39;rules-v1&#39; },
+  task: async (item) =&gt; tagTranscript(item.input.transcript),
+  scores: [
+    (item, output) =&gt; ({ name: &#39;exercise_match&#39;, value: output.exercise === item.expected.exercise ? 1 : 0 }),
+  ],
+})
+</code></pre>
+<p><code>bun evals run evals/tagging.ts [--baseline &lt;run_id&gt;] [--no-send]</code> creates the run, executes task and scores locally, posts traces in batches of 50, prints the summary table and the URLs. <code>bun evals compare &lt;a&gt; &lt;b&gt;</code> prints the summary with diffs.</p>
+<h2>Screens</h2>
+<p>Each screen follows the design system: four type sizes, one primary action, 72px rows, icons carry meaning, no helper prose.</p>
+<h3>Runs (<code>/runs</code>, <code>/runs/{id}</code>)</h3>
+<ul>
+<li>Purpose: see how a run did and pick what to compare.</li>
+<li>Input: dataset filter. Output: run rows with per-score bars; run detail with stat tiles and its traces.</li>
+<li>Primary action: Compare with baseline.</li>
+<li>Layout: sidebar nav, page head, stat tiles, table, empty state.</li>
+</ul>
+<h3>Compare (<code>/datasets/{id}/compare</code>)</h3>
+<ul>
+<li>Purpose: find which items changed between runs.</li>
+<li>Input: run ids, <code>only=changes</code>, selected score. Output: items as rows, one cell per run, per-score deltas with up and down icons.</li>
+<li>Primary action: open an item in review.</li>
+<li>Layout: run chips, toggle, table.</li>
+</ul>
+<h3>Trace (<code>/traces/{id}</code>)</h3>
+<ul>
+<li>Purpose: inspect one result.</li>
+<li>Output: input, output, expected in native format; scores; spans collapsed.</li>
+<li>Primary action: label it.</li>
+</ul>
+<h3>Review (<code>/review</code>, <code>/review/{trace_id}</code>)</h3>
+<ul>
+<li>Purpose: label one trace at a time.</li>
+<li>Input: keys 1, 2, D, U, arrows, Cmd+Enter; note text. Output: human score saved, counter updates.</li>
+<li>Primary action: Pass or Fail.</li>
+<li>Layout: counter, transcript, output, expected, verdict row, note.</li>
+</ul>
+<h3>Judges (<code>/judges</code>, <code>/judges/{name}</code>)</h3>
+<ul>
+<li>Purpose: see whether a judge can be trusted.</li>
+<li>Output: TPR and TNR per version, sample size, status pill Calibrated or Needs labels.</li>
+<li>Primary action: none; the data comes from the calibration command.</li>
+</ul>
+<h3>States</h3>
+<ul>
+<li>Empty: icon, title, one action (<code>.empty</code>).</li>
+<li>Loading: server-rendered, so pages arrive complete. Client writes show a disabled button until the response returns.</li>
+<li>Success: verdict buttons flash their fill for 150ms; no toast.</li>
+<li>Error: inline line under the control in <code>fail-ink</code>, with what to do.</li>
+<li>Accessibility: every icon has an <code>aria-label</code> or is hidden; verdict buttons are real buttons; focus ring from the tokens; Dynamic Type honored because sizes are in px on a 16px floor and the page reflows.</li>
+</ul>
+<h2>Affected files (all new)</h2>
+<pre><code>app/
+  package.json                 bun workspace root
+  src/server.ts                Hono app: pages, /api, /mcp, static
+  src/db/schema.sql
+  src/db/client.ts             bun:sqlite, migrations
+  src/db/repos/*.ts            dataset, run, trace, score, judge
+  src/services/*.ts            aggregates, summary, compare, filters, query guard
+  src/urls.ts                  the deep link contract, one function per URL
+  src/api/*.ts                 REST routes, Zod schemas
+  src/mcp/server.ts            four tools over services
+  src/pages/*.tsx              Layout, Runs, Run, Compare, Trace, Review, Judges, Empty
+  src/client/review.ts         keyboard flow and autosave
+  src/client/compare.ts        only-changes toggle, score select
+  public/system.css            copied from design-system/dist on build
+packages/evals/
+  src/index.ts                 defineEval, runner, summary table
+  src/cli.ts                   run, compare, calibrate
+  src/uuid7.ts
+evals/
+  tagging.example.ts           deterministic sample with seeded items
+</code></pre>
+<h2>Implementation assumptions</h2>
+<div class="scroll"><table>
+<thead>
+<tr>
+<th>Assumption</th>
+<th>Confidence</th>
+<th>How to verify</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>bun:sqlite</code> supports WAL mode and prepared statements needed here</td>
+<td>CERTAIN</td>
+<td>Bun docs; smoke test in phase 1</td>
+</tr>
+<tr>
+<td><code>bunfig.toml</code> <code>[install] minimumReleaseAge</code> is honored by Bun 1.3.9</td>
+<td>LIKELY</td>
+<td><code>bun install --help</code> lists <code>--minimum-release-age</code>; confirm the config key in phase 0</td>
+</tr>
+<tr>
+<td><code>hono</code> 4.12.28 and <code>@hono/mcp</code> 0.3.0 work with <code>@modelcontextprotocol/sdk</code> 1.29.0</td>
+<td>LIKELY</td>
+<td>Wire one tool in phase 3; all three predate the cutoff by months</td>
+</tr>
+<tr>
+<td><code>@hono/mcp</code> 0.3.0 exposes a Streamable HTTP transport that works with SDK 1.29 <code>McpServer</code></td>
+<td>LIKELY</td>
+<td>Read its README; wire one tool in phase 3</td>
+</tr>
+<tr>
+<td>Hono TSX renders without a client runtime when using <code>c.html()</code></td>
+<td>CERTAIN</td>
+<td>Hono docs</td>
+</tr>
+<tr>
+<td>Zod 4.4 schemas convert to MCP tool input schemas via the SDK helpers</td>
+<td>LIKELY</td>
+<td>Verify on first tool in phase 3</td>
+</tr>
+<tr>
+<td>Node-free: no <code>node:</code> imports needed beyond <code>node:fs</code> for CSS copy</td>
+<td>LIKELY</td>
+<td>Bun implements <code>node:fs</code></td>
+</tr>
+<tr>
+<td>Bootstrap bias correction can be computed in TS in under 100 ms for n=200</td>
+<td>CERTAIN</td>
+<td>Trivial loop</td>
+</tr>
+<tr>
+<td>Google Fonts link for Open Sans is acceptable in the local app</td>
+<td>ASSUMED</td>
+<td>Confirm; otherwise self-host</td>
+</tr>
+</tbody></table></div>
+<p>No existing backend, frontend, or tests exist in this repo, so there are no compatibility assumptions.</p>
+<h2>Git strategy</h2>
+<p>Branch <code>feat/skeleton</code> off <code>main</code>. One commit per phase. PR to <code>main</code> after phase 6, auto-merge.</p>
+<h2>QA strategy</h2>
+<ul>
+<li>LLM self-test per phase: <code>bun test</code> unit tests for services, a request-level test per endpoint with an in-memory SQLite, an MCP client script that calls all four tools.</li>
+<li>Manual verification: after phase 4, open each deep link from the CLI output in a fresh tab and confirm the state matches. After phase 5, label 10 traces with the keyboard only.</li>
+</ul>
+<h2>Phases</h2>
+<p>Each phase: at most three tasks, type-check and tests after each task, commit at the end, then pause for confirmation.</p>
+<p><strong>Phase 0: Scaffold</strong></p>
+<ol>
+<li><code>app/</code> and <code>packages/evals</code> workspaces, Bun scripts (<code>dev</code>, <code>test</code>, <code>typecheck</code>, <code>build:css</code>); <code>bunfig.toml</code> with <code>exact = true</code> and <code>minimumReleaseAge = 5184000</code>; <code>.bun-version</code> 1.3.9; exact pins from the Stack table; <code>bun.lock</code> committed.</li>
+<li>Copy <code>design-system/dist/system.css</code> into <code>app/public</code> at build.</li>
+<li>Hono app serving <code>/health</code> and a Layout page with the top bar.</li>
+</ol>
+<p><strong>Phase 1: Database</strong></p>
+<ol>
+<li><code>schema.sql</code>, migration runner, WAL mode.</li>
+<li>Repositories with typed rows and JSON parsing at the boundary.</li>
+<li>UUIDv7 helper and tests.</li>
+</ol>
+<p><strong>Phase 2: Services and REST</strong></p>
+<ol>
+<li>Aggregates and summary (mean, diff, improvements, regressions).</li>
+<li>Compare with <code>only=changes</code>; filter grammar; query guard.</li>
+<li>REST routes with Zod validation and <code>url</code> on every response. Endpoint tests.</li>
+</ol>
+<p><strong>Phase 3: MCP</strong></p>
+<ol>
+<li><code>McpServer</code> with <code>list</code>, <code>read</code>, <code>write</code>, <code>compare</code> over services.</li>
+<li>Mount at <code>/mcp</code>; client script exercises all four; results carry <code>url</code>.</li>
+<li><code>claude mcp add</code> instructions in README.</li>
+</ol>
+<p><strong>Phase 4: Pages</strong></p>
+<ol>
+<li>Runs list and run detail.</li>
+<li>Compare and trace detail; <code>compare.ts</code> client module.</li>
+<li>Review with <code>review.ts</code> keyboard flow and autosave; judges page.</li>
+</ol>
+<p><strong>Phase 5: SDK and CLI</strong></p>
+<ol>
+<li><code>defineEval</code>, runner, batch posting, summary table.</li>
+<li><code>evals run</code> and <code>evals compare</code> commands; <code>--no-send</code>.</li>
+<li>Sample eval with seeded items; seed script.</li>
+</ol>
+<p><strong>Phase 6: Judge calibration</strong></p>
+<ol>
+<li><code>evals calibrate &lt;judge&gt; --labels &lt;file&gt;</code>: splits, TPR, TNR, store.</li>
+<li>Bias-corrected pass rate with bootstrap interval in run aggregates.</li>
+<li>Aggregates exclude uncalibrated judges; judges page shows status.</li>
+</ol>
+<h2>Success metrics</h2>
+<ul>
+<li><code>bun evals run</code> on the sample eval completes in under 5 seconds for 120 items and prints working URLs.</li>
+<li>Every URL in the contract table restores its state in a fresh tab.</li>
+<li>Labeling 10 traces by keyboard takes under 30 seconds.</li>
+<li>All four MCP tools return <code>url</code> and round-trip against a fresh database.</li>
+</ul>
+
+</main>

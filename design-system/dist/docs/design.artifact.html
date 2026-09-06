@@ -1,0 +1,524 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Copper Evaluations design</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700;800&display=swap">
+<style>
+
+:root {
+  --color-canvas: #FBF8F3;
+  --color-surface: #FFFFFF;
+  --color-surface-sunken: #F3EEE6;
+  --color-surface-hover: #FFFBF3;
+  --color-border: #E7E0D6;
+  --color-border-strong: #CFC5B7;
+  --color-ink: #1A1613;
+  --color-ink2: #4A433C;
+  --color-ink3: #6F675F;
+  --color-ink-inverse: #FFFFFF;
+  --color-brand: #C25A44;
+  --color-brand-hover: #A8472F;
+  --color-brand-soft: #FDF1EC;
+  --color-brand-ink: #8A3824;
+  --color-accent: #F5D398;
+  --color-accent-soft: #FFF6E5;
+  --color-pass: #1E8E5A;
+  --color-pass-soft: #DDF5E8;
+  --color-pass-ink: #146A42;
+  --color-fail: #D6453D;
+  --color-fail-soft: #FDE3E1;
+  --color-fail-ink: #A83229;
+  --color-defer: #B57400;
+  --color-defer-soft: #FFF1D6;
+  --color-defer-ink: #8A5800;
+  --color-info: #2F6FD6;
+  --color-info-soft: #E3ECFB;
+  --color-info-ink: #1F4F9E;
+  --color-focus-ring: #E8927A;
+  --color-overlay: rgba(26, 22, 19, 0.5);
+  --text-caption: 16px;
+  --leading-caption: 1.5;
+  --tracking-caption: 0.01em;
+  --text-body: 18px;
+  --leading-body: 1.6;
+  --tracking-body: 0;
+  --text-title: 28px;
+  --leading-title: 1.3;
+  --tracking-title: -0.01em;
+  --text-stat: 64px;
+  --leading-stat: 1;
+  --tracking-stat: -0.03em;
+  --space-0: 0px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-24: 96px;
+  --space-32: 128px;
+  --radius-sm: 12px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-xl: 32px;
+  --radius-pill: 999px;
+  --shadow-none: none;
+  --shadow-sm: 0 1px 2px rgba(26, 22, 19, 0.06);
+  --shadow-md: 0 4px 16px rgba(26, 22, 19, 0.08);
+  --shadow-lg: 0 12px 40px rgba(26, 22, 19, 0.12);
+  --shadow-focus: 0 0 0 4px var(--color-focus-ring);
+  --icon-sm: 20px;
+  --icon-md: 24px;
+  --icon-lg: 32px;
+  --icon-xl: 48px;
+  --touch-target: 48px;
+  --control-height: 56px;
+  --control-height-compact: 48px;
+  --table-row: 72px;
+  --card-padding: 32px;
+  --card-gap: 24px;
+  --section-gap: 64px;
+  --page-gutter: 48px;
+  --page-gutter-sm: 24px;
+  --container-narrow: 720px;
+  --container-default: 1200px;
+  --container-wide: 1440px;
+  --duration-fast: 150ms;
+  --duration-base: 250ms;
+  --duration-slow: 400ms;
+  --ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-enter: cubic-bezier(0, 0, 0.2, 1);
+  --ease-exit: cubic-bezier(0.4, 0, 1, 1);
+  --font-features-numeric: "tnum" 1, "lnum" 1;
+  --font-features-default: "kern" 1, "liga" 1;
+  --font-heading: "Open Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-body: "Open Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+  --color-canvas: #141210;
+  --color-surface: #1E1B18;
+  --color-surface-sunken: #1A1613;
+  --color-surface-hover: #302B26;
+  --color-border: #302B26;
+  --color-border-strong: #4A433C;
+  --color-ink: #F5F1EB;
+  --color-ink2: #CFC7BD;
+  --color-ink3: #A29A8F;
+  --color-ink-inverse: #1A1613;
+  --color-brand: #E8927A;
+  --color-brand-hover: #F2B9A6;
+  --color-brand-soft: rgba(194, 90, 68, 0.18);
+  --color-brand-ink: #F2B9A6;
+  --color-accent: #E9BC6E;
+  --color-accent-soft: rgba(245, 211, 152, 0.14);
+  --color-pass: #4FCB8B;
+  --color-pass-soft: rgba(30, 142, 90, 0.22);
+  --color-pass-ink: #7FD6A8;
+  --color-fail: #F07067;
+  --color-fail-soft: rgba(214, 69, 61, 0.22);
+  --color-fail-ink: #F4A19B;
+  --color-defer: #F2B84B;
+  --color-defer-soft: rgba(181, 116, 0, 0.22);
+  --color-defer-ink: #F2B84B;
+  --color-info: #8FB2EC;
+  --color-info-soft: rgba(47, 111, 214, 0.22);
+  --color-info-ink: #8FB2EC;
+  --color-focus-ring: #E8927A;
+  --color-overlay: rgba(0, 0, 0, 0.6);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --color-canvas: #141210;
+  --color-surface: #1E1B18;
+  --color-surface-sunken: #1A1613;
+  --color-surface-hover: #302B26;
+  --color-border: #302B26;
+  --color-border-strong: #4A433C;
+  --color-ink: #F5F1EB;
+  --color-ink2: #CFC7BD;
+  --color-ink3: #A29A8F;
+  --color-ink-inverse: #1A1613;
+  --color-brand: #E8927A;
+  --color-brand-hover: #F2B9A6;
+  --color-brand-soft: rgba(194, 90, 68, 0.18);
+  --color-brand-ink: #F2B9A6;
+  --color-accent: #E9BC6E;
+  --color-accent-soft: rgba(245, 211, 152, 0.14);
+  --color-pass: #4FCB8B;
+  --color-pass-soft: rgba(30, 142, 90, 0.22);
+  --color-pass-ink: #7FD6A8;
+  --color-fail: #F07067;
+  --color-fail-soft: rgba(214, 69, 61, 0.22);
+  --color-fail-ink: #F4A19B;
+  --color-defer: #F2B84B;
+  --color-defer-soft: rgba(181, 116, 0, 0.22);
+  --color-defer-ink: #F2B84B;
+  --color-info: #8FB2EC;
+  --color-info-soft: rgba(47, 111, 214, 0.22);
+  --color-info-ink: #8FB2EC;
+  --color-focus-ring: #E8927A;
+  --color-overlay: rgba(0, 0, 0, 0.6);
+  color-scheme: dark;
+}
+:root[data-font="open"] {
+  --font-heading: "Open Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-body: "Open Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+  font-feature-settings: var(--font-features-default);
+  -webkit-font-smoothing: antialiased;
+}
+h1, h2, h3, h4, p { margin: 0; }
+h1, h2, h3, h4 { text-wrap: balance; }
+a { color: inherit; }
+button, input, select, textarea { font: inherit; color: inherit; }
+img, svg { display: block; max-width: 100%; }
+[hidden] { display: none !important; }
+:focus-visible { outline: none; box-shadow: var(--shadow-focus); border-radius: var(--radius-sm); }
+.num { font-variant-numeric: tabular-nums lining-nums; font-feature-settings: var(--font-features-numeric); }
+.mono { font-family: var(--font-mono); }
+.strong { font-weight: 600; }
+.heavy { font-weight: 800; }
+.muted { color: var(--color-ink2); }
+.faint { color: var(--color-ink3); }
+.stack { display: flex; flex-direction: column; gap: var(--stack-gap, var(--space-4)); }
+.cluster { display: flex; flex-wrap: wrap; align-items: center; gap: var(--cluster-gap, var(--space-3)); }
+.grid { display: grid; gap: var(--card-gap); grid-template-columns: repeat(auto-fit, minmax(var(--grid-min, 260px), 1fr)); }
+.container { width: 100%; max-width: var(--container-default); margin-inline: auto; padding-inline: var(--page-gutter-sm); }
+@media (min-width: 900px) { .container { padding-inline: var(--page-gutter); } }
+.container-wide { max-width: var(--container-wide); }
+.scroll-x { overflow-x: auto; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; } }
+.t-caption { font-family: var(--font-body); font-size: var(--text-caption); line-height: var(--leading-caption); letter-spacing: var(--tracking-caption); font-weight: 600; }
+.t-body { font-family: var(--font-body); font-size: var(--text-body); line-height: var(--leading-body); letter-spacing: var(--tracking-body); font-weight: 400; }
+.t-title { font-family: var(--font-heading); font-size: var(--text-title); line-height: var(--leading-title); letter-spacing: var(--tracking-title); font-weight: 600; }
+.t-stat { font-family: var(--font-heading); font-size: var(--text-stat); line-height: var(--leading-stat); letter-spacing: var(--tracking-stat); font-weight: 800; }
+
+
+/* Button */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--space-3);
+  min-height: var(--control-height); padding-inline: var(--space-6);
+  border-radius: var(--radius-pill); border: 2px solid transparent;
+  font-family: var(--font-body); font-size: var(--text-body); font-weight: 600;
+  cursor: pointer; text-decoration: none; white-space: nowrap;
+  transition: background var(--duration-fast) var(--ease-standard), transform var(--duration-fast) var(--ease-standard), border-color var(--duration-fast) var(--ease-standard);
+}
+.btn:active { transform: translateY(1px); }
+.btn-primary { background: var(--color-brand); color: var(--color-ink-inverse); }
+.btn-primary:hover { background: var(--color-brand-hover); }
+.btn-secondary { background: var(--color-surface); color: var(--color-ink); border-color: var(--color-border-strong); }
+.btn-secondary:hover { background: var(--color-surface-hover); }
+.btn-ghost { background: transparent; color: var(--color-ink2); }
+.btn-ghost:hover { background: var(--color-surface-sunken); color: var(--color-ink); }
+.btn-pass { background: var(--color-pass); color: var(--color-ink-inverse); }
+.btn-fail { background: var(--color-fail); color: var(--color-ink-inverse); }
+.btn-defer { background: var(--color-defer-soft); color: var(--color-defer-ink); }
+.btn-compact { min-height: var(--control-height-compact); padding-inline: var(--space-4); font-size: var(--text-caption); }
+.btn-icon { width: var(--control-height); padding: 0; }
+.btn[disabled] { opacity: 0.45; cursor: not-allowed; }
+
+/* Card */
+.card { background: var(--color-surface); border-radius: var(--radius-lg); padding: var(--card-padding); border: 1px solid var(--color-border); }
+.card-raised { box-shadow: var(--shadow-md); border-color: transparent; }
+.card-brand { background: var(--color-brand); color: var(--color-ink-inverse); border-color: transparent; }
+.card-accent { background: var(--color-accent-soft); border-color: transparent; }
+
+/* Verdict pill */
+.verdict {
+  display: inline-flex; align-items: center; gap: var(--space-2);
+  min-height: 40px; padding-inline: var(--space-4); border-radius: var(--radius-pill);
+  font-size: var(--text-caption); font-weight: 600; letter-spacing: 0.01em;
+}
+.verdict-pass { background: var(--color-pass-soft); color: var(--color-pass-ink); }
+.verdict-fail { background: var(--color-fail-soft); color: var(--color-fail-ink); }
+.verdict-defer { background: var(--color-defer-soft); color: var(--color-defer-ink); }
+.verdict-pending { background: var(--color-surface-sunken); color: var(--color-ink2); }
+.verdict-lg { min-height: 56px; padding-inline: var(--space-6); font-size: var(--text-body); }
+
+/* Stat tile */
+.stat { display: flex; flex-direction: column; gap: var(--space-2); }
+.stat-value { font-family: var(--font-heading); font-weight: 800; font-size: var(--text-stat); line-height: var(--leading-stat); letter-spacing: var(--tracking-stat); font-variant-numeric: tabular-nums lining-nums; }
+.stat-label { display: inline-flex; align-items: center; gap: var(--space-2); font-size: var(--text-caption); font-weight: 500; color: var(--color-ink2); }
+.delta { display: inline-flex; align-items: center; gap: var(--space-1); font-size: var(--text-body); font-weight: 600; font-variant-numeric: tabular-nums; }
+.delta-up { color: var(--color-pass-ink); }
+.delta-down { color: var(--color-fail-ink); }
+.delta-flat { color: var(--color-ink3); }
+
+/* Score bar */
+.bar { position: relative; height: 12px; border-radius: var(--radius-pill); background: var(--color-surface-sunken); overflow: hidden; }
+.bar > i { position: absolute; inset: 0 auto 0 0; border-radius: inherit; background: var(--color-brand); }
+.bar-pass > i { background: var(--color-pass); }
+.bar-fail > i { background: var(--color-fail); }
+
+/* Table */
+.table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: var(--text-body); }
+.table th { text-align: left; font-size: var(--text-caption); font-weight: 600; color: var(--color-ink2); letter-spacing: 0.01em; padding: var(--space-4) var(--space-6); border-bottom: 2px solid var(--color-border); white-space: nowrap; }
+.table td { height: var(--table-row); padding: var(--space-4) var(--space-6); border-bottom: 1px solid var(--color-border); vertical-align: middle; }
+.table tr:last-child td { border-bottom: 0; }
+.table tbody tr:hover td { background: var(--color-surface-hover); }
+.table .num { text-align: right; }
+.table .baseline th, .table .baseline td { background: var(--color-surface-sunken); }
+.cell-diff { display: inline-flex; align-items: center; gap: var(--space-2); font-weight: 600; }
+
+/* Nav */
+.nav { display: flex; flex-direction: column; gap: var(--space-1); }
+.nav a { display: flex; align-items: center; gap: var(--space-3); min-height: var(--control-height); padding-inline: var(--space-4); border-radius: var(--radius-md); text-decoration: none; color: var(--color-ink2); font-weight: 500; }
+.nav a:hover { background: var(--color-surface-sunken); color: var(--color-ink); }
+.nav a[aria-current="page"] { background: var(--color-brand-soft); color: var(--color-brand-ink); font-weight: 600; }
+
+/* Tabs */
+.tabs { display: flex; gap: var(--space-2); border-bottom: 2px solid var(--color-border); }
+.tabs button { min-height: var(--control-height); padding-inline: var(--space-4); border: 0; background: none; color: var(--color-ink2); font-weight: 600; border-bottom: 3px solid transparent; margin-bottom: -2px; cursor: pointer; }
+.tabs button[aria-selected="true"] { color: var(--color-ink); border-color: var(--color-brand); }
+
+/* Inputs */
+.field { display: flex; flex-direction: column; gap: var(--space-2); }
+.field label { font-size: var(--text-caption); font-weight: 600; color: var(--color-ink2); }
+.input { min-height: var(--control-height); padding-inline: var(--space-4); border-radius: var(--radius-md); border: 2px solid var(--color-border-strong); background: var(--color-surface); width: 100%; }
+.input:focus { border-color: var(--color-brand); box-shadow: none; outline: none; }
+textarea.input { min-height: 120px; padding-block: var(--space-3); resize: vertical; }
+
+/* Toggle */
+.toggle { position: relative; width: 64px; height: 36px; border-radius: var(--radius-pill); background: var(--color-border-strong); border: 0; cursor: pointer; transition: background var(--duration-fast); }
+.toggle::after { content: ""; position: absolute; top: 4px; left: 4px; width: 28px; height: 28px; border-radius: 50%; background: var(--color-surface); box-shadow: var(--shadow-sm); transition: transform var(--duration-fast) var(--ease-standard); }
+.toggle[aria-checked="true"] { background: var(--color-brand); }
+.toggle[aria-checked="true"]::after { transform: translateX(28px); }
+
+/* Keyboard key */
+.kbd { display: inline-flex; align-items: center; justify-content: center; min-width: 40px; height: 40px; padding-inline: var(--space-3); border-radius: var(--radius-sm); border: 2px solid var(--color-border-strong); border-bottom-width: 4px; background: var(--color-surface); font-family: var(--font-mono); font-size: var(--text-caption); font-weight: 600; }
+
+/* Segmented control */
+.segmented { display: inline-flex; padding: 4px; border-radius: var(--radius-pill); background: var(--color-surface-sunken); gap: 4px; }
+.segmented button { min-height: 48px; padding-inline: var(--space-4); border: 0; border-radius: var(--radius-pill); background: transparent; color: var(--color-ink2); font-weight: 600; cursor: pointer; }
+.segmented button[aria-pressed="true"] { background: var(--color-surface); color: var(--color-ink); box-shadow: var(--shadow-sm); }
+
+/* Empty state */
+.empty { display: flex; flex-direction: column; align-items: center; text-align: center; gap: var(--space-6); padding: var(--space-16) var(--space-8); }
+.empty svg { width: var(--icon-xl); height: var(--icon-xl); color: var(--color-brand); }
+
+
+.doc { max-width: var(--container-narrow); margin-inline: auto; padding: var(--space-12) var(--space-6) var(--space-24); }
+.doc h1 { font-size: var(--text-title); font-weight: 800; letter-spacing: var(--tracking-title); line-height: var(--leading-title); margin-bottom: var(--space-6); }
+.doc h2 { font-size: var(--text-title); font-weight: 600; letter-spacing: var(--tracking-title); line-height: var(--leading-title); margin: var(--space-16) 0 var(--space-4); padding-top: var(--space-6); border-top: 1px solid var(--color-border); }
+.doc h3 { font-size: var(--text-body); font-weight: 600; margin: var(--space-8) 0 var(--space-2); color: var(--color-ink2); }
+.doc p, .doc li { max-width: 68ch; }
+.doc p { margin: 0 0 var(--space-4); }
+.doc ul, .doc ol { padding-left: var(--space-6); margin: 0 0 var(--space-4); }
+.doc li { margin-bottom: var(--space-2); }
+.doc strong { font-weight: 600; }
+.doc code { font-family: var(--font-mono); font-size: var(--text-caption); background: var(--color-surface-sunken); padding: 2px 6px; border-radius: 6px; }
+.doc pre { background: var(--color-surface-sunken); border-radius: var(--radius-md); padding: var(--space-4) var(--space-6); overflow-x: auto; margin: 0 0 var(--space-6); }
+.doc pre code { background: none; padding: 0; font-size: var(--text-caption); line-height: 1.6; }
+.doc pre.mermaid { background: var(--color-surface); border: 1px solid var(--color-border); padding: var(--space-6); display: flex; justify-content: center; }
+.doc .scroll { overflow-x: auto; margin: 0 0 var(--space-6); }
+.doc table { border-collapse: collapse; width: 100%; font-size: var(--text-caption); }
+.doc th { text-align: left; font-weight: 600; color: var(--color-ink2); padding: var(--space-3) var(--space-4); border-bottom: 2px solid var(--color-border); white-space: nowrap; }
+.doc td { padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--color-border); vertical-align: top; }
+.doc td code { white-space: nowrap; }
+.doc blockquote { margin: 0 0 var(--space-4); padding-left: var(--space-4); border-left: 4px solid var(--color-brand); color: var(--color-ink2); }
+.doc .meta { color: var(--color-ink3); font-size: var(--text-caption); margin-bottom: var(--space-8); }
+
+</style>
+<main class="doc">
+<h1>Copper Evaluations: system design</h1>
+<p><strong>Status</strong>: Draft, 2026-09-06
+<strong>Scope</strong>: A local, single-user tool for running and comparing LLM evaluations, with a human review loop and calibrated LLM judges.</p>
+<h2>Goal</h2>
+<p>Run a test set through an LLM task, score every result, compare two runs by test case, and keep humans in the loop until the automated judge agrees with them.</p>
+<h2>Principles</h2>
+<ol>
+<li><strong>The server never runs the task.</strong> The SDK runs the task and the scorers and posts results. The server stores, aggregates, and compares.</li>
+<li><strong>Binary verdicts.</strong> A score is a name and a number. Human review is Pass or Fail with a note. No 1 to 5 scales.</li>
+<li><strong>Error analysis before judges.</strong> Read traces, write notes, group notes into failure modes, then write one judge per failure mode.</li>
+<li><strong>Judges are validated, not trusted.</strong> Every LLM judge is measured against human labels before its output counts.</li>
+<li><strong>One process, one file.</strong> SQLite and a single Python service. No containers.</li>
+</ol>
+<h2>Data model</h2>
+<p>Six tables. A trace with a <code>run_id</code> is an experiment result. A trace without one is a production log.</p>
+<div class="scroll"><table>
+<thead>
+<tr>
+<th>Table</th>
+<th>Columns</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>project</code></td>
+<td><code>id</code>, <code>name</code></td>
+</tr>
+<tr>
+<td><code>dataset</code></td>
+<td><code>id</code>, <code>project_id</code>, <code>name</code>, <code>description</code></td>
+</tr>
+<tr>
+<td><code>dataset_item</code></td>
+<td><code>id</code> (client-set), <code>dataset_id</code>, <code>input</code> JSON, <code>expected</code> JSON, <code>metadata</code> JSON</td>
+</tr>
+<tr>
+<td><code>run</code></td>
+<td><code>id</code>, <code>dataset_id</code>, <code>name</code>, <code>metadata</code> JSON (model, prompt version, git sha), <code>started_at</code>, <code>ended_at</code></td>
+</tr>
+<tr>
+<td><code>trace</code></td>
+<td><code>id</code> (client-set), <code>project_id</code>, <code>run_id</code> nullable, <code>dataset_item_id</code> nullable, <code>input</code>, <code>output</code>, <code>expected</code>, <code>metadata</code>, <code>tags</code>, <code>start</code>, <code>end</code>, <code>metrics</code> JSON (<code>prompt_tokens</code>, <code>completion_tokens</code>, <code>duration_ms</code>, <code>errors</code>), <code>spans</code> JSON nullable</td>
+</tr>
+<tr>
+<td><code>score</code></td>
+<td><code>id</code>, <code>trace_id</code>, <code>name</code>, <code>value</code> REAL, <code>label</code> nullable, <code>reason</code> nullable, <code>source</code> (<code>sdk</code>, <code>judge</code>, <code>human</code>)</td>
+</tr>
+</tbody></table></div>
+<p>Relationship chain:</p>
+<pre><code>dataset ──&lt; dataset_item ──&lt; trace &gt;── run
+                                │
+                              score
+</code></pre>
+<p>Run aggregates (mean per score name, p50 duration, tokens) are computed on read, never stored.</p>
+<p>Ids are UUIDv7, generated by the client, so scores can be written before the server acknowledges the trace.</p>
+<h2>API</h2>
+<div class="scroll"><table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>POST</td>
+<td><code>/datasets</code></td>
+<td>Create dataset</td>
+</tr>
+<tr>
+<td>PUT</td>
+<td><code>/datasets/{id}/items</code></td>
+<td>Upsert items by client id</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/runs</code></td>
+<td>Create run</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/traces/batch</code></td>
+<td>Insert traces; rows may carry <code>run_id</code>, <code>dataset_item_id</code>, <code>scores[]</code></td>
+</tr>
+<tr>
+<td>PUT</td>
+<td><code>/traces/{id}/scores</code></td>
+<td>Add or replace scores on a trace</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/runs/{id}</code></td>
+<td>Run with aggregates</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/runs/{id}/summary?compare_to=</code></td>
+<td>Per score name: mean, diff, improvements, regressions</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/datasets/{id}/compare?run_ids=</code></td>
+<td>Items with nested per-run output and scores</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/traces?filters=</code></td>
+<td>Filter grammar <code>[{field, key, operator, value}]</code> with symbol operators</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/query</code></td>
+<td>Read-only SQL over the tables</td>
+</tr>
+</tbody></table></div>
+<p>Filter operators: <code>=</code>, <code>!=</code>, <code>&lt;</code>, <code>&lt;=</code>, <code>&gt;</code>, <code>&gt;=</code>, <code>contains</code>, <code>starts_with</code>, <code>in</code>, <code>is_empty</code>.</p>
+<h2>SDK and CLI</h2>
+<pre><code class="language-python">from copper_evals import Eval
+
+def task(item):
+    return my_pipeline(item.input[&quot;transcript&quot;])
+
+def exercise_match(item, output):
+    return {&quot;name&quot;: &quot;exercise_match&quot;, &quot;value&quot;: float(output[&quot;exercise&quot;] == item.expected[&quot;exercise&quot;])}
+
+Eval(&quot;tagging-golden&quot;, task=task, scores=[exercise_match], metadata={&quot;model&quot;: &quot;rules-v1&quot;})
+</code></pre>
+<pre><code>copper-evals run evals/tagging.py            # runs, posts, prints the summary table
+copper-evals run evals/tagging.py --no-send  # prints only
+copper-evals compare &lt;run_a&gt; &lt;run_b&gt;         # summary with diffs
+</code></pre>
+<p>The summary table shows each score name with mean, diff versus the previous run, improvements, and regressions.</p>
+<h2>Review interface</h2>
+<p>One screen, one trace at a time.</p>
+<ul>
+<li>Input, output, and expected in their native format. Markdown rendered, JSON collapsible, transcripts as transcripts.</li>
+<li>Pass, Fail, Defer as large buttons. Keys <code>1</code>, <code>2</code>, <code>D</code>. Undo with <code>U</code>.</li>
+<li>One notes field. Auto-save on every action.</li>
+<li>Counter: position, remaining, labeled.</li>
+<li>Failure tags appear only after error analysis has produced a taxonomy.</li>
+<li>Traces are loaded from a sample file. Sampling stays outside the app.</li>
+</ul>
+<h2>Judge validation</h2>
+<ol>
+<li>Collect about 100 human labels per failure mode, balanced between Pass and Fail.</li>
+<li>Split 15% train (few-shot examples), 45% dev, 40% test.</li>
+<li>Measure true positive rate and true negative rate on dev. Iterate the prompt until both exceed 90%.</li>
+<li>Run once on test. Record TPR and TNR with the judge version.</li>
+<li>Report production pass rates corrected for judge error, with a bootstrapped confidence interval.</li>
+</ol>
+<p>A judge whose TPR or TNR is unknown shows as <code>pending</code> in the UI and its scores do not enter run aggregates.</p>
+<h2>MCP tools</h2>
+<p>Four tools over the same API, added after the CLI works.</p>
+<div class="scroll"><table>
+<thead>
+<tr>
+<th>Tool</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>list</code></td>
+<td>Datasets, runs, traces with filters</td>
+</tr>
+<tr>
+<td><code>read</code></td>
+<td>One run with aggregates, or one trace with spans and scores in a single call</td>
+</tr>
+<tr>
+<td><code>write</code></td>
+<td>Scores, traces, runs; validates against a schema first</td>
+</tr>
+<tr>
+<td><code>compare</code></td>
+<td>The pivoted compare table for two or more runs</td>
+</tr>
+</tbody></table></div>
+<p>Every result carries a URL into the UI.</p>
+<h2>Later</h2>
+<ul>
+<li>OTLP/HTTP receiver at <code>/otel/v1/traces</code> for agent and voice frameworks. Map <code>gen_ai.*</code> attributes first, keep unknown attributes in <code>metadata</code>.</li>
+<li>Compare page in the UI. Until then the CLI table is the compare view.</li>
+</ul>
+<h2>Non-goals</h2>
+<p>Prompt management, playgrounds, dashboards, alerts, sessions, multi-user access control, server-side code execution.</p>
+
+</main>

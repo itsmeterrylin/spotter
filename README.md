@@ -13,3 +13,7 @@ A local eval tool for LLM products: run a test set, score every result, compare 
 ```bash
 cd design-system && npm run build && open preview/index.html
 ```
+
+## Dependency policy
+
+Exact pins only. A version is adopted only after it has been public for 60 days. Bun enforces this with `minimumReleaseAge` in `bunfig.toml`; the design system checks it with `npm run check:deps`. Lockfiles are committed. Details in the plan's Stack section.
