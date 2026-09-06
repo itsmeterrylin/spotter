@@ -4,13 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Copper Evaluations</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=DM+Mono:wght@400;500&display=swap">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@500;600;700&family=Lexend:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Figtree:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&family=Source+Sans+3:wght@400;500;600&family=Source+Code+Pro:wght@400;500&display=swap">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=DM+Mono:wght@400;500&display=swap">
 <style>
 
 :root {
@@ -116,9 +116,9 @@
   --ease-exit: cubic-bezier(0.4, 0, 1, 1);
   --font-features-numeric: "tnum" 1, "lnum" 1;
   --font-features-default: "kern" 1, "liga" 1;
-  --font-heading: Sora, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-body: Manrope, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --font-heading: "DM Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-body: "DM Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: "DM Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   --font-heading-weight: 700;
   color-scheme: light;
 }
@@ -190,6 +190,12 @@
   --color-overlay: rgba(0, 0, 0, 0.6);
   color-scheme: dark;
 }
+:root[data-font="dm"] {
+  --font-heading: "DM Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-body: "DM Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: "DM Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --font-heading-weight: 700;
+}
 :root[data-font="sora"] {
   --font-heading: Sora, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --font-body: Manrope, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -224,12 +230,6 @@
   --font-heading: "Space Grotesk", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  --font-heading-weight: 700;
-}
-:root[data-font="dm"] {
-  --font-heading: "DM Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-body: "DM Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-mono: "DM Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   --font-heading-weight: 700;
 }
 
@@ -406,7 +406,8 @@ textarea.input { min-height: 120px; padding-block: var(--space-3); resize: verti
 .block { display: flex; flex-direction: column; gap: var(--space-2); }
 .block-label { display: inline-flex; align-items: center; gap: var(--space-2); font-size: var(--text-caption); font-weight: 600; color: var(--color-ink2); letter-spacing: 0.02em; text-transform: uppercase; }
 .transcript { font-size: var(--text-lead); line-height: 1.5; padding: var(--space-6); border-radius: var(--radius-md); background: var(--color-surface-sunken); }
-.kv { display: grid; grid-template-columns: max-content 1fr; gap: var(--space-2) var(--space-6); font-family: var(--font-mono); font-size: var(--text-body); }
+.kv { display: grid; grid-template-columns: max-content 1fr; gap: var(--space-2) var(--space-6); font-size: var(--text-body); }
+.kv dd { font-weight: 600; }
 .kv dt { color: var(--color-ink3); }
 .kv dd { margin: 0; }
 .verdict-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: var(--space-4); }
@@ -422,7 +423,7 @@ textarea.input { min-height: 120px; padding-block: var(--space-3); resize: verti
 .diff-neg { color: var(--color-fail-ink); }
 .changed td { box-shadow: inset 4px 0 0 var(--color-fail); }
 .improved td { box-shadow: inset 4px 0 0 var(--color-pass); }
-.out { max-width: 32ch; }
+.out { max-width: 32ch; font-size: var(--text-body); }
 </style>
 </head>
 <body>
@@ -457,7 +458,7 @@ textarea.input { min-height: 120px; padding-block: var(--space-3); resize: verti
       <div><span class="faint">lead 22</span><span class="t-lead">Squats, five sets of five, two twenty five. Then some light rows.</span></div>
       <div><span class="faint">body 18</span><span class="t-body">Every score is a name and a number. Humans say Pass or Fail. A judge counts once it agrees with them.</span></div>
       <div><span class="faint">caption 16</span><span class="t-caption muted">120 items · 4 regressions · 1.2 s p50</span></div>
-      <div><span class="faint">code 16</span><span class="t-code">{"exercise": "Bench Press", "sets": 3, "reps": 5, "weight": 225}</span></div>
+      <div><span class="faint">code 16</span><span class="t-code">01991c2e-7f3a-7d2b-9c1e-3f5a8b2d4e10</span></div>
     </div>
   </div>
 </section>
@@ -539,9 +540,9 @@ textarea.input { min-height: 120px; padding-block: var(--space-3); resize: verti
         <table class="table">
           <thead><tr><th>Item</th><th>rules-v1</th><th>rules-v2</th><th class="num">exercise_match</th><th class="num">weight_found</th></tr></thead>
           <tbody>
-            <tr class="improved"><td><div class="stack" style="--stack-gap: 4px"><span class="t-bodyStrong">bench-01</span><span class="t-caption muted">“bench press three by five at two twenty five”</span></div></td><td class="out t-code">Bench Press · 3×5 · 225</td><td class="out t-code">Bench Press · 3×5 · 225</td><td class="num"><span class="cell-diff diff-pos"><svg class="ic ic-sm"><use href="#i-up"/></svg>0 → 1</span></td><td class="num"><span class="cell-diff"><svg class="ic ic-sm"><use href="#i-flat"/></svg>1</span></td></tr>
-            <tr class="changed"><td><div class="stack" style="--stack-gap: 4px"><span class="t-bodyStrong">row-07</span><span class="t-caption muted">“then some light rows, ten reps”</span></div></td><td class="out t-code">Barbell Row · 1×10</td><td class="out t-code">Cable Row · 1×10</td><td class="num"><span class="cell-diff diff-neg"><svg class="ic ic-sm"><use href="#i-down"/></svg>1 → 0</span></td><td class="num"><span class="cell-diff"><svg class="ic ic-sm"><use href="#i-flat"/></svg>0</span></td></tr>
-            <tr class="improved"><td><div class="stack" style="--stack-gap: 4px"><span class="t-bodyStrong">squat-12</span><span class="t-caption muted">“squats five by five two twenty five”</span></div></td><td class="out t-code">Squat · 5×5</td><td class="out t-code">Squat · 5×5 · 225</td><td class="num"><span class="cell-diff"><svg class="ic ic-sm"><use href="#i-flat"/></svg>1</span></td><td class="num"><span class="cell-diff diff-pos"><svg class="ic ic-sm"><use href="#i-up"/></svg>0 → 1</span></td></tr>
+            <tr class="improved"><td><div class="stack" style="--stack-gap: 4px"><span class="t-bodyStrong">bench-01</span><span class="t-caption muted">“bench press three by five at two twenty five”</span></div></td><td class="out">Bench Press · 3×5 · 225</td><td class="out">Bench Press · 3×5 · 225</td><td class="num"><span class="cell-diff diff-pos"><svg class="ic ic-sm"><use href="#i-up"/></svg>0 → 1</span></td><td class="num"><span class="cell-diff"><svg class="ic ic-sm"><use href="#i-flat"/></svg>1</span></td></tr>
+            <tr class="changed"><td><div class="stack" style="--stack-gap: 4px"><span class="t-bodyStrong">row-07</span><span class="t-caption muted">“then some light rows, ten reps”</span></div></td><td class="out">Barbell Row · 1×10</td><td class="out">Cable Row · 1×10</td><td class="num"><span class="cell-diff diff-neg"><svg class="ic ic-sm"><use href="#i-down"/></svg>1 → 0</span></td><td class="num"><span class="cell-diff"><svg class="ic ic-sm"><use href="#i-flat"/></svg>0</span></td></tr>
+            <tr class="improved"><td><div class="stack" style="--stack-gap: 4px"><span class="t-bodyStrong">squat-12</span><span class="t-caption muted">“squats five by five two twenty five”</span></div></td><td class="out">Squat · 5×5</td><td class="out">Squat · 5×5 · 225</td><td class="num"><span class="cell-diff"><svg class="ic ic-sm"><use href="#i-flat"/></svg>1</span></td><td class="num"><span class="cell-diff diff-pos"><svg class="ic ic-sm"><use href="#i-up"/></svg>0 → 1</span></td></tr>
           </tbody>
         </table>
       </div>
@@ -655,7 +656,7 @@ textarea.input { min-height: 120px; padding-block: var(--space-3); resize: verti
 
 <script>
 (function () {
-  var pairs = [{"id":"sora","label":"Sora + Manrope"},{"id":"rubik","label":"Rubik + Lexend"},{"id":"open","label":"Open Sans"},{"id":"jakarta","label":"Plus Jakarta Sans + Figtree"},{"id":"outfit","label":"Outfit + Source Sans 3"},{"id":"grotesk","label":"Space Grotesk + IBM Plex Sans"},{"id":"dm","label":"DM Sans + DM Mono"}];
+  var pairs = [{"id":"dm","label":"DM Sans + DM Mono"},{"id":"sora","label":"Sora + Manrope"},{"id":"rubik","label":"Rubik + Lexend"},{"id":"open","label":"Open Sans"},{"id":"jakarta","label":"Plus Jakarta Sans + Figtree"},{"id":"outfit","label":"Outfit + Source Sans 3"},{"id":"grotesk","label":"Space Grotesk + IBM Plex Sans"}];
   var root = document.documentElement;
   var store = { get: function (k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set: function (k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
 

@@ -102,9 +102,9 @@
   --ease-exit: cubic-bezier(0.4, 0, 1, 1);
   --font-features-numeric: "tnum" 1, "lnum" 1;
   --font-features-default: "kern" 1, "liga" 1;
-  --font-heading: Sora, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-body: Manrope, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --font-heading: "DM Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-body: "DM Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: "DM Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   --font-heading-weight: 700;
   color-scheme: light;
 }
@@ -176,6 +176,12 @@
   --color-overlay: rgba(0, 0, 0, 0.6);
   color-scheme: dark;
 }
+:root[data-font="dm"] {
+  --font-heading: "DM Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-body: "DM Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: "DM Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --font-heading-weight: 700;
+}
 :root[data-font="sora"] {
   --font-heading: Sora, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --font-body: Manrope, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -210,11 +216,5 @@
   --font-heading: "Space Grotesk", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  --font-heading-weight: 700;
-}
-:root[data-font="dm"] {
-  --font-heading: "DM Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-body: "DM Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-mono: "DM Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   --font-heading-weight: 700;
 }

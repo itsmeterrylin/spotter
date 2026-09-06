@@ -25,6 +25,7 @@ open preview/index.html
 | Section gap | 64px |
 | Primary actions per screen | 1 |
 | Accent | Copper `#C25A44`. Pass, fail, and defer colors are semantic, not accents. |
+| Mono | Raw JSON and ids only. Never for outputs, names, or numbers. |
 
 ## Files
 
@@ -42,10 +43,10 @@ open preview/index.html
 
 | Id | Heading | Body |
 |---|---|---|
+| `dm` (default) | DM Sans | DM Sans |
 | `sora` | Sora | Manrope |
 | `rubik` | Rubik | Lexend |
 | `open` | Open Sans | Open Sans |
 | `jakarta` | Plus Jakarta Sans | Figtree |
 | `outfit` | Outfit | Source Sans 3 |
 | `grotesk` | Space Grotesk | IBM Plex Sans |
-| `dm` | DM Sans | DM Sans |

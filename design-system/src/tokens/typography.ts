@@ -5,6 +5,7 @@
  * - Smallest text on screen is 16px. There is no 12px or 14px step.
  * - Each step is visibly larger than the last (ratio 1.22 to 1.29).
  * - Numbers use tabular figures so columns line up.
+ * - Mono is for raw JSON and ids only. Outputs, names, and numbers use the body face.
  */
 
 export const fontSize = {
@@ -73,6 +74,7 @@ export const textStyle = {
   hero: { size: 'hero', weight: 'bold', family: 'heading' },
   stat: { size: 'stat', weight: 'bold', family: 'heading' },
   giant: { size: 'giant', weight: 'bold', family: 'heading' },
+  /** Raw JSON and ids only. */
   code: { size: 'caption', weight: 'regular', family: 'mono' },
   codeBlock: { size: 'body', weight: 'regular', family: 'mono' },
 } as const satisfies Record<
@@ -104,6 +106,16 @@ const monoFallback = `ui-monospace, SFMono-Regular, Menlo, Consolas, monospace`;
  * Candidate font pairs. Pick one; the others stay for comparison.
  */
 export const fontPairs: readonly FontPair[] = [
+  {
+    id: 'dm',
+    label: 'DM Sans + DM Mono',
+    heading: `"DM Sans", ${sansFallback}`,
+    body: `"DM Sans", ${sansFallback}`,
+    mono: `"DM Mono", ${monoFallback}`,
+    googleFontsUrl:
+      'https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=DM+Mono:wght@400;500&display=swap',
+    headingWeight: 'bold',
+  },
   {
     id: 'sora',
     label: 'Sora + Manrope',
@@ -164,19 +176,9 @@ export const fontPairs: readonly FontPair[] = [
       'https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap',
     headingWeight: 'bold',
   },
-  {
-    id: 'dm',
-    label: 'DM Sans + DM Mono',
-    heading: `"DM Sans", ${sansFallback}`,
-    body: `"DM Sans", ${sansFallback}`,
-    mono: `"DM Mono", ${monoFallback}`,
-    googleFontsUrl:
-      'https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=DM+Mono:wght@400;500&display=swap',
-    headingWeight: 'bold',
-  },
 ] as const;
 
-export const defaultFontPairId = 'sora';
+export const defaultFontPairId = 'dm';
 
 export const fontFeatures = {
   /** Tabular, lining numerals for any number that sits in a column. */

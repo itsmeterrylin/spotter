@@ -4,13 +4,13 @@ Seven candidates, all sans-serif and all on Google Fonts, so they render the sam
 
 | Id | Heading | Body | Character |
 |---|---|---|---|
-| `sora` | Sora | Manrope | Airy geometric headings, calm wide body. Default. |
+| `sora` | Sora | Manrope | Airy geometric headings, calm wide body. |
 | `rubik` | Rubik | Lexend | Rounded headings, body built for reading ease. |
 | `open` | Open Sans | Open Sans | Humanist, neutral, one variable family. |
 | `jakarta` | Plus Jakarta Sans | Figtree | Rounded, consumer feel. |
 | `outfit` | Outfit | Source Sans 3 | Geometric display, humanist body. |
 | `grotesk` | Space Grotesk | IBM Plex Sans | Quirky terminals on the headings, sober body. |
-| `dm` | DM Sans | DM Mono | One family. Calm, low contrast between roles. |
+| `dm` | DM Sans | DM Mono | One family. Calm, compact, easiest to scan in tables. Default. |
 
 ## Type specimen
 
@@ -32,14 +32,14 @@ Seven candidates, all sans-serif and all on Google Fonts, so they render the sam
 
 | Pair | Light | Dark |
 |---|---|---|
-| sora | [light](../../design-system/preview/screenshots/font-sora-light.png) | [dark](../../design-system/preview/screenshots/font-sora-dark.png) |
+| sora | [light](../../design-system/preview/screenshots/font-sora-light.png) | |
 | rubik | [light](../../design-system/preview/screenshots/font-rubik-light.png) | |
 | open | [light](../../design-system/preview/screenshots/font-open-light.png) | |
 | jakarta | [light](../../design-system/preview/screenshots/font-jakarta-light.png) | |
 | outfit | [light](../../design-system/preview/screenshots/font-outfit-light.png) | |
 | grotesk | [light](../../design-system/preview/screenshots/font-grotesk-light.png) | |
-| dm | [light](../../design-system/preview/screenshots/font-dm-light.png) | |
+| dm | [light](../../design-system/preview/screenshots/font-dm-light.png) | [dark](../../design-system/preview/screenshots/font-dm-dark.png) |
 
 ## Recommendation
 
-`sora` as the default. `rubik` if the review screen needs to feel even lighter. Change `defaultFontPairId` in `design-system/src/tokens/typography.ts` to lock the choice.
+`dm` is the default: compact digits and calm tone for tables. Mono is used only for raw JSON and ids. Change `defaultFontPairId` in `design-system/src/tokens/typography.ts` to lock the choice.
