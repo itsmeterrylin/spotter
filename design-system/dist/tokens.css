@@ -1,0 +1,214 @@
+
+@font-face { font-family: "Cooper Hewitt"; font-weight: 400; src: url("fonts/CooperHewitt-Book.otf") format("opentype"); }
+@font-face { font-family: "Cooper Hewitt"; font-weight: 500; src: url("fonts/CooperHewitt-Medium.otf") format("opentype"); }
+@font-face { font-family: "Cooper Hewitt"; font-weight: 600; src: url("fonts/CooperHewitt-Semibold.otf") format("opentype"); }
+@font-face { font-family: "Cooper Hewitt"; font-weight: 700; src: url("fonts/CooperHewitt-Bold.otf") format("opentype"); }
+:root {
+  --color-canvas: #FBF8F3;
+  --color-surface: #FFFFFF;
+  --color-surface-sunken: #F3EEE6;
+  --color-surface-hover: #FFFBF3;
+  --color-border: #E7E0D6;
+  --color-border-strong: #CFC5B7;
+  --color-ink: #1A1613;
+  --color-ink2: #4A433C;
+  --color-ink3: #6F675F;
+  --color-ink-inverse: #FFFFFF;
+  --color-brand: #C25A44;
+  --color-brand-hover: #A8472F;
+  --color-brand-soft: #FDF1EC;
+  --color-brand-ink: #8A3824;
+  --color-accent: #F5D398;
+  --color-accent-soft: #FFF6E5;
+  --color-pass: #1E8E5A;
+  --color-pass-soft: #DDF5E8;
+  --color-pass-ink: #146A42;
+  --color-fail: #D6453D;
+  --color-fail-soft: #FDE3E1;
+  --color-fail-ink: #A83229;
+  --color-defer: #B57400;
+  --color-defer-soft: #FFF1D6;
+  --color-defer-ink: #8A5800;
+  --color-info: #2F6FD6;
+  --color-info-soft: #E3ECFB;
+  --color-info-ink: #1F4F9E;
+  --color-focus-ring: #E8927A;
+  --color-overlay: rgba(26, 22, 19, 0.5);
+  --text-caption: 16px;
+  --leading-caption: 1.5;
+  --tracking-caption: 0.01em;
+  --text-body: 18px;
+  --leading-body: 1.6;
+  --tracking-body: 0;
+  --text-lead: 22px;
+  --leading-lead: 1.5;
+  --tracking-lead: 0;
+  --text-title: 28px;
+  --leading-title: 1.3;
+  --tracking-title: -0.01em;
+  --text-heading: 36px;
+  --leading-heading: 1.2;
+  --tracking-heading: -0.015em;
+  --text-display: 44px;
+  --leading-display: 1.1;
+  --tracking-display: -0.02em;
+  --text-hero: 56px;
+  --leading-hero: 1.05;
+  --tracking-hero: -0.025em;
+  --text-stat: 72px;
+  --leading-stat: 1;
+  --tracking-stat: -0.03em;
+  --text-giant: 96px;
+  --leading-giant: 1;
+  --tracking-giant: -0.035em;
+  --space-0: 0px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-24: 96px;
+  --space-32: 128px;
+  --radius-sm: 12px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-xl: 32px;
+  --radius-pill: 999px;
+  --shadow-none: none;
+  --shadow-sm: 0 1px 2px rgba(26, 22, 19, 0.06);
+  --shadow-md: 0 4px 16px rgba(26, 22, 19, 0.08);
+  --shadow-lg: 0 12px 40px rgba(26, 22, 19, 0.12);
+  --shadow-focus: 0 0 0 4px var(--color-focus-ring);
+  --icon-sm: 20px;
+  --icon-md: 24px;
+  --icon-lg: 32px;
+  --icon-xl: 48px;
+  --touch-target: 48px;
+  --control-height: 56px;
+  --control-height-compact: 48px;
+  --table-row: 72px;
+  --card-padding: 32px;
+  --card-gap: 24px;
+  --section-gap: 64px;
+  --page-gutter: 48px;
+  --page-gutter-sm: 24px;
+  --max-primary-actions: 1px;
+  --max-stats-per-row: 4px;
+  --container-narrow: 720px;
+  --container-default: 1200px;
+  --container-wide: 1440px;
+  --duration-fast: 150ms;
+  --duration-base: 250ms;
+  --duration-slow: 400ms;
+  --ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-enter: cubic-bezier(0, 0, 0.2, 1);
+  --ease-exit: cubic-bezier(0.4, 0, 1, 1);
+  --font-features-numeric: "tnum" 1, "lnum" 1;
+  --font-features-default: "kern" 1, "liga" 1;
+  --font-heading: "Cooper Hewitt", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-body: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --font-heading-weight: 700;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+  --color-canvas: #141210;
+  --color-surface: #1E1B18;
+  --color-surface-sunken: #1A1613;
+  --color-surface-hover: #302B26;
+  --color-border: #302B26;
+  --color-border-strong: #4A433C;
+  --color-ink: #F5F1EB;
+  --color-ink2: #CFC7BD;
+  --color-ink3: #A29A8F;
+  --color-ink-inverse: #1A1613;
+  --color-brand: #E8927A;
+  --color-brand-hover: #F2B9A6;
+  --color-brand-soft: rgba(194, 90, 68, 0.18);
+  --color-brand-ink: #F2B9A6;
+  --color-accent: #E9BC6E;
+  --color-accent-soft: rgba(245, 211, 152, 0.14);
+  --color-pass: #4FCB8B;
+  --color-pass-soft: rgba(30, 142, 90, 0.22);
+  --color-pass-ink: #7FD6A8;
+  --color-fail: #F07067;
+  --color-fail-soft: rgba(214, 69, 61, 0.22);
+  --color-fail-ink: #F4A19B;
+  --color-defer: #F2B84B;
+  --color-defer-soft: rgba(181, 116, 0, 0.22);
+  --color-defer-ink: #F2B84B;
+  --color-info: #8FB2EC;
+  --color-info-soft: rgba(47, 111, 214, 0.22);
+  --color-info-ink: #8FB2EC;
+  --color-focus-ring: #E8927A;
+  --color-overlay: rgba(0, 0, 0, 0.6);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --color-canvas: #141210;
+  --color-surface: #1E1B18;
+  --color-surface-sunken: #1A1613;
+  --color-surface-hover: #302B26;
+  --color-border: #302B26;
+  --color-border-strong: #4A433C;
+  --color-ink: #F5F1EB;
+  --color-ink2: #CFC7BD;
+  --color-ink3: #A29A8F;
+  --color-ink-inverse: #1A1613;
+  --color-brand: #E8927A;
+  --color-brand-hover: #F2B9A6;
+  --color-brand-soft: rgba(194, 90, 68, 0.18);
+  --color-brand-ink: #F2B9A6;
+  --color-accent: #E9BC6E;
+  --color-accent-soft: rgba(245, 211, 152, 0.14);
+  --color-pass: #4FCB8B;
+  --color-pass-soft: rgba(30, 142, 90, 0.22);
+  --color-pass-ink: #7FD6A8;
+  --color-fail: #F07067;
+  --color-fail-soft: rgba(214, 69, 61, 0.22);
+  --color-fail-ink: #F4A19B;
+  --color-defer: #F2B84B;
+  --color-defer-soft: rgba(181, 116, 0, 0.22);
+  --color-defer-ink: #F2B84B;
+  --color-info: #8FB2EC;
+  --color-info-soft: rgba(47, 111, 214, 0.22);
+  --color-info-ink: #8FB2EC;
+  --color-focus-ring: #E8927A;
+  --color-overlay: rgba(0, 0, 0, 0.6);
+  color-scheme: dark;
+}
+:root[data-font="brand"] {
+  --font-heading: "Cooper Hewitt", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-body: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --font-heading-weight: 700;
+}
+:root[data-font="jakarta"] {
+  --font-heading: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-body: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --font-heading-weight: 700;
+}
+:root[data-font="grotesk"] {
+  --font-heading: "Space Grotesk", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --font-heading-weight: 700;
+}
+:root[data-font="fraunces"] {
+  --font-heading: Fraunces, Georgia, "Times New Roman", serif;
+  --font-body: "Work Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --font-heading-weight: 600;
+}
+:root[data-font="dm"] {
+  --font-heading: "DM Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-body: "DM Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: "DM Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --font-heading-weight: 700;
+}

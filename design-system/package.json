@@ -1,0 +1,22 @@
+{
+  "name": "@copper/design-system",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Tokens, component contracts, and generated CSS for Copper Evaluations.",
+  "scripts": {
+    "build": "node --experimental-strip-types src/build.ts",
+    "check": "tsc --noEmit -p tsconfig.json"
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./tokens": "./src/tokens/index.ts",
+    "./icons": "./src/icons.ts",
+    "./css": "./src/css.ts",
+    "./components": "./src/components.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.1",
+    "typescript": "^5.9.3"
+  }
+}
