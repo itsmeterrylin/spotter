@@ -328,14 +328,15 @@ textarea.input { min-height: 120px; padding-block: var(--space-3); resize: verti
 .doc pre { background: var(--color-surface-sunken); border-radius: var(--radius-md); padding: var(--space-4) var(--space-6); overflow-x: auto; margin: 0 0 var(--space-6); }
 .doc pre code { background: none; padding: 0; font-size: var(--text-caption); line-height: 1.6; }
 .doc .diagram { position: relative; margin: 0 0 var(--space-6); }
-.doc pre.mermaid { background: var(--color-surface); border: 1px solid var(--color-border); padding: var(--space-6); overflow: auto; margin: 0; cursor: zoom-in; -webkit-overflow-scrolling: touch; }
-.doc pre.mermaid svg { max-width: none !important; display: block; }
+.doc .diagram-view { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-6); overflow: auto; cursor: zoom-in; -webkit-overflow-scrolling: touch; min-height: 120px; }
+.doc .diagram-view:focus-visible { box-shadow: var(--shadow-focus); outline: none; }
+.doc .diagram-view svg { max-width: none !important; display: block; }
 .doc .diagram-open { position: absolute; top: var(--space-3); right: var(--space-3); }
 .zoom { position: fixed; inset: 0; z-index: 100; background: var(--color-canvas); display: none; flex-direction: column; }
 .zoom[data-open] { display: flex; }
 .zoom-bar { display: flex; gap: var(--space-3); align-items: center; padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--color-border); background: var(--color-surface); }
 .zoom-bar .grow { flex: 1; }
-.zoom-body { flex: 1; overflow: auto; padding: var(--space-6); touch-action: pan-x pan-y pinch-zoom; }
+.zoom-body { flex: 1; overflow: auto; padding: var(--space-6); touch-action: pan-x pan-y pinch-zoom; cursor: grab; }
 .zoom-body svg { max-width: none !important; display: block; }
 .doc .scroll { overflow-x: auto; margin: 0 0 var(--space-6); }
 .doc table { border-collapse: collapse; width: 100%; font-size: var(--text-caption); }
@@ -539,9 +540,30 @@ copper-evals compare &lt;run_a&gt; &lt;run_b&gt;         # summary with diffs
   <div class="zoom-bar"><button type="button" class="btn btn-secondary btn-compact" data-zoom-out aria-label="Zoom out">−</button><button type="button" class="btn btn-secondary btn-compact" data-zoom-in aria-label="Zoom in">+</button><span class="t-caption muted" id="zoomLevel">100%</span><span class="grow"></span><button type="button" class="btn btn-primary btn-compact" data-zoom-close>Close</button></div>
   <div class="zoom-body" id="zoomBody"></div>
 </div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/11.12.0/mermaid.min.js"></script>
 <script>
 (function () {
   var MIN_WIDTH = 960;
+  var css = getComputedStyle(document.documentElement);
+  var v = function (name) { return css.getPropertyValue(name).trim(); };
+  var dark = matchMedia('(prefers-color-scheme: dark)').matches && document.documentElement.getAttribute('data-theme') !== 'light' || document.documentElement.getAttribute('data-theme') === 'dark';
+  mermaid.initialize({
+    startOnLoad: false,
+    theme: 'base',
+    themeVariables: {
+      fontFamily: v('--font-body'), fontSize: '16px',
+      primaryColor: v('--color-brand-soft'), primaryBorderColor: v('--color-brand'), primaryTextColor: v('--color-ink'),
+      secondaryColor: v('--color-surface-sunken'), tertiaryColor: v('--color-surface'),
+      lineColor: v('--color-ink2'), textColor: v('--color-ink'), clusterBkg: v('--color-surface-sunken'), clusterBorder: v('--color-border-strong'),
+      actorBkg: v('--color-brand-soft'), actorBorder: v('--color-brand'), actorTextColor: v('--color-ink'), signalColor: v('--color-ink2'), signalTextColor: v('--color-ink'),
+      noteBkgColor: v('--color-accent-soft'), noteBorderColor: v('--color-accent'), noteTextColor: v('--color-ink'),
+      labelBoxBkgColor: v('--color-surface'), labelBoxBorderColor: v('--color-border-strong'), labelTextColor: v('--color-ink'), loopTextColor: v('--color-ink2'),
+      edgeLabelBackground: v('--color-surface'), darkMode: dark
+    },
+    flowchart: { useMaxWidth: false, htmlLabels: true, padding: 16 },
+    sequence: { useMaxWidth: false, mirrorActors: false, actorMargin: 40, messageMargin: 36 }
+  });
+
   function size(svg, scale) {
     var vb = svg.viewBox && svg.viewBox.baseVal;
     if (!vb || !vb.width) return;
@@ -550,27 +572,54 @@ copper-evals compare &lt;run_a&gt; &lt;run_b&gt;         # summary with diffs
     svg.setAttribute('height', Math.round(vb.height * base * scale));
     svg.style.maxWidth = 'none';
   }
-  function fix(root) { root.querySelectorAll('pre.mermaid svg').forEach(function (s) { if (!s.dataset.sized) { s.dataset.sized = '1'; size(s, 1); } }); }
-  fix(document);
-  new MutationObserver(function () { fix(document); }).observe(document.body, { childList: true, subtree: true });
 
   var zoom = document.getElementById('zoom'), body = document.getElementById('zoomBody'), level = document.getElementById('zoomLevel');
   var scale = 1, current = null;
   function render() { if (!current) return; size(current, scale); level.textContent = Math.round(scale * 100) + '%'; }
-  function open(svg) { current = svg.cloneNode(true); current.dataset.sized = '1'; body.innerHTML = ''; body.appendChild(current); scale = 1; render(); zoom.setAttribute('data-open', ''); document.body.style.overflow = 'hidden'; }
-  function close() { zoom.removeAttribute('data-open'); document.body.style.overflow = ''; }
-  document.querySelectorAll('.diagram').forEach(function (d) {
-    var go = function () { var svg = d.querySelector('svg'); if (svg) open(svg); };
-    d.querySelector('[data-zoom]').addEventListener('click', go);
-    d.querySelector('pre.mermaid').addEventListener('click', go);
-  });
-  document.querySelector('[data-zoom-in]').addEventListener('click', function () { scale = Math.min(4, scale * 1.25); render(); });
-  document.querySelector('[data-zoom-out]').addEventListener('click', function () { scale = Math.max(0.5, scale / 1.25); render(); });
+  function open(svg) {
+    current = svg.cloneNode(true); body.innerHTML = ''; body.appendChild(current); scale = 1; render();
+    zoom.setAttribute('data-open', ''); document.body.style.overflow = 'hidden';
+    if (zoom.requestFullscreen) zoom.requestFullscreen().catch(function () {});
+    body.focus();
+  }
+  function close() {
+    zoom.removeAttribute('data-open'); document.body.style.overflow = '';
+    if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(function () {});
+  }
+  function zoomBy(f) { scale = Math.min(6, Math.max(0.25, scale * f)); render(); }
+  document.querySelector('[data-zoom-in]').addEventListener('click', function () { zoomBy(1.25); });
+  document.querySelector('[data-zoom-out]').addEventListener('click', function () { zoomBy(1 / 1.25); });
   document.querySelector('[data-zoom-close]').addEventListener('click', close);
-  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
+  document.addEventListener('keydown', function (e) {
+    if (!zoom.hasAttribute('data-open')) return;
+    if (e.key === 'Escape') close();
+    if (e.key === '+' || e.key === '=') zoomBy(1.25);
+    if (e.key === '-') zoomBy(1 / 1.25);
+    if (e.key === '0') { scale = 1; render(); }
+  });
+  document.addEventListener('fullscreenchange', function () { if (!document.fullscreenElement && zoom.hasAttribute('data-open')) close(); });
+  body.addEventListener('wheel', function (e) { if (e.ctrlKey || e.metaKey) { e.preventDefault(); zoomBy(e.deltaY < 0 ? 1.1 : 1 / 1.1); } }, { passive: false });
+  body.addEventListener('dblclick', function () { zoomBy(1.5); });
+  var drag = null;
+  body.addEventListener('pointerdown', function (e) { if (e.pointerType === 'mouse') { drag = { x: e.clientX, y: e.clientY, l: body.scrollLeft, t: body.scrollTop }; body.style.cursor = 'grabbing'; } });
+  body.addEventListener('pointermove', function (e) { if (drag) { body.scrollLeft = drag.l - (e.clientX - drag.x); body.scrollTop = drag.t - (e.clientY - drag.y); } });
+  body.addEventListener('pointerup', function () { drag = null; body.style.cursor = 'grab'; });
+
+  var n = 0;
+  document.querySelectorAll('.diagram').forEach(function (d) {
+    var src = d.querySelector('.diagram-src').textContent;
+    var view = d.querySelector('.diagram-view');
+    mermaid.render('diagram-' + (n++), src).then(function (out) {
+      view.innerHTML = out.svg;
+      var svg = view.querySelector('svg');
+      size(svg, 1);
+      var go = function () { open(svg); };
+      view.addEventListener('click', go);
+      view.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } });
+      d.querySelector('[data-zoom]').addEventListener('click', go);
+    }).catch(function (err) { view.textContent = 'Diagram failed to render: ' + err.message; });
+  });
 })();
 </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/11.12.0/mermaid.min.js"></script>
-<script>mermaid.initialize({ startOnLoad: true, flowchart: { useMaxWidth: false }, sequence: { useMaxWidth: false } });</script>
 </body>
 </html>
