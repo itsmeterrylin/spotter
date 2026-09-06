@@ -98,7 +98,6 @@ export type FontPair = {
 };
 
 const sansFallback = `system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif`;
-const serifFallback = `Georgia, "Times New Roman", serif`;
 const monoFallback = `ui-monospace, SFMono-Regular, Menlo, Consolas, monospace`;
 
 /**
@@ -125,6 +124,16 @@ export const fontPairs: readonly FontPair[] = [
     mono: `"JetBrains Mono", ${monoFallback}`,
     googleFontsUrl:
       'https://fonts.googleapis.com/css2?family=Rubik:wght@500;600;700&family=Lexend:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap',
+    headingWeight: 'bold',
+  },
+  {
+    id: 'open',
+    label: 'Open Sans',
+    heading: `"Open Sans", ${sansFallback}`,
+    body: `"Open Sans", ${sansFallback}`,
+    mono: `"JetBrains Mono", ${monoFallback}`,
+    googleFontsUrl:
+      'https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap',
     headingWeight: 'bold',
   },
   {
@@ -165,16 +174,6 @@ export const fontPairs: readonly FontPair[] = [
     googleFontsUrl:
       'https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap',
     headingWeight: 'bold',
-  },
-  {
-    id: 'fraunces',
-    label: 'Fraunces + Work Sans',
-    heading: `Fraunces, ${serifFallback}`,
-    body: `"Work Sans", ${sansFallback}`,
-    mono: `"JetBrains Mono", ${monoFallback}`,
-    googleFontsUrl:
-      'https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap',
-    headingWeight: 'semibold',
   },
   {
     id: 'dm',
