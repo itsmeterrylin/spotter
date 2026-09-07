@@ -5,7 +5,7 @@ The human in the loop for agent-run evals. Spotter is a local tool for LLM produ
 | Path | Contents |
 |---|---|
 | `docs/design/eval-tool-design.md` | Data model, API, SDK, review loop, judge validation |
-| `design-system/` | Tokens and component contracts in TypeScript, generated CSS, preview page |
+| `design-system/` | Tokens, generated CSS, seven components, preview and clickable prototype |
 | `docs/plans/2026-09-06-feature-eval-tool-skeleton.md` | Implementation plan: architecture, schema, API, MCP tools, deep links, phases |
 
 ## Preview

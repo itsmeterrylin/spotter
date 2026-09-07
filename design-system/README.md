@@ -1,48 +1,47 @@
 # Spotter design system
 
-Tokens and component contracts in TypeScript. CSS is generated, never hand-edited.
-
-## Use
+One tokens file, one generated CSS file, seven components. The class names are the contract.
 
 ```bash
-cd design-system
-npm run build   # dist/tokens.css, dist/system.css, dist/tokens.json, preview/index.html
-npm run check   # type-check
-open preview/index.html
+npm run build       # dist/spotter.css, dist/tokens.json, preview/index.html, preview/prototype.html
+npm run build:docs  # dist/docs/*.html from docs/
+npm run check       # type-check
+npm run check:deps  # 60-day release-age gate
 ```
-
-`preview/index.html` is self-contained. It has a font pair switcher and a theme switcher.
 
 ## Rules
 
 | Rule | Value |
 |---|---|
-| Smallest text | 16px |
-| Type steps | 16, 18, 28, 64. One token per job: caption, body, title, stat. |
-| Weights | 400, 600, 800. The page heading is title at 800. |
-| Modifiers | `.strong` 600, `.heavy` 800, `.mono`, `.num` tabular figures |
-| Control height | 56px (48px inside table rows) |
-| Table row | 72px |
-| Card padding | 32px |
-| Section gap | 64px |
-| Primary actions per screen | 1 |
-| Accent | Copper `#C25A44`. Pass, fail, and defer colors are semantic, not accents. |
-| Mono | Raw JSON and ids only. Never for outputs, names, or numbers. |
+| Type | Open Sans. caption 16, body 18, title 28, stat 64. Weights 400, 600, 800. |
+| Mono | System monospace. Raw JSON and ids only. |
+| Color | 10 roles: canvas, surface, border, ink, ink-muted, brand, pass, fail, defer, focus. Tints via `color-mix`. Light and dark. |
+| Space | 8, 16, 32, 64 |
+| Radius | 16, and pill. No shadows. |
+| Controls | 56px, 48px compact, 72px rows. One primary action per screen. |
+
+## Components
+
+| Class | Variants |
+|---|---|
+| `.btn` | `-primary` `-secondary` `-ghost` `-pass` `-fail` `-defer` `-compact` `-icon`, `aria-pressed` |
+| `.pill` | `-pass` `-fail` `-defer` `-brand` `-lg` |
+| `.card` | `-flush` |
+| `.row` | child `.grow` |
+| `.table` | cell `.num` |
+| `.input`, `.field` | textarea |
+| `.kbd` | |
+
+Utilities: `.t-caption` `.t-body` `.t-title` `.t-stat`, `.strong` `.heavy` `.muted` `.mono` `.num` `.link` `.pos` `.neg`, `.stack` `.cluster` `.container` `.narrow` `.scroll-x`, `.ic` `.ic-sm` `.ic-lg`, `.bar`.
 
 ## Files
 
 | File | Holds |
 |---|---|
-| `src/tokens/color.ts` | Palette and light and dark semantic roles |
-| `src/tokens/typography.ts` | Scale, weights, text styles, font pairs |
-| `src/tokens/layout.ts` | Space, radius, shadow, motion, icon sizes, density rules |
-| `src/icons.ts` | Inline SVG icon set, named by meaning |
-| `src/components.ts` | Prop types and class mappers for every component |
-| `src/css.ts` | Token, base, and component CSS generators |
-| `src/build.ts` | Writes `dist/` and the preview page |
-
-## Type
-
-One family: **Open Sans**, weights 400 to 800. Headings and body share it; hierarchy comes from size and weight. Stat numbers use 800. Mono is the system monospace stack and appears only on raw JSON and ids.
-
-Candidates compared before this choice: `docs/design/font-pairs.md`.
+| `src/tokens.ts` | Every token |
+| `src/css.ts` | The generator |
+| `src/icons.ts` | 26 icons named by meaning |
+| `src/build.ts` | Builds CSS and the two preview pages |
+| `src/build-docs.ts` | Renders markdown docs with the system |
+| `preview/template.html` | System preview |
+| `preview/prototype.template.html` | Clickable prototype |

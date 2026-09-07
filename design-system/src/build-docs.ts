@@ -9,8 +9,8 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { marked } from 'marked';
-import { allCss } from './css.ts';
-import { fontPairs } from './tokens/typography.ts';
+import { css } from './css.ts';
+import { font } from './tokens.ts';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const repo = join(root, '..');
@@ -22,42 +22,39 @@ const docs: Record<string, string> = {
   design: join(repo, 'docs', 'design', 'eval-tool-design.md'),
 };
 
-const fontLinks = fontPairs
-  .filter((p) => p.googleFontsUrl)
-  .map((p) => `<link rel="stylesheet" href="${p.googleFontsUrl}">`)
-  .join('\n');
+const fontLinks = `<link rel="stylesheet" href="${font.googleFontsUrl}">`;
 
 const docCss = `
-.doc { max-width: var(--container-narrow); margin-inline: auto; padding: var(--space-12) var(--space-6) var(--space-24); }
-.doc h1 { font-size: var(--text-title); font-weight: 800; letter-spacing: var(--tracking-title); line-height: var(--leading-title); margin-bottom: var(--space-6); }
-.doc h2 { font-size: var(--text-title); font-weight: 600; letter-spacing: var(--tracking-title); line-height: var(--leading-title); margin: var(--space-16) 0 var(--space-4); padding-top: var(--space-6); border-top: 1px solid var(--color-border); }
-.doc h3 { font-size: var(--text-body); font-weight: 600; margin: var(--space-8) 0 var(--space-2); color: var(--color-ink2); }
+.doc { max-width: var(--container-narrow); margin-inline: auto; padding: var(--space-64) var(--space-64) var(--space-64); }
+.doc h1 { font-size: var(--text-title); font-weight: 800; letter-spacing: -0.01em; line-height: var(--lh-title); margin-bottom: var(--space-16); }
+.doc h2 { font-size: var(--text-title); font-weight: 600; letter-spacing: -0.01em; line-height: var(--lh-title); margin: var(--space-64) 0 var(--space-16); padding-top: var(--space-16); border-top: 1px solid var(--border); }
+.doc h3 { font-size: var(--text-body); font-weight: 600; margin: var(--space-32) 0 var(--space-8); color: var(--ink-muted); }
 .doc p, .doc li { max-width: 68ch; }
-.doc p { margin: 0 0 var(--space-4); }
-.doc ul, .doc ol { padding-left: var(--space-6); margin: 0 0 var(--space-4); }
-.doc li { margin-bottom: var(--space-2); }
+.doc p { margin: 0 0 var(--space-16); }
+.doc ul, .doc ol { padding-left: var(--space-16); margin: 0 0 var(--space-16); }
+.doc li { margin-bottom: var(--space-8); }
 .doc strong { font-weight: 600; }
-.doc code { font-family: var(--font-mono); font-size: var(--text-caption); background: var(--color-surface-sunken); padding: 2px 6px; border-radius: 6px; }
-.doc pre { background: var(--color-surface-sunken); border-radius: var(--radius-md); padding: var(--space-4) var(--space-6); overflow-x: auto; margin: 0 0 var(--space-6); }
+.doc code { font-family: var(--font-mono); font-size: var(--text-caption); background: color-mix(in srgb, var(--ink) 6%, var(--surface)); padding: 2px 6px; border-radius: 6px; }
+.doc pre { background: color-mix(in srgb, var(--ink) 6%, var(--surface)); border-radius: var(--radius); padding: var(--space-16) var(--space-16); overflow-x: auto; margin: 0 0 var(--space-16); }
 .doc pre code { background: none; padding: 0; font-size: var(--text-caption); line-height: 1.6; }
-.doc .diagram { position: relative; margin: 0 0 var(--space-6); }
-.doc .diagram-view { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-6); overflow: auto; cursor: zoom-in; -webkit-overflow-scrolling: touch; min-height: 120px; }
-.doc .diagram-view:focus-visible { box-shadow: var(--shadow-focus); outline: none; }
+.doc .diagram { position: relative; margin: 0 0 var(--space-16); }
+.doc .diagram-view { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: var(--space-16); overflow: auto; cursor: zoom-in; -webkit-overflow-scrolling: touch; min-height: 120px; }
+.doc .diagram-view:focus-visible { box-shadow: 0 0 0 4px var(--focus); outline: none; }
 .doc .diagram-view svg { max-width: none !important; display: block; }
-.doc .diagram-open { position: absolute; top: var(--space-3); right: var(--space-3); }
-.zoom { position: fixed; inset: 0; z-index: 100; background: var(--color-canvas); display: none; flex-direction: column; }
+.doc .diagram-open { position: absolute; top: var(--space-8); right: var(--space-8); }
+.zoom { position: fixed; inset: 0; z-index: 100; background: var(--canvas); display: none; flex-direction: column; }
 .zoom[data-open] { display: flex; }
-.zoom-bar { display: flex; gap: var(--space-3); align-items: center; padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--color-border); background: var(--color-surface); }
+.zoom-bar { display: flex; gap: var(--space-8); align-items: center; padding: var(--space-8) var(--space-16); border-bottom: 1px solid var(--border); background: var(--surface); }
 .zoom-bar .grow { flex: 1; }
-.zoom-body { flex: 1; overflow: auto; padding: var(--space-6); touch-action: pan-x pan-y pinch-zoom; cursor: grab; }
+.zoom-body { flex: 1; overflow: auto; padding: var(--space-16); touch-action: pan-x pan-y pinch-zoom; cursor: grab; }
 .zoom-body svg { max-width: none !important; display: block; }
-.doc .scroll { overflow-x: auto; margin: 0 0 var(--space-6); }
+.doc .scroll { overflow-x: auto; margin: 0 0 var(--space-16); }
 .doc table { border-collapse: collapse; width: 100%; font-size: var(--text-caption); }
-.doc th { text-align: left; font-weight: 600; color: var(--color-ink2); padding: var(--space-3) var(--space-4); border-bottom: 2px solid var(--color-border); white-space: nowrap; }
-.doc td { padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--color-border); vertical-align: top; }
+.doc th { text-align: left; font-weight: 600; color: var(--ink-muted); padding: var(--space-8) var(--space-16); border-bottom: 2px solid var(--border); white-space: nowrap; }
+.doc td { padding: var(--space-8) var(--space-16); border-bottom: 1px solid var(--border); vertical-align: top; }
 .doc td code { white-space: nowrap; }
-.doc blockquote { margin: 0 0 var(--space-4); padding-left: var(--space-4); border-left: 4px solid var(--color-brand); color: var(--color-ink2); }
-.doc .meta { color: var(--color-ink3); font-size: var(--text-caption); margin-bottom: var(--space-8); }
+.doc blockquote { margin: 0 0 var(--space-16); padding-left: var(--space-16); border-left: 4px solid var(--brand); color: var(--ink-muted); }
+.doc .meta { color: var(--ink-muted); font-size: var(--text-caption); margin-bottom: var(--space-32); }
 `;
 
 for (const [name, file] of Object.entries(docs)) {
@@ -74,7 +71,7 @@ for (const [name, file] of Object.entries(docs)) {
 <title>${title}</title>
 ${fontLinks}
 <style>
-${allCss()}
+${css()}
 ${docCss}
 </style>
 <main class="doc">
@@ -95,14 +92,14 @@ ${html}
     startOnLoad: false,
     theme: 'base',
     themeVariables: {
-      fontFamily: v('--font-body'), fontSize: '16px',
-      primaryColor: v('--color-brand-soft'), primaryBorderColor: v('--color-brand'), primaryTextColor: v('--color-ink'),
-      secondaryColor: v('--color-surface-sunken'), tertiaryColor: v('--color-surface'),
-      lineColor: v('--color-ink2'), textColor: v('--color-ink'), clusterBkg: v('--color-surface-sunken'), clusterBorder: v('--color-border-strong'),
-      actorBkg: v('--color-brand-soft'), actorBorder: v('--color-brand'), actorTextColor: v('--color-ink'), signalColor: v('--color-ink2'), signalTextColor: v('--color-ink'),
-      noteBkgColor: v('--color-accent-soft'), noteBorderColor: v('--color-accent'), noteTextColor: v('--color-ink'),
-      labelBoxBkgColor: v('--color-surface'), labelBoxBorderColor: v('--color-border-strong'), labelTextColor: v('--color-ink'), loopTextColor: v('--color-ink2'),
-      edgeLabelBackground: v('--color-surface'), darkMode: dark
+      fontFamily: v('--font'), fontSize: '16px',
+      primaryColor: v('--brand') + '22', primaryBorderColor: v('--brand'), primaryTextColor: v('--ink'),
+      secondaryColor: v('--canvas'), tertiaryColor: v('--surface'),
+      lineColor: v('--ink-muted'), textColor: v('--ink'), clusterBkg: v('--canvas'), clusterBorder: v('--border'),
+      actorBkg: v('--brand') + '22', actorBorder: v('--brand'), actorTextColor: v('--ink'), signalColor: v('--ink-muted'), signalTextColor: v('--ink'),
+      noteBkgColor: v('--surface'), noteBorderColor: v('--defer'), noteTextColor: v('--ink'),
+      labelBoxBkgColor: v('--surface'), labelBoxBorderColor: v('--border'), labelTextColor: v('--ink'), loopTextColor: v('--ink-muted'),
+      edgeLabelBackground: v('--surface'), darkMode: dark
     },
     flowchart: { useMaxWidth: false, htmlLabels: true, padding: 16 },
     sequence: { useMaxWidth: false, mirrorActors: false, actorMargin: 40, messageMargin: 36 }

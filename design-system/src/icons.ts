@@ -4,7 +4,8 @@
  * not what it draws.
  */
 
-import { iconSize, iconStroke } from './tokens/layout.ts';
+import { iconSize } from './tokens.ts';
+const iconStroke = 2;
 
 export const iconPaths = {
   pass: '<path d="M20 6 9 17l-5-5"/>',

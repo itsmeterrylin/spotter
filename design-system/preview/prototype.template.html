@@ -5,68 +5,56 @@
 <!-- FONT_LINKS -->
 <style>
 /* SYSTEM_CSS */
-
-.ic { width: var(--icon-md); height: var(--icon-md); flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-.ic-sm { width: var(--icon-sm); height: var(--icon-sm); }
-.ic-lg { width: var(--icon-lg); height: var(--icon-lg); }
-.topbar { position: sticky; top: 0; z-index: 10; background: color-mix(in srgb, var(--color-canvas) 90%, transparent); backdrop-filter: blur(12px); border-bottom: 1px solid var(--color-border); }
-.topbar .container { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); min-height: 72px; }
-.brand { display: inline-flex; align-items: center; gap: var(--space-3); font-weight: 800; text-decoration: none; }
-.brand .ic { color: var(--color-brand); }
-.badge { display: inline-flex; align-items: center; justify-content: center; min-width: 28px; height: 28px; padding-inline: 8px; border-radius: var(--radius-pill); background: var(--color-brand); color: var(--color-ink-inverse); font-size: var(--text-caption); font-weight: 600; }
-main { padding-block: var(--space-12) var(--space-24); }
-.page-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-4); margin-bottom: var(--space-8); }
-.crumbs { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); color: var(--color-ink2); }
-.crumbs a { text-decoration: none; color: var(--color-ink2); }
-.crumbs a:hover { color: var(--color-ink); }
-.row { display: flex; align-items: center; gap: var(--space-4); padding: var(--space-4) 0; border-bottom: 1px solid var(--color-border); }
-.row:last-child { border-bottom: 0; }
-.row .ic { color: var(--color-brand); }
-.row .grow { flex: 1; min-width: 0; }
-.row a.btn { flex: none; }
-.group { margin-bottom: var(--space-12); }
-.group h2 { margin-bottom: var(--space-4); }
-.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--card-gap); margin-bottom: var(--space-8); }
-.scores { display: grid; gap: var(--space-4); }
-.score-row { display: grid; grid-template-columns: 1fr auto; gap: var(--space-2) var(--space-6); align-items: center; }
-.score-row .bar { grid-column: 1 / -1; }
-.chips { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); }
-.chips a { text-decoration: none; }
-.link { color: var(--color-brand-ink); text-decoration: underline; text-underline-offset: 3px; }
+.topbar { position: sticky; top: 0; z-index: 10; background: color-mix(in srgb, var(--canvas) 90%, transparent); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); }
+.topbar .container { display: flex; align-items: center; justify-content: space-between; gap: var(--space-16); min-height: 72px; }
+.brand { display: inline-flex; align-items: center; gap: var(--space-8); font-weight: 800; text-decoration: none; }
+.brand .ic { color: var(--brand); }
+.badge { display: inline-flex; align-items: center; justify-content: center; min-width: 28px; height: 28px; padding-inline: 8px; border-radius: var(--radius-pill); background: var(--brand); color: var(--surface); font-size: var(--text-caption); font-weight: 600; }
+main { padding-block: var(--space-32) var(--space-64); }
+.page-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-16); margin-bottom: var(--space-32); }
+.crumbs { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-8); color: var(--ink-muted); margin-bottom: var(--space-16); }
+.crumbs a { text-decoration: none; }
+.group { margin-bottom: var(--space-32); }
+.group h2 { margin-bottom: var(--space-16); }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-16); margin-bottom: var(--space-32); }
+.stat { display: flex; flex-direction: column; gap: var(--space-8); }
+.stat .label { display: inline-flex; align-items: center; gap: var(--space-8); font-size: var(--text-caption); font-weight: 600; color: var(--ink-muted); }
+.delta { display: inline-flex; align-items: center; gap: 4px; font-weight: 600; }
+.chips { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-8); }
 .table td.out { max-width: 30ch; }
 .table tr.linkrow { cursor: pointer; }
-.changed td:first-child { box-shadow: inset 4px 0 0 var(--color-fail); }
-.improved td:first-child { box-shadow: inset 4px 0 0 var(--color-pass); }
-.diff-pos { color: var(--color-pass-ink); }
-.diff-neg { color: var(--color-fail-ink); }
-.review { max-width: var(--container-narrow); margin-inline: auto; display: grid; gap: var(--space-8); }
-.block { display: flex; flex-direction: column; gap: var(--space-2); }
-.block-label { display: inline-flex; align-items: center; gap: var(--space-2); font-size: var(--text-caption); font-weight: 600; color: var(--color-ink2); letter-spacing: 0.02em; text-transform: uppercase; }
-.transcript { padding: var(--space-6); border-radius: var(--radius-md); background: var(--color-surface-sunken); }
-.turn { display: grid; grid-template-columns: 88px 1fr; gap: var(--space-3) var(--space-4); padding: var(--space-3) 0; border-top: 1px solid var(--color-border); }
+.changed td:first-child { box-shadow: inset 4px 0 0 var(--fail); }
+.improved td:first-child { box-shadow: inset 4px 0 0 var(--pass); }
+.cell-diff { display: inline-flex; align-items: center; gap: var(--space-8); font-weight: 600; }
+.review { max-width: var(--container-narrow); margin-inline: auto; display: grid; gap: var(--space-32); }
+.block { display: flex; flex-direction: column; gap: var(--space-8); }
+.block-label { display: inline-flex; align-items: center; gap: var(--space-8); font-size: var(--text-caption); font-weight: 600; color: var(--ink-muted); letter-spacing: 0.02em; text-transform: uppercase; }
+.transcript { padding: var(--space-16); border-radius: var(--radius); background: color-mix(in srgb, var(--ink) 6%, var(--surface)); }
+.turn { display: grid; grid-template-columns: 88px 1fr; gap: var(--space-8) var(--space-16); padding: var(--space-8) 0; border-top: 1px solid var(--border); }
 .turn:first-child { border-top: 0; padding-top: 0; }
-.turn .who { font-size: var(--text-caption); font-weight: 600; color: var(--color-ink3); text-transform: uppercase; letter-spacing: 0.02em; padding-top: 4px; }
-.turn[data-focus] { background: var(--color-accent-soft); margin-inline: calc(-1 * var(--space-4)); padding-inline: var(--space-4); border-radius: var(--radius-sm); }
-.turn .verdict { margin-top: var(--space-2); }
-.kv { display: grid; grid-template-columns: max-content 1fr; gap: var(--space-2) var(--space-6); }
-.kv dt { color: var(--color-ink3); }
-.kv dd { margin: 0; font-weight: 600; }
-.verdict-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: var(--space-4); }
+.turn .who { font-size: var(--text-caption); font-weight: 600; color: var(--ink-muted); text-transform: uppercase; letter-spacing: 0.02em; padding-top: 4px; }
+.turn[data-focus] { background: color-mix(in srgb, var(--defer) var(--tint), var(--surface)); margin-inline: calc(-1 * var(--space-16)); padding-inline: var(--space-16); border-radius: var(--radius); }
+.turn .pill { margin-top: var(--space-8); }
+.kv { display: grid; grid-template-columns: max-content 1fr; gap: var(--space-8) var(--space-16); }
+.kv dt { color: var(--ink-muted); }
+.kv dd { font-weight: 600; }
+.verdict-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: var(--space-16); }
 .verdict-row .btn { min-height: 72px; }
-.verdict-row .kbd { margin-left: var(--space-2); }
-.verdict-row .btn[aria-pressed="true"] { box-shadow: 0 0 0 4px var(--color-focus-ring); }
-.timeline { display: grid; gap: var(--space-4); }
-.version { display: grid; grid-template-columns: 96px 1fr auto; gap: var(--space-4); align-items: center; padding: var(--space-4) var(--space-6); border-radius: var(--radius-md); border: 1px solid var(--color-border); background: var(--color-surface); }
-.version[data-active] { border-color: var(--color-brand); box-shadow: inset 4px 0 0 var(--color-brand); }
-.version .cal { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
-.version .cal .stat-label { font-size: var(--text-caption); }
-.toast { position: fixed; left: 50%; bottom: var(--space-8); transform: translateX(-50%); background: var(--color-ink); color: var(--color-ink-inverse); padding: var(--space-3) var(--space-6); border-radius: var(--radius-pill); font-weight: 600; opacity: 0; transition: opacity var(--duration-fast); pointer-events: none; }
+.verdict-row .kbd { margin-left: var(--space-8); }
+.verdict-row .btn[aria-pressed="true"] { box-shadow: 0 0 0 4px var(--focus); }
+.timeline { display: grid; gap: var(--space-16); }
+.version { display: grid; grid-template-columns: 96px 1fr auto; gap: var(--space-16); align-items: center; padding: var(--space-16) var(--space-32); border-radius: var(--radius); border: 1px solid var(--border); background: var(--surface); }
+.version[data-active] { border-color: var(--brand); box-shadow: inset 4px 0 0 var(--brand); }
+.version .cal { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-16); }
+.empty { display: flex; flex-direction: column; align-items: center; text-align: center; gap: var(--space-16); padding: var(--space-64) var(--space-32); }
+.empty > .ic { width: var(--icon-lg); height: var(--icon-lg); color: var(--brand); }
+.toast { position: fixed; left: 50%; bottom: var(--space-32); transform: translateX(-50%); background: var(--ink); color: var(--surface); padding: var(--space-8) var(--space-16); border-radius: var(--radius-pill); font-weight: 600; opacity: 0; transition: opacity var(--duration); pointer-events: none; }
 .toast[data-show] { opacity: 1; }
-.picker { position: fixed; inset: 0; background: var(--color-overlay); display: none; align-items: center; justify-content: center; z-index: 50; }
+.picker { position: fixed; inset: 0; background: color-mix(in srgb, var(--ink) 50%, transparent); display: none; align-items: center; justify-content: center; z-index: 50; }
 .picker[data-open] { display: flex; }
 .picker .card { width: min(480px, 90vw); }
-.picker button.opt { width: 100%; text-align: left; justify-content: flex-start; }
-.hint { display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: center; color: var(--color-ink3); font-size: var(--text-caption); }
+.picker button.opt { width: 100%; justify-content: flex-start; }
+.hint { display: flex; flex-wrap: wrap; gap: var(--space-8); align-items: center; color: var(--ink-muted); font-size: var(--text-caption); }
 .hint .kbd { min-width: 32px; height: 32px; }
 @media (max-width: 640px) { .version { grid-template-columns: 1fr; } .verdict-row { grid-template-columns: 1fr; } .turn { grid-template-columns: 1fr; } }
 </style>
@@ -170,48 +158,48 @@ main { padding-block: var(--space-12) var(--space-24); }
   function inbox() {
     var items = inboxItems();
     var runs = ['B', 'A'].map(function (id) { var r = RUNS[id]; var m = mean(id, 'exercise_match'); var d = r.baseline ? m - mean(r.baseline, 'exercise_match') : null;
-      return '<div class="row">' + icon('run') + '<div class="grow"><a class="link" href="#/runs/' + id + '">' + r.name + '</a> <span class="muted">· ' + r.at + '</span></div><span class="num strong">' + pct(m) + '</span>' + (d == null ? '<span class="delta delta-flat num">' + icon('flat', 'ic-sm') + '</span>' : '<span class="delta ' + (d >= 0 ? 'delta-up' : 'delta-down') + ' num">' + icon(d >= 0 ? 'up' : 'down', 'ic-sm') + Math.abs(Math.round(d * 100)) + ' pts</span>') + '</div>'; }).join('');
+      return '<div class="row">' + icon('run') + '<div class="grow"><a class="link" href="#/runs/' + id + '">' + r.name + '</a> <span class="muted">· ' + r.at + '</span></div><span class="num strong">' + pct(m) + '</span>' + (d == null || Math.round(d * 100) === 0 ? '<span class="delta muted num">' + icon('flat', 'ic-sm') + '</span>' : '<span class="delta ' + (d > 0 ? 'pos' : 'neg') + ' num">' + icon(d > 0 ? 'up' : 'down', 'ic-sm') + Math.abs(Math.round(d * 100)) + ' pts</span>') + '</div>'; }).join('');
     return '<div class="page-head"><h1 class="t-title heavy">Inbox</h1><span class="t-caption muted">Sep 7</span></div>' +
-      '<section class="group"><h2 class="t-caption muted">Waiting on you</h2>' + (items.length ? '<div class="card" style="padding-block: 0">' + items.map(function (i) { return '<div class="row">' + icon(i.icon) + '<div class="grow">' + i.text + '</div><a class="btn btn-primary btn-compact" href="' + i.href + '">' + i.cta + '</a></div>'; }).join('') + '</div>' : '<div class="card empty">' + icon('pass') + '<span class="t-title">All clear</span></div>') + '</section>' +
-      '<section class="group"><h2 class="t-caption muted">Runs</h2><div class="card" style="padding-block: 0">' + runs + '</div></section>';
+      '<section class="group"><h2 class="t-caption muted">Waiting on you</h2>' + (items.length ? '<div class="card card-flush">' + items.map(function (i) { return '<div class="row">' + icon(i.icon) + '<div class="grow">' + i.text + '</div><a class="btn btn-primary btn-compact" href="' + i.href + '">' + i.cta + '</a></div>'; }).join('') + '</div>' : '<div class="card empty">' + icon('pass') + '<span class="t-title">All clear</span></div>') + '</section>' +
+      '<section class="group"><h2 class="t-caption muted">Runs</h2><div class="card card-flush">' + runs + '</div></section>';
   }
 
   function runPage(id, q) {
     var r = RUNS[id]; if (!r) return notFound();
     var b = r.baseline; var reg = regressions(id); var un = unlabeled(id);
     var tiles = SCORES.map(function (s) { var m = mean(id, s); var d = b ? m - mean(b, s) : null;
-      return '<div class="card stat"><span class="stat-label">' + icon('score', 'ic-sm') + s + '</span><span class="stat-value num">' + pct(m) + '</span>' + (d == null ? '' : '<span class="delta ' + (d > 0 ? 'delta-up' : d < 0 ? 'delta-down' : 'delta-flat') + ' num">' + icon(d > 0 ? 'up' : d < 0 ? 'down' : 'flat', 'ic-sm') + (d === 0 ? '0' : Math.abs(Math.round(d * 100)) + ' pts') + '</span>') + '</div>'; }).join('');
+      return '<div class="card stat"><span class="label">' + icon('score', 'ic-sm') + s + '</span><span class="t-stat num">' + pct(m) + '</span>' + (d == null ? '' : '<span class="delta ' + (d > 0 ? 'pos' : d < 0 ? 'neg' : 'muted') + ' num">' + icon(d > 0 ? 'up' : d < 0 ? 'down' : 'flat', 'ic-sm') + (d === 0 ? '0' : Math.abs(Math.round(d * 100)) + ' pts') + '</span>') + '</div>'; }).join('');
     return crumbs([['#/inbox', 'Inbox']]) + '<div class="page-head"><h1 class="t-title heavy">' + r.name + '</h1>' + (b ? '<a class="btn btn-primary" href="#/compare?runs=' + b + ',' + id + '&only=changes">' + icon('compare') + 'Compare with ' + RUNS[b].name + '</a>' : '') + '</div>' +
-      '<div class="stats">' + tiles + '<div class="card stat"><span class="stat-label">' + icon('dataset', 'ic-sm') + 'Items</span><span class="stat-value num">' + ITEMS.length + '</span><span class="t-caption muted">' + r.model + '</span></div>' + (b ? '<div class="card stat"><span class="stat-label">' + icon('flag', 'ic-sm') + 'Regressions</span><span class="stat-value num">' + reg.length + '</span>' + (reg.length ? '<a class="link t-caption" href="#/compare?runs=' + b + ',' + id + '&only=changes">See them</a>' : '') + '</div>' : '') + '</div>' +
-      '<div class="card" style="padding-block: 0">' + ITEMS.map(function (it) { var o = OUT[id][it.id]; var tid = traceId(id, it.id); var v = state.verdicts[tid];
-        return '<div class="row">' + icon(o[1] && o[2] ? 'pass' : 'fail') + '<div class="grow"><a class="link" href="#/traces/' + tid + '">' + it.id + '</a> <span class="muted">' + esc(o[0]) + '</span></div>' + (v ? '<span class="verdict verdict-' + v.verdict + '">' + icon(v.verdict, 'ic-sm') + v.verdict + '</span>' : '<span class="verdict verdict-pending">' + icon('time', 'ic-sm') + 'unlabeled</span>') + '</div>'; }).join('') + '</div>' +
-      (un.length ? '<p style="margin-top: var(--space-6)"><a class="btn btn-secondary" href="#/review?run=' + id + '&filter=unlabeled">' + icon('human') + 'Review ' + un.length + ' unlabeled</a></p>' : '');
+      '<div class="stats">' + tiles + '<div class="card stat"><span class="label">' + icon('dataset', 'ic-sm') + 'Items</span><span class="t-stat num">' + ITEMS.length + '</span><span class="t-caption muted">' + r.model + '</span></div>' + (b ? '<div class="card stat"><span class="label">' + icon('flag', 'ic-sm') + 'Regressions</span><span class="t-stat num">' + reg.length + '</span>' + (reg.length ? '<a class="link t-caption" href="#/compare?runs=' + b + ',' + id + '&only=changes">See them</a>' : '') + '</div>' : '') + '</div>' +
+      '<div class="card card-flush">' + ITEMS.map(function (it) { var o = OUT[id][it.id]; var tid = traceId(id, it.id); var v = state.verdicts[tid];
+        return '<div class="row">' + icon(o[1] && o[2] ? 'pass' : 'fail') + '<div class="grow"><a class="link" href="#/traces/' + tid + '">' + it.id + '</a> <span class="muted">' + esc(o[0]) + '</span></div>' + (v ? '<span class="pill pill-' + v.verdict + '">' + icon(v.verdict, 'ic-sm') + v.verdict + '</span>' : '<span class="pill pill-pending">' + icon('time', 'ic-sm') + 'unlabeled</span>') + '</div>'; }).join('') + '</div>' +
+      (un.length ? '<p style="margin-top: var(--space-16)"><a class="btn btn-secondary" href="#/review?run=' + id + '&filter=unlabeled">' + icon('human') + 'Review ' + un.length + ' unlabeled</a></p>' : '');
   }
 
   function compare(q) {
     var runs = (q.runs || 'A,B').split(','); var a = runs[0], b = runs[1]; var only = q.only === 'changes';
     var rows = ITEMS.filter(function (it) { if (!only) return true; var x = OUT[a][it.id], y = OUT[b][it.id]; return x[1] !== y[1] || x[2] !== y[2]; });
     var body = rows.map(function (it) { var x = OUT[a][it.id], y = OUT[b][it.id]; var worse = (y[1] < x[1]) || (y[2] < x[2]); var better = (y[1] > x[1]) || (y[2] > x[2]);
-      var cell = function (i) { var d = y[i] - x[i]; return '<td class="num"><span class="cell-diff ' + (d > 0 ? 'diff-pos' : d < 0 ? 'diff-neg' : '') + '">' + icon(d > 0 ? 'up' : d < 0 ? 'down' : 'flat', 'ic-sm') + (d === 0 ? y[i] : x[i] + ' → ' + y[i]) + '</span></td>'; };
-      return '<tr class="linkrow ' + (worse ? 'changed' : better ? 'improved' : '') + '" data-href="#/traces/' + traceId(b, it.id) + '"><td><div class="stack" style="--stack-gap: 2px"><span class="strong">' + it.id + '</span><span class="t-caption muted">“' + esc(it.transcript) + '”</span></div></td><td class="out">' + esc(x[0]) + '</td><td class="out">' + esc(y[0]) + '</td>' + cell(1) + cell(2) + '</tr>'; }).join('');
-    return crumbs([['#/inbox', 'Inbox'], ['#/runs/' + b, RUNS[b].name]]) + '<div class="page-head"><div class="chips"><a class="verdict verdict-pending" href="#/runs/' + a + '">' + RUNS[a].name + '</a>' + icon('next') + '<a class="verdict verdict-pass" href="#/runs/' + b + '">' + RUNS[b].name + '</a></div><label class="cluster"><button class="toggle" type="button" role="switch" aria-checked="' + only + '" data-only></button><span class="t-caption muted">Only changes</span></label></div>' +
-      '<div class="card scroll-x" style="padding: 0"><table class="table"><thead><tr><th>Item</th><th>' + RUNS[a].name + '</th><th>' + RUNS[b].name + '</th><th class="num">exercise_match</th><th class="num">weight_found</th></tr></thead><tbody>' + (body || '<tr><td colspan="5"><div class="empty">' + icon('pass') + '<span class="t-title">No changes</span></div></td></tr>') + '</tbody></table></div>';
+      var cell = function (i) { var d = y[i] - x[i]; return '<td class="num"><span class="cell-diff ' + (d > 0 ? 'pos' : d < 0 ? 'neg' : '') + '">' + icon(d > 0 ? 'up' : d < 0 ? 'down' : 'flat', 'ic-sm') + (d === 0 ? y[i] : x[i] + ' → ' + y[i]) + '</span></td>'; };
+      return '<tr class="linkrow ' + (worse ? 'changed' : better ? 'improved' : '') + '" data-href="#/traces/' + traceId(b, it.id) + '"><td><div class="stack" style="--gap: 2px"><span class="strong">' + it.id + '</span><span class="t-caption muted">“' + esc(it.transcript) + '”</span></div></td><td class="out">' + esc(x[0]) + '</td><td class="out">' + esc(y[0]) + '</td>' + cell(1) + cell(2) + '</tr>'; }).join('');
+    return crumbs([['#/inbox', 'Inbox'], ['#/runs/' + b, RUNS[b].name]]) + '<div class="page-head"><div class="chips"><a class="pill pill-pending" href="#/runs/' + a + '">' + RUNS[a].name + '</a>' + icon('next') + '<a class="pill pill-pass" href="#/runs/' + b + '">' + RUNS[b].name + '</a></div><button class="btn btn-secondary btn-compact" type="button" aria-pressed="' + only + '" data-only>' + icon('filter', 'ic-sm') + 'Only changes</button></div>' +
+      '<div class="card card-flush scroll-x"><table class="table"><thead><tr><th>Item</th><th>' + RUNS[a].name + '</th><th>' + RUNS[b].name + '</th><th class="num">exercise_match</th><th class="num">weight_found</th></tr></thead><tbody>' + (body || '<tr><td colspan="5"><div class="empty">' + icon('pass') + '<span class="t-title">No changes</span></div></td></tr>') + '</tbody></table></div>';
   }
 
   function trace(tid, q) {
     var p = tid.split(':'); var run = p[0], item = p[1]; var it = ITEMS.filter(function (i) { return i.id === item; })[0]; if (!it || !RUNS[run]) return notFound();
     var o = OUT[run][item]; var v = state.verdicts[tid]; var isConvo = item === 'bench-01' || item === 'row-07';
     var focus = q.turn != null ? Number(q.turn) : null;
-    var transcript = isConvo ? '<div class="transcript">' + CONVO.turns.map(function (t, i) { return '<div class="turn" ' + (focus === i ? 'data-focus' : '') + '><span class="who">' + t.role + ' · ' + i + '</span><span>' + esc(t.text) + (t.role === 'assistant' && i === 3 ? '<br><span class="verdict verdict-fail" style="margin-top: 8px">' + icon('fail', 'ic-sm') + 'turn 3 · asked instead of defaulting to barbell</span>' : '') + '</span></div>'; }).join('') + '</div>' : '<p class="transcript">' + esc(it.transcript) + '</p>';
+    var transcript = isConvo ? '<div class="transcript">' + CONVO.turns.map(function (t, i) { return '<div class="turn" ' + (focus === i ? 'data-focus' : '') + '><span class="who">' + t.role + ' · ' + i + '</span><span>' + esc(t.text) + (t.role === 'assistant' && i === 3 ? '<br><span class="pill pill-fail" style="margin-top: 8px">' + icon('fail', 'ic-sm') + 'turn 3 · asked instead of defaulting to barbell</span>' : '') + '</span></div>'; }).join('') + '</div>' : '<p class="transcript">' + esc(it.transcript) + '</p>';
     return crumbs([['#/inbox', 'Inbox'], ['#/runs/' + run, RUNS[run].name]]) + '<div class="review">' +
       '<div class="page-head"><h1 class="t-title heavy">' + item + '</h1><a class="btn btn-primary" href="#/review/' + tid + '">' + icon('human') + (v ? 'Change verdict' : 'Label')+ '</a></div>' +
       '<div class="block"><span class="block-label">' + icon('trace', 'ic-sm') + (isConvo ? 'Conversation ' + CONVO.id : 'Transcript') + '</span>' + transcript + '</div>' +
       '<div class="block"><span class="block-label">' + icon('score', 'ic-sm') + 'Output</span><p class="strong">' + esc(o[0]) + '</p></div>' +
       '<div class="block"><span class="block-label">' + icon('flag', 'ic-sm') + 'Expected</span><dl class="kv">' + Object.keys(it.expected).map(function (k) { return '<dt>' + k + '</dt><dd>' + esc(it.expected[k]) + '</dd>'; }).join('') + '</dl></div>' +
-      '<div class="block"><span class="block-label">' + icon('judge', 'ic-sm') + 'Scores</span><div class="card" style="padding-block: 0">' +
+      '<div class="block"><span class="block-label">' + icon('judge', 'ic-sm') + 'Scores</span><div class="card card-flush">' +
         '<div class="row">' + icon(o[1] ? 'pass' : 'fail') + '<div class="grow">exercise_match <span class="muted">· judge v' + activeVersion('exercise_match') + '</span></div><span class="num strong">' + o[1] + '</span></div>' +
         '<div class="row">' + icon(o[2] ? 'pass' : 'fail') + '<div class="grow">weight_found <span class="muted">· rule</span></div><span class="num strong">' + o[2] + '</span></div>' +
-        (v ? '<div class="row">' + icon(v.verdict) + '<div class="grow">human <span class="muted">· ' + esc(v.note || '') + '</span></div><span class="verdict verdict-' + v.verdict + '">' + v.verdict + '</span></div>' : '') + '</div></div>' +
+        (v ? '<div class="row">' + icon(v.verdict) + '<div class="grow">human <span class="muted">· ' + esc(v.note || '') + '</span></div><span class="pill pill-' + v.verdict + '">' + v.verdict + '</span></div>' : '') + '</div></div>' +
       (isConvo ? '<div class="hint">' + icon('open', 'ic-sm') + '<a class="link" href="#/traces/' + tid + '?turn=3">Deep link to turn 3</a></div>' : '') + '</div>';
   }
 
@@ -233,13 +221,13 @@ main { padding-block: var(--space-12) var(--space-24); }
       '<div class="block"><span class="block-label">' + icon('flag', 'ic-sm') + 'Expected</span><dl class="kv">' + Object.keys(it.expected).map(function (k) { return '<dt>' + k + '</dt><dd>' + esc(it.expected[k]) + '</dd>'; }).join('') + '</dl></div>' + judgeSaid +
       '<div class="verdict-row"><button class="btn btn-pass" type="button" data-verdict="pass" aria-pressed="' + (v.verdict === 'pass') + '">' + icon('pass') + 'Pass<span class="kbd">1</span></button><button class="btn btn-fail" type="button" data-verdict="fail" aria-pressed="' + (v.verdict === 'fail') + '">' + icon('fail') + 'Fail<span class="kbd">2</span></button><button class="btn btn-defer" type="button" data-verdict="defer" aria-pressed="' + (v.verdict === 'defer') + '">' + icon('defer') + 'Defer<span class="kbd">D</span></button></div>' +
       '<div class="field"><label for="note">Note</label><textarea class="input" id="note" placeholder="What went wrong">' + esc(v.note || '') + '</textarea></div>' +
-      '<div class="hint"><span class="kbd">A</span> add to dataset <span class="kbd">U</span> undo <span class="kbd">⌘↵</span> save and next' + (state.added[tid] ? ' <span class="verdict verdict-pass">' + icon('dataset', 'ic-sm') + state.added[tid] + '</span>' : '') + '</div></div>';
+      '<div class="hint"><span class="kbd">A</span> add to dataset <span class="kbd">U</span> undo <span class="kbd">⌘↵</span> save and next' + (state.added[tid] ? ' <span class="pill pill-pass">' + icon('dataset', 'ic-sm') + state.added[tid] + '</span>' : '') + '</div></div>';
   }
 
   function judge(name) {
     var j = JUDGES[name]; if (!j) return notFound(); var active = activeVersion(name); var d = disagreements(name, active);
-    var versions = j.versions.slice().reverse().map(function (v) { var isActive = v.n === active; var cal = v.tpr == null ? '<span class="verdict verdict-defer">' + icon('time', 'ic-sm') + 'Needs labels · ' + v.nn + ' of 100</span>' : '<div class="cal"><div class="stat"><span class="stat-label">TPR</span><span class="t-title num">' + pct(v.tpr) + '</span><div class="bar ' + (v.tpr >= 0.9 ? 'bar-pass' : 'bar-fail') + '"><i style="width:' + pct(v.tpr) + '"></i></div></div><div class="stat"><span class="stat-label">TNR</span><span class="t-title num">' + pct(v.tnr) + '</span><div class="bar ' + (v.tnr >= 0.9 ? 'bar-pass' : 'bar-fail') + '"><i style="width:' + pct(v.tnr) + '"></i></div></div></div>';
-      return '<div class="version" ' + (isActive ? 'data-active' : '') + '><div class="stack" style="--stack-gap: 4px"><span class="t-title num">v' + v.n + '</span>' + (isActive ? '<span class="verdict verdict-pass">' + icon('pass', 'ic-sm') + 'Active</span>' : '') + '</div><div class="stack"><span class="muted">' + esc(v.note) + ' <span class="faint">· ' + v.by + ' · n=' + v.nn + '</span></span>' + cal + '</div><div class="stack">' + (isActive ? (d.length ? '<a class="btn btn-primary btn-compact" href="#/review?judge=' + name + '&version=' + v.n + '">' + icon('human', 'ic-sm') + d.length + ' disagreements</a>' : '<span class="verdict verdict-pass">' + icon('pass', 'ic-sm') + 'No disagreements</span>') : (v.tpr != null ? '<button class="btn btn-secondary btn-compact" type="button" data-activate="' + v.n + '">' + icon('previous', 'ic-sm') + 'Activate v' + v.n + '</button>' : '')) + '</div></div>'; }).join('');
+    var versions = j.versions.slice().reverse().map(function (v) { var isActive = v.n === active; var cal = v.tpr == null ? '<span class="pill pill-defer">' + icon('time', 'ic-sm') + 'Needs labels · ' + v.nn + ' of 100</span>' : '<div class="cal"><div class="stat"><span class="label">TPR</span><span class="t-title num">' + pct(v.tpr) + '</span><div class="bar ' + (v.tpr >= 0.9 ? 'bar-pass' : 'bar-fail') + '"><i style="width:' + pct(v.tpr) + '"></i></div></div><div class="stat"><span class="label">TNR</span><span class="t-title num">' + pct(v.tnr) + '</span><div class="bar ' + (v.tnr >= 0.9 ? 'bar-pass' : 'bar-fail') + '"><i style="width:' + pct(v.tnr) + '"></i></div></div></div>';
+      return '<div class="version" ' + (isActive ? 'data-active' : '') + '><div class="stack" style="--gap: 4px"><span class="t-title num">v' + v.n + '</span>' + (isActive ? '<span class="pill pill-pass">' + icon('pass', 'ic-sm') + 'Active</span>' : '') + '</div><div class="stack"><span class="muted">' + esc(v.note) + ' <span class="faint">· ' + v.by + ' · n=' + v.nn + '</span></span>' + cal + '</div><div class="stack">' + (isActive ? (d.length ? '<a class="btn btn-primary btn-compact" href="#/review?judge=' + name + '&version=' + v.n + '">' + icon('human', 'ic-sm') + d.length + ' disagreements</a>' : '<span class="pill pill-pass">' + icon('pass', 'ic-sm') + 'No disagreements</span>') : (v.tpr != null ? '<button class="btn btn-secondary btn-compact" type="button" data-activate="' + v.n + '">' + icon('previous', 'ic-sm') + 'Activate v' + v.n + '</button>' : '')) + '</div></div>'; }).join('');
     return crumbs([['#/inbox', 'Inbox']]) + '<div class="page-head"><h1 class="t-title heavy">' + name + '</h1><span class="t-caption muted">' + j.scope + ' · ' + j.versions.length + (j.versions.length === 1 ? ' version' : ' versions') + '</span></div>' + (j.versions.length > 1 ? '<div class="timeline">' + versions + '</div>' : '<div class="card">' + versions + '</div>');
   }
 

@@ -36,7 +36,7 @@ Pinned to exact versions. A version is adopted only after it has been public for
 | Node types | `@types/node` | 25.9.5 | see registry | 26.4.1 (2026-09-01) |
 | Database | `bun:sqlite` | built into Bun 1.3.9 | | |
 | Client code | Vanilla TypeScript modules, no framework | | | |
-| Styles | `design-system/dist/system.css` | built from tokens | | |
+| Styles | `design-system/dist/spotter.css` | 8 KB, 60 classes, built from one tokens file | | |
 
 ### Dependency policy
 
@@ -438,7 +438,7 @@ app/
   src/pages/*.tsx              Layout, Runs, Run, Compare, Trace, Review, Judges, Empty
   src/client/review.ts         keyboard flow and autosave
   src/client/compare.ts        only-changes toggle, score select
-  public/system.css            copied from design-system/dist on build
+  public/spotter.css           copied from design-system/dist on build
 packages/evals/
   src/index.ts                 defineEval, runner, summary table
   src/cli.ts                   run, compare, calibrate
@@ -478,7 +478,7 @@ Each phase: at most three tasks, type-check and tests after each task, commit at
 
 **Phase 0: Scaffold**
 1. `app/` and `packages/evals` workspaces, Bun scripts (`dev`, `test`, `typecheck`, `build:css`); `bunfig.toml` with `exact = true` and `minimumReleaseAge = 5184000`; `.bun-version` 1.3.9; exact pins from the Stack table; `bun.lock` committed.
-2. Copy `design-system/dist/system.css` into `app/public` at build.
+2. Copy `design-system/dist/spotter.css` into `app/public` at build.
 3. Hono app serving `/health` and a Layout page with the top bar.
 
 **Phase 1: Database**
@@ -503,7 +503,7 @@ Each phase: at most three tasks, type-check and tests after each task, commit at
 
 **Phase 5: SDK and CLI**
 1. `defineEval`, runner, batch posting, summary table.
-2. `spotter run` and `spotter compare` commands; `--no-send`.
+2. `spotter run` and `spotter compare` commands; `--no-send`. `spotter init`: a guided first eval that asks for the dataset source, the task file, and scorers, writes the eval file, runs it once, and prints the inbox link. The only guided flow in the product, and it lives in the CLI.
 3. Sample eval with seeded items; seed script.
 
 **Phase 6: Judges**
