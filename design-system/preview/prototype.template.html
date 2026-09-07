@@ -1,0 +1,306 @@
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spotter Inbox</title>
+<!-- FONT_LINKS -->
+<style>
+/* SYSTEM_CSS */
+
+.ic { width: var(--icon-md); height: var(--icon-md); flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.ic-sm { width: var(--icon-sm); height: var(--icon-sm); }
+.ic-lg { width: var(--icon-lg); height: var(--icon-lg); }
+.topbar { position: sticky; top: 0; z-index: 10; background: color-mix(in srgb, var(--color-canvas) 90%, transparent); backdrop-filter: blur(12px); border-bottom: 1px solid var(--color-border); }
+.topbar .container { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); min-height: 72px; }
+.brand { display: inline-flex; align-items: center; gap: var(--space-3); font-weight: 800; text-decoration: none; }
+.brand .ic { color: var(--color-brand); }
+.badge { display: inline-flex; align-items: center; justify-content: center; min-width: 28px; height: 28px; padding-inline: 8px; border-radius: var(--radius-pill); background: var(--color-brand); color: var(--color-ink-inverse); font-size: var(--text-caption); font-weight: 600; }
+main { padding-block: var(--space-12) var(--space-24); }
+.page-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-4); margin-bottom: var(--space-8); }
+.crumbs { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); color: var(--color-ink2); }
+.crumbs a { text-decoration: none; color: var(--color-ink2); }
+.crumbs a:hover { color: var(--color-ink); }
+.row { display: flex; align-items: center; gap: var(--space-4); padding: var(--space-4) 0; border-bottom: 1px solid var(--color-border); }
+.row:last-child { border-bottom: 0; }
+.row .ic { color: var(--color-brand); }
+.row .grow { flex: 1; min-width: 0; }
+.row a.btn { flex: none; }
+.group { margin-bottom: var(--space-12); }
+.group h2 { margin-bottom: var(--space-4); }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--card-gap); margin-bottom: var(--space-8); }
+.scores { display: grid; gap: var(--space-4); }
+.score-row { display: grid; grid-template-columns: 1fr auto; gap: var(--space-2) var(--space-6); align-items: center; }
+.score-row .bar { grid-column: 1 / -1; }
+.chips { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); }
+.chips a { text-decoration: none; }
+.link { color: var(--color-brand-ink); text-decoration: underline; text-underline-offset: 3px; }
+.table td.out { max-width: 30ch; }
+.table tr.linkrow { cursor: pointer; }
+.changed td:first-child { box-shadow: inset 4px 0 0 var(--color-fail); }
+.improved td:first-child { box-shadow: inset 4px 0 0 var(--color-pass); }
+.diff-pos { color: var(--color-pass-ink); }
+.diff-neg { color: var(--color-fail-ink); }
+.review { max-width: var(--container-narrow); margin-inline: auto; display: grid; gap: var(--space-8); }
+.block { display: flex; flex-direction: column; gap: var(--space-2); }
+.block-label { display: inline-flex; align-items: center; gap: var(--space-2); font-size: var(--text-caption); font-weight: 600; color: var(--color-ink2); letter-spacing: 0.02em; text-transform: uppercase; }
+.transcript { padding: var(--space-6); border-radius: var(--radius-md); background: var(--color-surface-sunken); }
+.turn { display: grid; grid-template-columns: 88px 1fr; gap: var(--space-3) var(--space-4); padding: var(--space-3) 0; border-top: 1px solid var(--color-border); }
+.turn:first-child { border-top: 0; padding-top: 0; }
+.turn .who { font-size: var(--text-caption); font-weight: 600; color: var(--color-ink3); text-transform: uppercase; letter-spacing: 0.02em; padding-top: 4px; }
+.turn[data-focus] { background: var(--color-accent-soft); margin-inline: calc(-1 * var(--space-4)); padding-inline: var(--space-4); border-radius: var(--radius-sm); }
+.turn .verdict { margin-top: var(--space-2); }
+.kv { display: grid; grid-template-columns: max-content 1fr; gap: var(--space-2) var(--space-6); }
+.kv dt { color: var(--color-ink3); }
+.kv dd { margin: 0; font-weight: 600; }
+.verdict-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: var(--space-4); }
+.verdict-row .btn { min-height: 72px; }
+.verdict-row .kbd { margin-left: var(--space-2); }
+.verdict-row .btn[aria-pressed="true"] { box-shadow: 0 0 0 4px var(--color-focus-ring); }
+.timeline { display: grid; gap: var(--space-4); }
+.version { display: grid; grid-template-columns: 96px 1fr auto; gap: var(--space-4); align-items: center; padding: var(--space-4) var(--space-6); border-radius: var(--radius-md); border: 1px solid var(--color-border); background: var(--color-surface); }
+.version[data-active] { border-color: var(--color-brand); box-shadow: inset 4px 0 0 var(--color-brand); }
+.version .cal { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
+.version .cal .stat-label { font-size: var(--text-caption); }
+.toast { position: fixed; left: 50%; bottom: var(--space-8); transform: translateX(-50%); background: var(--color-ink); color: var(--color-ink-inverse); padding: var(--space-3) var(--space-6); border-radius: var(--radius-pill); font-weight: 600; opacity: 0; transition: opacity var(--duration-fast); pointer-events: none; }
+.toast[data-show] { opacity: 1; }
+.picker { position: fixed; inset: 0; background: var(--color-overlay); display: none; align-items: center; justify-content: center; z-index: 50; }
+.picker[data-open] { display: flex; }
+.picker .card { width: min(480px, 90vw); }
+.picker button.opt { width: 100%; text-align: left; justify-content: flex-start; }
+.hint { display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: center; color: var(--color-ink3); font-size: var(--text-caption); }
+.hint .kbd { min-width: 32px; height: 32px; }
+@media (max-width: 640px) { .version { grid-template-columns: 1fr; } .verdict-row { grid-template-columns: 1fr; } .turn { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<!-- ICON_SPRITE -->
+
+<header class="topbar">
+  <div class="container">
+    <a class="brand" href="#/inbox"><svg class="ic ic-lg"><use href="#i-paw"/></svg>Spotter</a>
+    <a class="btn btn-secondary btn-compact" href="#/inbox"><svg class="ic ic-sm"><use href="#i-flag"/></svg>Inbox <span class="badge" id="inboxCount">0</span></a>
+  </div>
+</header>
+
+<main><div class="container" id="view"></div></main>
+
+<div class="toast" id="toast"></div>
+<div class="picker" id="picker"><div class="card stack"><span class="t-title">Add to dataset</span><div class="stack" id="pickerOptions"></div><button type="button" class="btn btn-ghost" data-picker-close>Cancel</button></div></div>
+
+<script>
+(function () {
+  // ---------- sample data (Copper domain) ----------
+  var ITEMS = [
+    { id: 'bench-01', transcript: 'bench press three by five at two twenty five', expected: { exercise: 'Bench Press', sets: 3, reps: 5, weight: 225 } },
+    { id: 'row-07', transcript: 'then some light rows, ten reps', expected: { exercise: 'Barbell Row', sets: 1, reps: 10 } },
+    { id: 'squat-12', transcript: 'squats five by five two twenty five', expected: { exercise: 'Squat', sets: 5, reps: 5, weight: 225 } },
+    { id: 'ohp-03', transcript: 'overhead press, three sets of eight at ninety five', expected: { exercise: 'Overhead Press', sets: 3, reps: 8, weight: 95 } },
+    { id: 'dl-09', transcript: 'deadlift one by five at three fifteen', expected: { exercise: 'Deadlift', sets: 1, reps: 5, weight: 315 } },
+    { id: 'curl-15', transcript: 'curls, twelve reps, three sets, thirty pound dumbbells', expected: { exercise: 'Dumbbell Curl', sets: 3, reps: 12, weight: 30 } },
+    { id: 'pull-04', transcript: 'pull ups, three sets to failure', expected: { exercise: 'Pull Up', sets: 3 } },
+    { id: 'lunge-08', transcript: 'walking lunges, two sets of twenty', expected: { exercise: 'Walking Lunge', sets: 2, reps: 20 } },
+    { id: 'rdl-11', transcript: 'romanian deadlifts three by ten at one thirty five', expected: { exercise: 'Romanian Deadlift', sets: 3, reps: 10, weight: 135 } },
+    { id: 'dip-06', transcript: 'dips, bodyweight, four sets of eight', expected: { exercise: 'Dip', sets: 4, reps: 8 } },
+    { id: 'plank-02', transcript: 'plank, sixty seconds, three rounds', expected: { exercise: 'Plank', sets: 3, duration: 60 } },
+    { id: 'fly-10', transcript: 'cable flys, three sets of fifteen at twenty', expected: { exercise: 'Cable Fly', sets: 3, reps: 15, weight: 20 } }
+  ];
+  var RUNS = {
+    A: { id: 'A', name: 'rules-v1', model: 'gemini-2.5-flash', at: 'Sep 5, 9:12', baseline: null },
+    B: { id: 'B', name: 'rules-v2', model: 'gemini-2.5-flash', at: 'Sep 6, 14:40', baseline: 'A' }
+  };
+  // outputs per run per item, and scores (exercise_match from judge v3, weight_found deterministic)
+  var OUT = {
+    A: { 'bench-01': ['Bench Press · 3×5 · 225', 1, 1], 'row-07': ['Barbell Row · 1×10', 1, 1], 'squat-12': ['Squat · 5×5', 1, 0], 'ohp-03': ['Overhead Press · 3×8 · 95', 1, 1], 'dl-09': ['Deadlift · 1×5 · 315', 1, 1], 'curl-15': ['Bicep Curl · 3×12 · 30', 0, 1], 'pull-04': ['Pull Up · 3', 1, 1], 'lunge-08': ['Lunge · 2×20', 0, 1], 'rdl-11': ['Romanian Deadlift · 3×10 · 135', 1, 1], 'dip-06': ['Dip · 4×8', 1, 1], 'plank-02': ['Plank · 3 × 60s', 1, 1], 'fly-10': ['Cable Fly · 3×15 · 20', 1, 1] },
+    B: { 'bench-01': ['Bench Press · 3×5 · 225', 1, 1], 'row-07': ['Cable Row · 1×10', 0, 1], 'squat-12': ['Squat · 5×5 · 225', 1, 1], 'ohp-03': ['Overhead Press · 3×8 · 95', 1, 1], 'dl-09': ['Deadlift · 1×5 · 315', 1, 1], 'curl-15': ['Dumbbell Curl · 3×12 · 30', 1, 1], 'pull-04': ['Pull Up · 3', 1, 1], 'lunge-08': ['Walking Lunge · 2×20', 1, 1], 'rdl-11': ['Deadlift · 3×10 · 135', 0, 1], 'dip-06': ['Dip · 4×8', 1, 1], 'plank-02': ['Plank · 3×60', 1, 0], 'fly-10': ['Cable Fly · 3×15 · 20', 1, 1] }
+  };
+  var SCORES = ['exercise_match', 'weight_found'];
+  var JUDGES = {
+    exercise_match: { scope: 'transcript', active: 3, versions: [
+      { n: 1, note: 'first draft', model: 'gpt-4.1-mini', tpr: 0.81, tnr: 0.64, nn: 60, by: 'human' },
+      { n: 2, note: 'added 3 counter-examples for equipment defaults', model: 'gpt-4.1-mini', tpr: 0.90, tnr: 0.83, nn: 88, by: 'agent' },
+      { n: 3, note: 'ask for the movement family before the name', model: 'gpt-4.1-mini', tpr: 0.94, tnr: 0.91, nn: 104, by: 'agent' }
+    ] },
+    weight_found: { scope: 'transcript', active: 1, versions: [ { n: 1, note: 'first draft', model: 'gpt-4.1-mini', tpr: null, tnr: null, nn: 31, by: 'human' } ] }
+  };
+  // judge v3 disagreed with a human on these items (judge said pass, human said fail, or vice versa)
+  var DISAGREE = { exercise_match: { 3: ['row-07', 'rdl-11', 'curl-15', 'lunge-08', 'pull-04', 'dip-06', 'fly-10'] } };
+  var CONVO = { id: 'call-3391', turns: [
+    { role: 'user', text: 'Hey Copper, log my workout.' },
+    { role: 'assistant', text: 'Go ahead, what did you do?' },
+    { role: 'user', text: 'Bench press three sets of five at two twenty five, then some light rows, ten reps.' },
+    { role: 'assistant', text: 'Logged bench press, 3 by 5 at 225. For the rows, which equipment?' },
+    { role: 'user', text: 'Just the barbell.' },
+    { role: 'assistant', text: 'Got it. Barbell row, 1 by 10. Anything else?' }
+  ] };
+  var DATASETS = ['tagging-golden', 'tagging-hard-cases', 'exercise_match labels'];
+
+  // ---------- state ----------
+  var store = { get: function (k, d) { try { return JSON.parse(localStorage.getItem('spotter.' + k)) || d; } catch (e) { return d; } }, set: function (k, v) { try { localStorage.setItem('spotter.' + k, JSON.stringify(v)); } catch (e) {} } };
+  var state = { verdicts: store.get('verdicts', {}), added: store.get('added', {}), active: store.get('active', {}) };
+  function save() { store.set('verdicts', state.verdicts); store.set('added', state.added); store.set('active', state.active); }
+  function activeVersion(j) { return state.active[j] || JUDGES[j].active; }
+
+  // ---------- helpers ----------
+  var icon = function (n, cls) { return '<svg class="ic ' + (cls || '') + '"><use href="#i-' + n + '"/></svg>'; };
+  var esc = function (s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
+  var pct = function (x) { return Math.round(x * 100) + '%'; };
+  function mean(run, score) { var i = SCORES.indexOf(score) + 1; var v = ITEMS.map(function (it) { return OUT[run][it.id][i]; }); return v.reduce(function (a, b) { return a + b; }, 0) / v.length; }
+  function traceId(run, item) { return run + ':' + item; }
+  function parse() {
+    var h = location.hash.slice(1) || '/inbox';
+    var q = {}; var path = h;
+    if (h.indexOf('?') >= 0) { path = h.slice(0, h.indexOf('?')); h.slice(h.indexOf('?') + 1).split('&').forEach(function (kv) { var p = kv.split('='); q[decodeURIComponent(p[0])] = decodeURIComponent(p[1] || ''); }); }
+    return { path: path, q: q, parts: path.split('/').filter(Boolean) };
+  }
+  function setQuery(q) { var r = parse(); var s = Object.keys(q).filter(function (k) { return q[k] != null && q[k] !== ''; }).map(function (k) { return k + '=' + encodeURIComponent(q[k]).replace(/%2C/g, ','); }).join('&'); history.replaceState(null, '', '#' + r.path + (s ? '?' + s : '')); render(); }
+  function toast(msg) { var t = document.getElementById('toast'); t.textContent = msg; t.setAttribute('data-show', ''); clearTimeout(t._h); t._h = setTimeout(function () { t.removeAttribute('data-show'); }, 1600); }
+
+  // queues
+  function unlabeled(run) { return ITEMS.filter(function (it) { return !state.verdicts[traceId(run, it.id)]; }); }
+  function disagreements(j, v) { return ((DISAGREE[j] || {})[v] || []).filter(function (id) { return !state.verdicts[traceId('B', id)]; }); }
+  function regressions(run) { var b = RUNS[run].baseline; if (!b) return []; return ITEMS.filter(function (it) { return OUT[run][it.id][1] < OUT[b][it.id][1] || OUT[run][it.id][2] < OUT[b][it.id][2]; }); }
+  function inboxItems() {
+    var out = [];
+    var reg = regressions('B'); if (reg.length) out.push({ icon: 'down', text: '<span class="strong">' + reg.length + ' regressions</span> in rules-v2 vs rules-v1', href: '#/compare?runs=A,B&only=changes', cta: 'Verify' });
+    Object.keys(JUDGES).forEach(function (j) { var v = activeVersion(j); var d = disagreements(j, v); if (d.length) out.push({ icon: 'judge', text: '<span class="strong">' + d.length + ' disagreements</span> with ' + j + ' v' + v, href: '#/review?judge=' + j + '&version=' + v, cta: 'Label' }); });
+    var wf = JUDGES.weight_found.versions[0]; if (wf.tpr == null) { var need = 100 - wf.nn - Object.keys(state.verdicts).length; if (need > 0) out.push({ icon: 'human', text: '<span class="strong">weight_found</span> needs ' + need + ' more labels before it counts', href: '#/review?run=B&filter=unlabeled', cta: 'Label' }); }
+    return out;
+  }
+
+  // ---------- screens ----------
+  function inbox() {
+    var items = inboxItems();
+    var runs = ['B', 'A'].map(function (id) { var r = RUNS[id]; var m = mean(id, 'exercise_match'); var d = r.baseline ? m - mean(r.baseline, 'exercise_match') : null;
+      return '<div class="row">' + icon('run') + '<div class="grow"><a class="link" href="#/runs/' + id + '">' + r.name + '</a> <span class="muted">· ' + r.at + '</span></div><span class="num strong">' + pct(m) + '</span>' + (d == null ? '<span class="delta delta-flat num">' + icon('flat', 'ic-sm') + '</span>' : '<span class="delta ' + (d >= 0 ? 'delta-up' : 'delta-down') + ' num">' + icon(d >= 0 ? 'up' : 'down', 'ic-sm') + Math.abs(Math.round(d * 100)) + ' pts</span>') + '</div>'; }).join('');
+    return '<div class="page-head"><h1 class="t-title heavy">Inbox</h1><span class="t-caption muted">Sep 7</span></div>' +
+      '<section class="group"><h2 class="t-caption muted">Waiting on you</h2>' + (items.length ? '<div class="card" style="padding-block: 0">' + items.map(function (i) { return '<div class="row">' + icon(i.icon) + '<div class="grow">' + i.text + '</div><a class="btn btn-primary btn-compact" href="' + i.href + '">' + i.cta + '</a></div>'; }).join('') + '</div>' : '<div class="card empty">' + icon('pass') + '<span class="t-title">All clear</span></div>') + '</section>' +
+      '<section class="group"><h2 class="t-caption muted">Runs</h2><div class="card" style="padding-block: 0">' + runs + '</div></section>';
+  }
+
+  function runPage(id, q) {
+    var r = RUNS[id]; if (!r) return notFound();
+    var b = r.baseline; var reg = regressions(id); var un = unlabeled(id);
+    var tiles = SCORES.map(function (s) { var m = mean(id, s); var d = b ? m - mean(b, s) : null;
+      return '<div class="card stat"><span class="stat-label">' + icon('score', 'ic-sm') + s + '</span><span class="stat-value num">' + pct(m) + '</span>' + (d == null ? '' : '<span class="delta ' + (d > 0 ? 'delta-up' : d < 0 ? 'delta-down' : 'delta-flat') + ' num">' + icon(d > 0 ? 'up' : d < 0 ? 'down' : 'flat', 'ic-sm') + (d === 0 ? '0' : Math.abs(Math.round(d * 100)) + ' pts') + '</span>') + '</div>'; }).join('');
+    return crumbs([['#/inbox', 'Inbox']]) + '<div class="page-head"><h1 class="t-title heavy">' + r.name + '</h1>' + (b ? '<a class="btn btn-primary" href="#/compare?runs=' + b + ',' + id + '&only=changes">' + icon('compare') + 'Compare with ' + RUNS[b].name + '</a>' : '') + '</div>' +
+      '<div class="stats">' + tiles + '<div class="card stat"><span class="stat-label">' + icon('dataset', 'ic-sm') + 'Items</span><span class="stat-value num">' + ITEMS.length + '</span><span class="t-caption muted">' + r.model + '</span></div>' + (b ? '<div class="card stat"><span class="stat-label">' + icon('flag', 'ic-sm') + 'Regressions</span><span class="stat-value num">' + reg.length + '</span>' + (reg.length ? '<a class="link t-caption" href="#/compare?runs=' + b + ',' + id + '&only=changes">See them</a>' : '') + '</div>' : '') + '</div>' +
+      '<div class="card" style="padding-block: 0">' + ITEMS.map(function (it) { var o = OUT[id][it.id]; var tid = traceId(id, it.id); var v = state.verdicts[tid];
+        return '<div class="row">' + icon(o[1] && o[2] ? 'pass' : 'fail') + '<div class="grow"><a class="link" href="#/traces/' + tid + '">' + it.id + '</a> <span class="muted">' + esc(o[0]) + '</span></div>' + (v ? '<span class="verdict verdict-' + v.verdict + '">' + icon(v.verdict, 'ic-sm') + v.verdict + '</span>' : '<span class="verdict verdict-pending">' + icon('time', 'ic-sm') + 'unlabeled</span>') + '</div>'; }).join('') + '</div>' +
+      (un.length ? '<p style="margin-top: var(--space-6)"><a class="btn btn-secondary" href="#/review?run=' + id + '&filter=unlabeled">' + icon('human') + 'Review ' + un.length + ' unlabeled</a></p>' : '');
+  }
+
+  function compare(q) {
+    var runs = (q.runs || 'A,B').split(','); var a = runs[0], b = runs[1]; var only = q.only === 'changes';
+    var rows = ITEMS.filter(function (it) { if (!only) return true; var x = OUT[a][it.id], y = OUT[b][it.id]; return x[1] !== y[1] || x[2] !== y[2]; });
+    var body = rows.map(function (it) { var x = OUT[a][it.id], y = OUT[b][it.id]; var worse = (y[1] < x[1]) || (y[2] < x[2]); var better = (y[1] > x[1]) || (y[2] > x[2]);
+      var cell = function (i) { var d = y[i] - x[i]; return '<td class="num"><span class="cell-diff ' + (d > 0 ? 'diff-pos' : d < 0 ? 'diff-neg' : '') + '">' + icon(d > 0 ? 'up' : d < 0 ? 'down' : 'flat', 'ic-sm') + (d === 0 ? y[i] : x[i] + ' → ' + y[i]) + '</span></td>'; };
+      return '<tr class="linkrow ' + (worse ? 'changed' : better ? 'improved' : '') + '" data-href="#/traces/' + traceId(b, it.id) + '"><td><div class="stack" style="--stack-gap: 2px"><span class="strong">' + it.id + '</span><span class="t-caption muted">“' + esc(it.transcript) + '”</span></div></td><td class="out">' + esc(x[0]) + '</td><td class="out">' + esc(y[0]) + '</td>' + cell(1) + cell(2) + '</tr>'; }).join('');
+    return crumbs([['#/inbox', 'Inbox'], ['#/runs/' + b, RUNS[b].name]]) + '<div class="page-head"><div class="chips"><a class="verdict verdict-pending" href="#/runs/' + a + '">' + RUNS[a].name + '</a>' + icon('next') + '<a class="verdict verdict-pass" href="#/runs/' + b + '">' + RUNS[b].name + '</a></div><label class="cluster"><button class="toggle" type="button" role="switch" aria-checked="' + only + '" data-only></button><span class="t-caption muted">Only changes</span></label></div>' +
+      '<div class="card scroll-x" style="padding: 0"><table class="table"><thead><tr><th>Item</th><th>' + RUNS[a].name + '</th><th>' + RUNS[b].name + '</th><th class="num">exercise_match</th><th class="num">weight_found</th></tr></thead><tbody>' + (body || '<tr><td colspan="5"><div class="empty">' + icon('pass') + '<span class="t-title">No changes</span></div></td></tr>') + '</tbody></table></div>';
+  }
+
+  function trace(tid, q) {
+    var p = tid.split(':'); var run = p[0], item = p[1]; var it = ITEMS.filter(function (i) { return i.id === item; })[0]; if (!it || !RUNS[run]) return notFound();
+    var o = OUT[run][item]; var v = state.verdicts[tid]; var isConvo = item === 'bench-01' || item === 'row-07';
+    var focus = q.turn != null ? Number(q.turn) : null;
+    var transcript = isConvo ? '<div class="transcript">' + CONVO.turns.map(function (t, i) { return '<div class="turn" ' + (focus === i ? 'data-focus' : '') + '><span class="who">' + t.role + ' · ' + i + '</span><span>' + esc(t.text) + (t.role === 'assistant' && i === 3 ? '<br><span class="verdict verdict-fail" style="margin-top: 8px">' + icon('fail', 'ic-sm') + 'turn 3 · asked instead of defaulting to barbell</span>' : '') + '</span></div>'; }).join('') + '</div>' : '<p class="transcript">' + esc(it.transcript) + '</p>';
+    return crumbs([['#/inbox', 'Inbox'], ['#/runs/' + run, RUNS[run].name]]) + '<div class="review">' +
+      '<div class="page-head"><h1 class="t-title heavy">' + item + '</h1><a class="btn btn-primary" href="#/review/' + tid + '">' + icon('human') + (v ? 'Change verdict' : 'Label')+ '</a></div>' +
+      '<div class="block"><span class="block-label">' + icon('trace', 'ic-sm') + (isConvo ? 'Conversation ' + CONVO.id : 'Transcript') + '</span>' + transcript + '</div>' +
+      '<div class="block"><span class="block-label">' + icon('score', 'ic-sm') + 'Output</span><p class="strong">' + esc(o[0]) + '</p></div>' +
+      '<div class="block"><span class="block-label">' + icon('flag', 'ic-sm') + 'Expected</span><dl class="kv">' + Object.keys(it.expected).map(function (k) { return '<dt>' + k + '</dt><dd>' + esc(it.expected[k]) + '</dd>'; }).join('') + '</dl></div>' +
+      '<div class="block"><span class="block-label">' + icon('judge', 'ic-sm') + 'Scores</span><div class="card" style="padding-block: 0">' +
+        '<div class="row">' + icon(o[1] ? 'pass' : 'fail') + '<div class="grow">exercise_match <span class="muted">· judge v' + activeVersion('exercise_match') + '</span></div><span class="num strong">' + o[1] + '</span></div>' +
+        '<div class="row">' + icon(o[2] ? 'pass' : 'fail') + '<div class="grow">weight_found <span class="muted">· rule</span></div><span class="num strong">' + o[2] + '</span></div>' +
+        (v ? '<div class="row">' + icon(v.verdict) + '<div class="grow">human <span class="muted">· ' + esc(v.note || '') + '</span></div><span class="verdict verdict-' + v.verdict + '">' + v.verdict + '</span></div>' : '') + '</div></div>' +
+      (isConvo ? '<div class="hint">' + icon('open', 'ic-sm') + '<a class="link" href="#/traces/' + tid + '?turn=3">Deep link to turn 3</a></div>' : '') + '</div>';
+  }
+
+  function queueFor(q) {
+    if (q.judge) return { ids: disagreements(q.judge, Number(q.version) || activeVersion(q.judge)).map(function (id) { return traceId('B', id); }), title: q.judge + ' v' + (q.version || activeVersion(q.judge)) + ' disagreements', back: ['#/judges/' + q.judge, q.judge] };
+    var run = q.run || 'B'; return { ids: unlabeled(run).map(function (it) { return traceId(run, it.id); }), title: RUNS[run].name + ' unlabeled', back: ['#/runs/' + run, RUNS[run].name] };
+  }
+
+  function review(tid, q) {
+    var queue = queueFor(q); var ids = queue.ids;
+    if (!tid) { if (!ids.length) return crumbs([['#/inbox', 'Inbox']]) + '<div class="card empty">' + icon('pass') + '<span class="t-title">Nothing to label</span><a class="btn btn-primary" href="#/inbox">Inbox</a></div>'; location.replace('#/review/' + ids[0] + qs(q)); return ''; }
+    var p = tid.split(':'); var run = p[0], item = p[1]; var it = ITEMS.filter(function (i) { return i.id === item; })[0]; if (!it) return notFound();
+    var o = OUT[run][item]; var v = state.verdicts[tid] || {}; var pos = ids.indexOf(tid); var remaining = ids.length;
+    var judgeSaid = q.judge ? '<div class="row" style="border: 0; padding: 0">' + icon('judge') + '<div class="grow">Judge v' + (q.version || activeVersion(q.judge)) + ' said <span class="strong">' + (o[1] ? 'pass' : 'fail') + '</span></div></div>' : '';
+    return crumbs([['#/inbox', 'Inbox'], [queue.back[0], queue.back[1]]]) + '<div class="review">' +
+      '<div class="cluster" style="justify-content: space-between"><span class="t-title num">' + Math.max(remaining, 1) + ' <span class="muted">left</span> <span class="muted">· ' + esc(queue.title) + '</span></span><div class="cluster"><button class="btn btn-ghost btn-icon" type="button" data-nav="-1" aria-label="Previous">' + icon('previous') + '</button><button class="btn btn-ghost btn-icon" type="button" data-nav="1" aria-label="Next">' + icon('next') + '</button></div></div>' +
+      '<div class="block"><span class="block-label">' + icon('trace', 'ic-sm') + 'Transcript</span><p class="transcript">' + esc(it.transcript) + '</p></div>' +
+      '<div class="block"><span class="block-label">' + icon('score', 'ic-sm') + 'Output</span><p class="strong">' + esc(o[0]) + '</p></div>' +
+      '<div class="block"><span class="block-label">' + icon('flag', 'ic-sm') + 'Expected</span><dl class="kv">' + Object.keys(it.expected).map(function (k) { return '<dt>' + k + '</dt><dd>' + esc(it.expected[k]) + '</dd>'; }).join('') + '</dl></div>' + judgeSaid +
+      '<div class="verdict-row"><button class="btn btn-pass" type="button" data-verdict="pass" aria-pressed="' + (v.verdict === 'pass') + '">' + icon('pass') + 'Pass<span class="kbd">1</span></button><button class="btn btn-fail" type="button" data-verdict="fail" aria-pressed="' + (v.verdict === 'fail') + '">' + icon('fail') + 'Fail<span class="kbd">2</span></button><button class="btn btn-defer" type="button" data-verdict="defer" aria-pressed="' + (v.verdict === 'defer') + '">' + icon('defer') + 'Defer<span class="kbd">D</span></button></div>' +
+      '<div class="field"><label for="note">Note</label><textarea class="input" id="note" placeholder="What went wrong">' + esc(v.note || '') + '</textarea></div>' +
+      '<div class="hint"><span class="kbd">A</span> add to dataset <span class="kbd">U</span> undo <span class="kbd">⌘↵</span> save and next' + (state.added[tid] ? ' <span class="verdict verdict-pass">' + icon('dataset', 'ic-sm') + state.added[tid] + '</span>' : '') + '</div></div>';
+  }
+
+  function judge(name) {
+    var j = JUDGES[name]; if (!j) return notFound(); var active = activeVersion(name); var d = disagreements(name, active);
+    var versions = j.versions.slice().reverse().map(function (v) { var isActive = v.n === active; var cal = v.tpr == null ? '<span class="verdict verdict-defer">' + icon('time', 'ic-sm') + 'Needs labels · ' + v.nn + ' of 100</span>' : '<div class="cal"><div class="stat"><span class="stat-label">TPR</span><span class="t-title num">' + pct(v.tpr) + '</span><div class="bar ' + (v.tpr >= 0.9 ? 'bar-pass' : 'bar-fail') + '"><i style="width:' + pct(v.tpr) + '"></i></div></div><div class="stat"><span class="stat-label">TNR</span><span class="t-title num">' + pct(v.tnr) + '</span><div class="bar ' + (v.tnr >= 0.9 ? 'bar-pass' : 'bar-fail') + '"><i style="width:' + pct(v.tnr) + '"></i></div></div></div>';
+      return '<div class="version" ' + (isActive ? 'data-active' : '') + '><div class="stack" style="--stack-gap: 4px"><span class="t-title num">v' + v.n + '</span>' + (isActive ? '<span class="verdict verdict-pass">' + icon('pass', 'ic-sm') + 'Active</span>' : '') + '</div><div class="stack"><span class="muted">' + esc(v.note) + ' <span class="faint">· ' + v.by + ' · n=' + v.nn + '</span></span>' + cal + '</div><div class="stack">' + (isActive ? (d.length ? '<a class="btn btn-primary btn-compact" href="#/review?judge=' + name + '&version=' + v.n + '">' + icon('human', 'ic-sm') + d.length + ' disagreements</a>' : '<span class="verdict verdict-pass">' + icon('pass', 'ic-sm') + 'No disagreements</span>') : (v.tpr != null ? '<button class="btn btn-secondary btn-compact" type="button" data-activate="' + v.n + '">' + icon('previous', 'ic-sm') + 'Activate v' + v.n + '</button>' : '')) + '</div></div>'; }).join('');
+    return crumbs([['#/inbox', 'Inbox']]) + '<div class="page-head"><h1 class="t-title heavy">' + name + '</h1><span class="t-caption muted">' + j.scope + ' · ' + j.versions.length + (j.versions.length === 1 ? ' version' : ' versions') + '</span></div>' + (j.versions.length > 1 ? '<div class="timeline">' + versions + '</div>' : '<div class="card">' + versions + '</div>');
+  }
+
+  function notFound() { return '<div class="card empty">' + icon('search') + '<span class="t-title">Not here</span><a class="btn btn-primary" href="#/inbox">Inbox</a></div>'; }
+  function crumbs(list) { return '<nav class="crumbs t-caption">' + list.map(function (c) { return '<a href="' + c[0] + '">' + esc(c[1]) + '</a>'; }).join(icon('next', 'ic-sm')) + '</nav>'; }
+  function qs(q) { var s = Object.keys(q).map(function (k) { return k + '=' + encodeURIComponent(q[k]); }).join('&'); return s ? '?' + s : ''; }
+
+  // ---------- render + wiring ----------
+  function render() {
+    var r = parse(); var view = document.getElementById('view'); var html = '';
+    var p = r.parts;
+    if (!p.length || p[0] === 'inbox') html = inbox();
+    else if (p[0] === 'runs' && p[1]) html = runPage(p[1], r.q);
+    else if (p[0] === 'compare') html = compare(r.q);
+    else if (p[0] === 'traces' && p[1]) html = trace(p[1], r.q);
+    else if (p[0] === 'review') html = review(p[1], r.q);
+    else if (p[0] === 'judges' && p[1] && p[2] === 'disagreements') { location.replace('#/review?judge=' + p[1] + '&version=' + (r.q.version || activeVersion(p[1]))); return; }
+    else if (p[0] === 'judges' && p[1]) html = judge(p[1]);
+    else html = notFound();
+    view.innerHTML = html;
+    document.getElementById('inboxCount').textContent = inboxItems().length;
+    document.title = 'Spotter Inbox';
+    window.scrollTo(0, 0);
+    wire(r);
+  }
+
+  function wire(r) {
+    var only = document.querySelector('[data-only]'); if (only) only.addEventListener('click', function () { setQuery(Object.assign({}, r.q, { only: r.q.only === 'changes' ? null : 'changes' })); });
+    document.querySelectorAll('tr.linkrow').forEach(function (tr) { tr.addEventListener('click', function () { location.hash = tr.dataset.href; }); });
+    document.querySelectorAll('[data-activate]').forEach(function (b) { b.addEventListener('click', function () { var name = r.parts[1]; state.active[name] = Number(b.dataset.activate); save(); toast('v' + b.dataset.activate + ' is active'); render(); }); });
+    if (r.parts[0] === 'review' && r.parts[1]) wireReview(r);
+  }
+
+  function wireReview(r) {
+    var tid = r.parts[1]; var queue = queueFor(r.q); var note = document.getElementById('note');
+    function set(verdict) { state.verdicts[tid] = { verdict: verdict, note: note.value }; save(); toast(verdict); }
+    function next(dir) { var ids = queue.ids.length ? queue.ids : [tid]; var i = ids.indexOf(tid); var n = ids[i + dir]; if (!n) n = ids[0]; if (!n || n === tid) { location.hash = '#/inbox'; return; } location.hash = '#/review/' + n + qs(r.q); }
+    document.querySelectorAll('[data-verdict]').forEach(function (b) { b.addEventListener('click', function () { set(b.dataset.verdict); setTimeout(function () { next(1); }, 150); }); });
+    document.querySelectorAll('[data-nav]').forEach(function (b) { b.addEventListener('click', function () { next(Number(b.dataset.nav)); }); });
+    note.addEventListener('input', function () { if (state.verdicts[tid]) { state.verdicts[tid].note = note.value; save(); } });
+    var picker = document.getElementById('picker'); var opts = document.getElementById('pickerOptions');
+    function openPicker() { opts.innerHTML = DATASETS.map(function (d) { return '<button type="button" class="btn btn-secondary opt" data-ds="' + esc(d) + '">' + icon('dataset') + esc(d) + '</button>'; }).join(''); picker.setAttribute('data-open', ''); opts.querySelectorAll('[data-ds]').forEach(function (b) { b.addEventListener('click', function () { state.added[tid] = b.dataset.ds; save(); picker.removeAttribute('data-open'); toast('Added to ' + b.dataset.ds); render(); }); }); }
+    picker.querySelector('[data-picker-close]').addEventListener('click', function () { picker.removeAttribute('data-open'); });
+    document.onkeydown = function (e) {
+      if (picker.hasAttribute('data-open')) { if (e.key === 'Escape') picker.removeAttribute('data-open'); return; }
+      var typing = document.activeElement === note;
+      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); if (!state.verdicts[tid]) set('pass'); next(1); return; }
+      if (typing) return;
+      if (e.key === '1') { set('pass'); next(1); }
+      else if (e.key === '2') { set('fail'); note.focus(); }
+      else if (e.key === 'd' || e.key === 'D') { set('defer'); next(1); }
+      else if (e.key === 'u' || e.key === 'U') { delete state.verdicts[tid]; save(); toast('undone'); render(); }
+      else if (e.key === 'a' || e.key === 'A') { openPicker(); }
+      else if (e.key === 'ArrowRight') next(1);
+      else if (e.key === 'ArrowLeft') next(-1);
+      else if (e.key === 'Escape') location.hash = '#/inbox';
+    };
+  }
+
+  window.addEventListener('hashchange', function () { document.onkeydown = null; render(); });
+  render();
+})();
+</script>
+</body>

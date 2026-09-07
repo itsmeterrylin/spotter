@@ -76,9 +76,18 @@ const body = template
 writeFileSync(join(root, 'preview', 'index.html'), `<!doctype html>\n<html lang="en">\n${body.replace('<!-- PLAN_URL -->', PLAN_URL_LOCAL)}\n</html>\n`);
 writeFileSync(join(dist, 'artifact.html'), body.replace('<!-- PLAN_URL -->', PLAN_URL_PUBLISHED).replace(/<head>|<\/head>|<body>|<\/body>/g, ''));
 
-const used = new Set<IconName>();
-for (const m of template.matchAll(/#i-([a-z]+)/g)) used.add(m[1] as IconName);
-const unknown = [...used].filter((n) => !iconNames.includes(n));
-if (unknown.length) throw new Error(`Template uses unknown icons: ${unknown.join(', ')}`);
+// Prototype: same CSS and sprite, its own template
+const proto = readFileSync(join(root, 'preview', 'prototype.template.html'), 'utf8')
+  .replace('<!-- FONT_LINKS -->', fontLinks)
+  .replace('/* SYSTEM_CSS */', inlineFonts(allCss()))
+  .replace('<!-- ICON_SPRITE -->', iconSprite);
+writeFileSync(join(root, 'preview', 'prototype.html'), `<!doctype html>\n<html lang="en">\n${proto}\n</html>\n`);
+writeFileSync(join(dist, 'prototype.artifact.html'), proto.replace(/<head>|<\/head>|<body>|<\/body>/g, ''));
 
-console.log(`built ${dist} and preview/index.html (${used.size} icons used)`);
+const used = new Set<IconName>();
+for (const t of [template, proto]) for (const m of t.matchAll(/#i-([a-z]+)/g)) used.add(m[1] as IconName);
+for (const m of proto.matchAll(/icon\('([a-z]+)'/g)) used.add(m[1] as IconName);
+const unknown = [...used].filter((n) => !iconNames.includes(n));
+if (unknown.length) throw new Error(`Templates use unknown icons: ${unknown.join(', ')}`);
+
+console.log(`built ${dist}, preview/index.html, preview/prototype.html (${used.size} icons used)`);
