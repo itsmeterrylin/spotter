@@ -2,7 +2,7 @@
 
 **Date**: 2026-09-06
 **Type**: feature
-**Status**: Draft, awaiting review
+**Status**: Reviewed 2026-09-13, awaiting approval to start Phase 0
 **Depends on**: `docs/design/eval-tool-design.md`, `design-system/`
 **Repo**: `github.com/itsmeterrylin/spotter`
 
@@ -450,23 +450,40 @@ evals/
 
 ## Implementation assumptions
 
-| Assumption | Confidence | How to verify |
+Reviewed 2026-09-13 in a scratch folder with the exact pinned versions. Evidence in `~/.claude/jobs/b12b374a/tmp/bun-age-test/` during the session.
+
+| Assumption | Result | Evidence |
 |---|---|---|
-| `bun:sqlite` supports WAL mode and prepared statements needed here | CERTAIN | Bun docs; smoke test in phase 1 |
-| `bunfig.toml` `[install] minimumReleaseAge` is honored by Bun 1.3.9 | LIKELY | `bun install --help` lists `--minimum-release-age`; confirm the config key in phase 0 |
-| `hono` 4.12.28 and `@hono/mcp` 0.3.0 work with `@modelcontextprotocol/sdk` 1.29.0 | LIKELY | Wire one tool in phase 3; all three predate the cutoff by months |
-| `@hono/mcp` 0.3.0 exposes a Streamable HTTP transport that works with SDK 1.29 `McpServer` | LIKELY | Read its README; wire one tool in phase 3 |
-| Hono TSX renders without a client runtime when using `c.html()` | CERTAIN | Hono docs |
-| Zod 4.4 schemas convert to MCP tool input schemas via the SDK helpers | LIKELY | Verify on first tool in phase 3 |
-| Node-free: no `node:` imports needed beyond `node:fs` for CSS copy | LIKELY | Bun implements `node:fs` |
-| Bootstrap bias correction can be computed in TS in under 100 ms for n=200 | CERTAIN | Trivial loop |
-| Google Fonts link for Open Sans is acceptable in the local app | ASSUMED | Confirm; otherwise self-host |
+| `bun:sqlite` supports WAL and prepared statements | VERIFIED | `PRAGMA journal_mode=WAL`, `prepare().run()`, `query().get()` ran in `app.tsx` |
+| `bunfig.toml` `[install] minimumReleaseAge` is honored by Bun 1.3.9 | VERIFIED | `bun add hono@4.13.7` refused with "blocked by minimum-release-age: 5184000 seconds"; `hono@4.12.28` installed exact |
+| `hono` 4.12.28, `@hono/mcp` 0.3.0, SDK 1.29.0, `zod` 4.4.3 install together under the gate | VERIFIED | 93 packages installed, no peer errors. `@hono/mcp` peers: `zod ^3.25 \|\| ^4`, `hono *`, sdk `^1.25.1`, `hono-rate-limiter ^0.5.3` (resolved by Bun) |
+| `@hono/mcp` `StreamableHTTPTransport` works with SDK 1.29 `McpServer` and Zod 4 tool schemas | VERIFIED | `initialize` over `app.request('/mcp')` returned 200 with `protocolVersion 2025-06-18` and `tools` capability |
+| Hono TSX renders server-side with `c.html()` and no client runtime | VERIFIED | Needs `tsconfig` `"jsx": "react-jsx", "jsxImportSource": "hono/jsx"`; without it Bun looks for React |
+| Bootstrap bias correction runs in under 100 ms for n=200 | CERTAIN | Trivial loop; measured in phase 6 |
+| Google Fonts link for Open Sans is acceptable in the local app | ASSUMED | Confirm in phase 0; fallback is self-hosting the two weights |
 
 No existing backend, frontend, or tests exist in this repo, so there are no compatibility assumptions.
 
+## State and concurrency
+
+| Trigger | Current state | Next state | Guard |
+|---|---|---|---|
+| `POST /traces/batch` twice with the same ids within 100 ms | no rows | rows once | `INSERT OR IGNORE` on client ids inside one transaction; second call reports `inserted: 0` |
+| Trace and its inline scores | none | both or neither | One SQLite transaction per batch |
+| Two verdicts for the same trace, same person, in sequence | score A | score B | `PUT` replaces by `(trace_id, name, source, turn)`; last write wins, both kept in `created_at` order is not needed |
+| `judge.activate` from two agents at once | v3 active | one of them active | Single `UPDATE judge SET active_version_id = ? WHERE name = ?` in WAL mode; last write wins and is logged in `note` |
+| `judge.propose` with a hash that already exists | n versions | n versions | `UNIQUE (judge_name, content_hash)`; return the existing row |
+| Review page while a verdict saves | buttons enabled | button pressed, then next trace | Button disabled until the response; failure shows an inline line in `fail`; the note field keeps its text |
+| Alert rule fires twice inside `cooldown_s` | last_fired_at = t | unchanged | Check and set `last_fired_at` in the same transaction |
+| Reads while the SDK is writing a batch | | | WAL mode; readers never block |
+
+## Style rules for the new repo
+
+No comments unless they say why. No try/catch around internal calls; external calls (model providers, webhooks, SMTP) are the only ones wrapped. Errors return `{error: {code, message}}`. Zod at every boundary, typed rows from the repositories, no `any`. Files stay under 200 lines; a file that grows past that is split by responsibility.
+
 ## Git strategy
 
-Branch `feat/skeleton` off `main`. One commit per phase. PR to `main` after phase 6; phases 7 to 10 each get their own branch and PR.
+Branch `feat/skeleton` off `main`. One commit per phase, checkpoint before the next phase starts. PR to `main` after phase 6, auto-merge; phases 7 to 10 each get their own branch and PR.
 
 ## QA strategy
 
@@ -531,6 +548,69 @@ Each phase: at most three tasks, type-check and tests after each task, commit at
 1. Dockerfile with digest-pinned base, `.dockerignore`, `SPOTTER_*` config, health check; `docker run` smoke test.
 2. Release workflow: multi-arch build, GHCR push on tag, SBOM, cosign signature.
 3. LICENSE, SECURITY.md, CONTRIBUTING.md, sample dataset in the image, README quick start.
+
+## Tasks
+
+Phase rules: at most three tasks per phase. `bun run check` (type-check) and `bun test` after every task. Commit at N.0 before starting and at the end. Pause at N.5 for confirmation. A `.D` task updates docs in the same PR when an endpoint, tool, or schema changes.
+
+### Phase 0: Scaffold
+- [ ] 0.0 `git checkout -b feat/skeleton`
+- [ ] 0.1 `bunfig.toml` (`exact`, `minimumReleaseAge = 5184000`), `.bun-version` 1.3.9, root `package.json` workspaces `app`, `packages/evals`; pins from the Stack table; `bun install`; commit `bun.lock`
+- [ ] 0.2 `app/tsconfig.json` with `hono/jsx`, `app/src/server.ts` serving `/health` and a Layout page; `build:css` copies `design-system/dist/spotter.css` to `app/public`
+- [ ] 0.3 Scripts `dev`, `test`, `check`; first `bun test` with a health request test
+- [ ] 0.4 `bun run check && bun test && curl localhost:3000/health`
+- [ ] 0.5 Confirmation
+
+### Phase 1: Database
+- [ ] 1.1 `app/src/db/schema.sql` from the Data schema section; `client.ts` opens the file from `SPOTTER_DB`, runs migrations, sets WAL
+- [ ] 1.2 Repositories `dataset`, `run`, `trace`, `score`, `judge` with typed rows and JSON parsing at the boundary; UUIDv7 in `packages/evals/src/uuid7.ts`
+- [ ] 1.3 Tests: migration on an in-memory database, one round trip per repository, UUIDv7 ordering
+- [ ] 1.4 `bun run check && bun test`
+- [ ] 1.5 Confirmation
+
+### Phase 2: Services and REST
+- [ ] 2.1 `services/aggregates.ts` (mean per score, p50 duration, tokens; judge scores excluded when uncalibrated), `services/summary.ts` (mean, diff, improvements, regressions), `services/compare.ts` with `only=changes`
+- [ ] 2.2 `services/filters.ts` (symbol operators, `metadata.<key>`), `services/query.ts` (single SELECT guard), `src/urls.ts` (every route in one file)
+- [ ] 2.3 `api/*.ts` routes from the API table with Zod schemas and `url` on every response; request tests per endpoint against an in-memory database
+- [ ] 2.4 `bun run check && bun test`
+- [ ] 2.5 Confirmation
+
+### Phase 3: MCP
+- [ ] 3.1 `mcp/server.ts`: `McpServer` with `list`, `read`, `write`, `compare` over the services; `read audit`, `list notes`
+- [ ] 3.2 Mount at `/mcp` with `StreamableHTTPTransport`; client script calls all four tools and checks every result carries `url`
+- [ ] 3.3 README `claude mcp add` block; `skills/spotter.md` describing tools and deep links
+- [ ] 3.D Design doc MCP table matches the code
+- [ ] 3.4 `bun run check && bun test`
+- [ ] 3.5 Confirmation
+
+### Phase 4: Pages
+- [ ] 4.1 `pages/Inbox.tsx`, `pages/Run.tsx` with the seven components; state read from the URL only
+- [ ] 4.2 `pages/Compare.tsx`, `pages/Trace.tsx`; `client/compare.ts` writes `only` and `score` back to the URL
+- [ ] 4.3 `pages/Review.tsx` with `client/review.ts` (keys 1, 2, D, U, A, arrows, Cmd+Enter; autosave through `PUT /api/traces/{id}/scores`); `pages/Judges.tsx`
+- [ ] 4.4 `bun run check && bun test`; open every URL in the deep-link table in a fresh tab
+- [ ] 4.5 Confirmation
+
+### Phase 5: SDK and CLI
+- [ ] 5.1 `packages/evals/src/index.ts`: `defineEval`, runner, batches of 50, summary table
+- [ ] 5.2 `cli.ts`: `spotter run`, `spotter compare`, `--no-send`, `spotter init` guided first eval
+- [ ] 5.3 `evals/tagging.example.ts` with seeded items; `bun spotter run` prints working URLs
+- [ ] 5.D README quick start
+- [ ] 5.4 `bun run check && bun test`; sample run under 5 s for 120 items
+- [ ] 5.5 Confirmation
+
+### Phase 6: Judges
+- [ ] 6.1 `judge`, `judge_version` tables; `propose` with hash dedup; `activate` with audit note; REST and MCP ops; `spotter judge run <name> --version N --run <id>`
+- [ ] 6.2 Calibration per version from human-versus-judge pairs: splits, TPR, TNR, bias-corrected rate with bootstrap interval; aggregates exclude uncalibrated versions
+- [ ] 6.3 Judges pages: timeline, version detail, disagreements queue reusing the review screen
+- [ ] 6.D Design doc judge section matches the code
+- [ ] 6.4 `bun run check && bun test`
+- [ ] 6.5 Confirmation, then PR to `main`
+
+Phases 7 to 10 keep their task lists above and get the same checklist form when phase 6 merges.
+
+## Completeness
+
+9 of 10. Gaps: the Google Fonts assumption stays open until phase 0, and phases 7 to 10 are not yet in checklist form by design.
 
 ## Success metrics
 

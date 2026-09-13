@@ -207,7 +207,7 @@ textarea.input { min-height: 120px; resize: vertical; }
 <h1>Implementation plan: Spotter skeleton</h1>
 <p><strong>Date</strong>: 2026-09-06
 <strong>Type</strong>: feature
-<strong>Status</strong>: Draft, awaiting review
+<strong>Status</strong>: Reviewed 2026-09-13, awaiting approval to start Phase 0
 <strong>Depends on</strong>: <code>docs/design/eval-tool-design.md</code>, <code>design-system/</code>
 <strong>Repo</strong>: <code>github.com/itsmeterrylin/spotter</code></p>
 <h2>Summary</h2>
@@ -899,63 +899,115 @@ evals/
   tagging.example.ts           deterministic sample with seeded items
 </code></pre>
 <h2>Implementation assumptions</h2>
+<p>Reviewed 2026-09-13 in a scratch folder with the exact pinned versions. Evidence in <code>~/.claude/jobs/b12b374a/tmp/bun-age-test/</code> during the session.</p>
 <div class="scroll"><table>
 <thead>
 <tr>
 <th>Assumption</th>
-<th>Confidence</th>
-<th>How to verify</th>
+<th>Result</th>
+<th>Evidence</th>
 </tr>
 </thead>
 <tbody><tr>
-<td><code>bun:sqlite</code> supports WAL mode and prepared statements needed here</td>
-<td>CERTAIN</td>
-<td>Bun docs; smoke test in phase 1</td>
+<td><code>bun:sqlite</code> supports WAL and prepared statements</td>
+<td>VERIFIED</td>
+<td><code>PRAGMA journal_mode=WAL</code>, <code>prepare().run()</code>, <code>query().get()</code> ran in <code>app.tsx</code></td>
 </tr>
 <tr>
 <td><code>bunfig.toml</code> <code>[install] minimumReleaseAge</code> is honored by Bun 1.3.9</td>
-<td>LIKELY</td>
-<td><code>bun install --help</code> lists <code>--minimum-release-age</code>; confirm the config key in phase 0</td>
+<td>VERIFIED</td>
+<td><code>bun add hono@4.13.7</code> refused with &quot;blocked by minimum-release-age: 5184000 seconds&quot;; <code>hono@4.12.28</code> installed exact</td>
 </tr>
 <tr>
-<td><code>hono</code> 4.12.28 and <code>@hono/mcp</code> 0.3.0 work with <code>@modelcontextprotocol/sdk</code> 1.29.0</td>
-<td>LIKELY</td>
-<td>Wire one tool in phase 3; all three predate the cutoff by months</td>
+<td><code>hono</code> 4.12.28, <code>@hono/mcp</code> 0.3.0, SDK 1.29.0, <code>zod</code> 4.4.3 install together under the gate</td>
+<td>VERIFIED</td>
+<td>93 packages installed, no peer errors. <code>@hono/mcp</code> peers: <code>zod ^3.25 || ^4</code>, <code>hono *</code>, sdk <code>^1.25.1</code>, <code>hono-rate-limiter ^0.5.3</code> (resolved by Bun)</td>
 </tr>
 <tr>
-<td><code>@hono/mcp</code> 0.3.0 exposes a Streamable HTTP transport that works with SDK 1.29 <code>McpServer</code></td>
-<td>LIKELY</td>
-<td>Read its README; wire one tool in phase 3</td>
+<td><code>@hono/mcp</code> <code>StreamableHTTPTransport</code> works with SDK 1.29 <code>McpServer</code> and Zod 4 tool schemas</td>
+<td>VERIFIED</td>
+<td><code>initialize</code> over <code>app.request(&#39;/mcp&#39;)</code> returned 200 with <code>protocolVersion 2025-06-18</code> and <code>tools</code> capability</td>
 </tr>
 <tr>
-<td>Hono TSX renders without a client runtime when using <code>c.html()</code></td>
+<td>Hono TSX renders server-side with <code>c.html()</code> and no client runtime</td>
+<td>VERIFIED</td>
+<td>Needs <code>tsconfig</code> <code>&quot;jsx&quot;: &quot;react-jsx&quot;, &quot;jsxImportSource&quot;: &quot;hono/jsx&quot;</code>; without it Bun looks for React</td>
+</tr>
+<tr>
+<td>Bootstrap bias correction runs in under 100 ms for n=200</td>
 <td>CERTAIN</td>
-<td>Hono docs</td>
-</tr>
-<tr>
-<td>Zod 4.4 schemas convert to MCP tool input schemas via the SDK helpers</td>
-<td>LIKELY</td>
-<td>Verify on first tool in phase 3</td>
-</tr>
-<tr>
-<td>Node-free: no <code>node:</code> imports needed beyond <code>node:fs</code> for CSS copy</td>
-<td>LIKELY</td>
-<td>Bun implements <code>node:fs</code></td>
-</tr>
-<tr>
-<td>Bootstrap bias correction can be computed in TS in under 100 ms for n=200</td>
-<td>CERTAIN</td>
-<td>Trivial loop</td>
+<td>Trivial loop; measured in phase 6</td>
 </tr>
 <tr>
 <td>Google Fonts link for Open Sans is acceptable in the local app</td>
 <td>ASSUMED</td>
-<td>Confirm; otherwise self-host</td>
+<td>Confirm in phase 0; fallback is self-hosting the two weights</td>
 </tr>
 </tbody></table></div>
 <p>No existing backend, frontend, or tests exist in this repo, so there are no compatibility assumptions.</p>
+<h2>State and concurrency</h2>
+<div class="scroll"><table>
+<thead>
+<tr>
+<th>Trigger</th>
+<th>Current state</th>
+<th>Next state</th>
+<th>Guard</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>POST /traces/batch</code> twice with the same ids within 100 ms</td>
+<td>no rows</td>
+<td>rows once</td>
+<td><code>INSERT OR IGNORE</code> on client ids inside one transaction; second call reports <code>inserted: 0</code></td>
+</tr>
+<tr>
+<td>Trace and its inline scores</td>
+<td>none</td>
+<td>both or neither</td>
+<td>One SQLite transaction per batch</td>
+</tr>
+<tr>
+<td>Two verdicts for the same trace, same person, in sequence</td>
+<td>score A</td>
+<td>score B</td>
+<td><code>PUT</code> replaces by <code>(trace_id, name, source, turn)</code>; last write wins, both kept in <code>created_at</code> order is not needed</td>
+</tr>
+<tr>
+<td><code>judge.activate</code> from two agents at once</td>
+<td>v3 active</td>
+<td>one of them active</td>
+<td>Single <code>UPDATE judge SET active_version_id = ? WHERE name = ?</code> in WAL mode; last write wins and is logged in <code>note</code></td>
+</tr>
+<tr>
+<td><code>judge.propose</code> with a hash that already exists</td>
+<td>n versions</td>
+<td>n versions</td>
+<td><code>UNIQUE (judge_name, content_hash)</code>; return the existing row</td>
+</tr>
+<tr>
+<td>Review page while a verdict saves</td>
+<td>buttons enabled</td>
+<td>button pressed, then next trace</td>
+<td>Button disabled until the response; failure shows an inline line in <code>fail</code>; the note field keeps its text</td>
+</tr>
+<tr>
+<td>Alert rule fires twice inside <code>cooldown_s</code></td>
+<td>last_fired_at = t</td>
+<td>unchanged</td>
+<td>Check and set <code>last_fired_at</code> in the same transaction</td>
+</tr>
+<tr>
+<td>Reads while the SDK is writing a batch</td>
+<td></td>
+<td></td>
+<td>WAL mode; readers never block</td>
+</tr>
+</tbody></table></div>
+<h2>Style rules for the new repo</h2>
+<p>No comments unless they say why. No try/catch around internal calls; external calls (model providers, webhooks, SMTP) are the only ones wrapped. Errors return <code>{error: {code, message}}</code>. Zod at every boundary, typed rows from the repositories, no <code>any</code>. Files stay under 200 lines; a file that grows past that is split by responsibility.</p>
 <h2>Git strategy</h2>
-<p>Branch <code>feat/skeleton</code> off <code>main</code>. One commit per phase. PR to <code>main</code> after phase 6; phases 7 to 10 each get their own branch and PR.</p>
+<p>Branch <code>feat/skeleton</code> off <code>main</code>. One commit per phase, checkpoint before the next phase starts. PR to <code>main</code> after phase 6, auto-merge; phases 7 to 10 each get their own branch and PR.</p>
 <h2>QA strategy</h2>
 <ul>
 <li>LLM self-test per phase: <code>bun test</code> unit tests for services, a request-level test per endpoint with an in-memory SQLite, an MCP client script that calls all four tools.</li>
@@ -1029,6 +1081,71 @@ evals/
 <li>Release workflow: multi-arch build, GHCR push on tag, SBOM, cosign signature.</li>
 <li>LICENSE, SECURITY.md, CONTRIBUTING.md, sample dataset in the image, README quick start.</li>
 </ol>
+<h2>Tasks</h2>
+<p>Phase rules: at most three tasks per phase. <code>bun run check</code> (type-check) and <code>bun test</code> after every task. Commit at N.0 before starting and at the end. Pause at N.5 for confirmation. A <code>.D</code> task updates docs in the same PR when an endpoint, tool, or schema changes.</p>
+<h3>Phase 0: Scaffold</h3>
+<ul>
+<li><input disabled="" type="checkbox"> 0.0 <code>git checkout -b feat/skeleton</code></li>
+<li><input disabled="" type="checkbox"> 0.1 <code>bunfig.toml</code> (<code>exact</code>, <code>minimumReleaseAge = 5184000</code>), <code>.bun-version</code> 1.3.9, root <code>package.json</code> workspaces <code>app</code>, <code>packages/evals</code>; pins from the Stack table; <code>bun install</code>; commit <code>bun.lock</code></li>
+<li><input disabled="" type="checkbox"> 0.2 <code>app/tsconfig.json</code> with <code>hono/jsx</code>, <code>app/src/server.ts</code> serving <code>/health</code> and a Layout page; <code>build:css</code> copies <code>design-system/dist/spotter.css</code> to <code>app/public</code></li>
+<li><input disabled="" type="checkbox"> 0.3 Scripts <code>dev</code>, <code>test</code>, <code>check</code>; first <code>bun test</code> with a health request test</li>
+<li><input disabled="" type="checkbox"> 0.4 <code>bun run check &amp;&amp; bun test &amp;&amp; curl localhost:3000/health</code></li>
+<li><input disabled="" type="checkbox"> 0.5 Confirmation</li>
+</ul>
+<h3>Phase 1: Database</h3>
+<ul>
+<li><input disabled="" type="checkbox"> 1.1 <code>app/src/db/schema.sql</code> from the Data schema section; <code>client.ts</code> opens the file from <code>SPOTTER_DB</code>, runs migrations, sets WAL</li>
+<li><input disabled="" type="checkbox"> 1.2 Repositories <code>dataset</code>, <code>run</code>, <code>trace</code>, <code>score</code>, <code>judge</code> with typed rows and JSON parsing at the boundary; UUIDv7 in <code>packages/evals/src/uuid7.ts</code></li>
+<li><input disabled="" type="checkbox"> 1.3 Tests: migration on an in-memory database, one round trip per repository, UUIDv7 ordering</li>
+<li><input disabled="" type="checkbox"> 1.4 <code>bun run check &amp;&amp; bun test</code></li>
+<li><input disabled="" type="checkbox"> 1.5 Confirmation</li>
+</ul>
+<h3>Phase 2: Services and REST</h3>
+<ul>
+<li><input disabled="" type="checkbox"> 2.1 <code>services/aggregates.ts</code> (mean per score, p50 duration, tokens; judge scores excluded when uncalibrated), <code>services/summary.ts</code> (mean, diff, improvements, regressions), <code>services/compare.ts</code> with <code>only=changes</code></li>
+<li><input disabled="" type="checkbox"> 2.2 <code>services/filters.ts</code> (symbol operators, <code>metadata.&lt;key&gt;</code>), <code>services/query.ts</code> (single SELECT guard), <code>src/urls.ts</code> (every route in one file)</li>
+<li><input disabled="" type="checkbox"> 2.3 <code>api/*.ts</code> routes from the API table with Zod schemas and <code>url</code> on every response; request tests per endpoint against an in-memory database</li>
+<li><input disabled="" type="checkbox"> 2.4 <code>bun run check &amp;&amp; bun test</code></li>
+<li><input disabled="" type="checkbox"> 2.5 Confirmation</li>
+</ul>
+<h3>Phase 3: MCP</h3>
+<ul>
+<li><input disabled="" type="checkbox"> 3.1 <code>mcp/server.ts</code>: <code>McpServer</code> with <code>list</code>, <code>read</code>, <code>write</code>, <code>compare</code> over the services; <code>read audit</code>, <code>list notes</code></li>
+<li><input disabled="" type="checkbox"> 3.2 Mount at <code>/mcp</code> with <code>StreamableHTTPTransport</code>; client script calls all four tools and checks every result carries <code>url</code></li>
+<li><input disabled="" type="checkbox"> 3.3 README <code>claude mcp add</code> block; <code>skills/spotter.md</code> describing tools and deep links</li>
+<li><input disabled="" type="checkbox"> 3.D Design doc MCP table matches the code</li>
+<li><input disabled="" type="checkbox"> 3.4 <code>bun run check &amp;&amp; bun test</code></li>
+<li><input disabled="" type="checkbox"> 3.5 Confirmation</li>
+</ul>
+<h3>Phase 4: Pages</h3>
+<ul>
+<li><input disabled="" type="checkbox"> 4.1 <code>pages/Inbox.tsx</code>, <code>pages/Run.tsx</code> with the seven components; state read from the URL only</li>
+<li><input disabled="" type="checkbox"> 4.2 <code>pages/Compare.tsx</code>, <code>pages/Trace.tsx</code>; <code>client/compare.ts</code> writes <code>only</code> and <code>score</code> back to the URL</li>
+<li><input disabled="" type="checkbox"> 4.3 <code>pages/Review.tsx</code> with <code>client/review.ts</code> (keys 1, 2, D, U, A, arrows, Cmd+Enter; autosave through <code>PUT /api/traces/{id}/scores</code>); <code>pages/Judges.tsx</code></li>
+<li><input disabled="" type="checkbox"> 4.4 <code>bun run check &amp;&amp; bun test</code>; open every URL in the deep-link table in a fresh tab</li>
+<li><input disabled="" type="checkbox"> 4.5 Confirmation</li>
+</ul>
+<h3>Phase 5: SDK and CLI</h3>
+<ul>
+<li><input disabled="" type="checkbox"> 5.1 <code>packages/evals/src/index.ts</code>: <code>defineEval</code>, runner, batches of 50, summary table</li>
+<li><input disabled="" type="checkbox"> 5.2 <code>cli.ts</code>: <code>spotter run</code>, <code>spotter compare</code>, <code>--no-send</code>, <code>spotter init</code> guided first eval</li>
+<li><input disabled="" type="checkbox"> 5.3 <code>evals/tagging.example.ts</code> with seeded items; <code>bun spotter run</code> prints working URLs</li>
+<li><input disabled="" type="checkbox"> 5.D README quick start</li>
+<li><input disabled="" type="checkbox"> 5.4 <code>bun run check &amp;&amp; bun test</code>; sample run under 5 s for 120 items</li>
+<li><input disabled="" type="checkbox"> 5.5 Confirmation</li>
+</ul>
+<h3>Phase 6: Judges</h3>
+<ul>
+<li><input disabled="" type="checkbox"> 6.1 <code>judge</code>, <code>judge_version</code> tables; <code>propose</code> with hash dedup; <code>activate</code> with audit note; REST and MCP ops; <code>spotter judge run &lt;name&gt; --version N --run &lt;id&gt;</code></li>
+<li><input disabled="" type="checkbox"> 6.2 Calibration per version from human-versus-judge pairs: splits, TPR, TNR, bias-corrected rate with bootstrap interval; aggregates exclude uncalibrated versions</li>
+<li><input disabled="" type="checkbox"> 6.3 Judges pages: timeline, version detail, disagreements queue reusing the review screen</li>
+<li><input disabled="" type="checkbox"> 6.D Design doc judge section matches the code</li>
+<li><input disabled="" type="checkbox"> 6.4 <code>bun run check &amp;&amp; bun test</code></li>
+<li><input disabled="" type="checkbox"> 6.5 Confirmation, then PR to <code>main</code></li>
+</ul>
+<p>Phases 7 to 10 keep their task lists above and get the same checklist form when phase 6 merges.</p>
+<h2>Completeness</h2>
+<p>9 of 10. Gaps: the Google Fonts assumption stays open until phase 0, and phases 7 to 10 are not yet in checklist form by design.</p>
 <h2>Success metrics</h2>
 <ul>
 <li><code>spotter run</code> on the sample eval completes in under 5 seconds for 120 items and prints working URLs.</li>
