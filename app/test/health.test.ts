@@ -1,5 +1,8 @@
 import { describe, expect, test } from 'bun:test';
-import { app } from '../src/app.ts';
+import { createApp } from '../src/app.ts';
+import { openDatabase } from '../src/db/client.ts';
+
+const app = createApp(openDatabase(':memory:'));
 
 describe('health', () => {
   test('GET /health returns ok and version', async () => {
