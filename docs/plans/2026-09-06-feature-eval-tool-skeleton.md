@@ -209,7 +209,8 @@ Scenario: MCP compare
 14. FR14 Extra inputs: OTLP attributes and events are kept raw; a per-project `attribute_map` promotes chosen ones to typed metadata keys; `PATCH /api/traces/{id}/metadata` deep-merges late facts; filters accept `metadata.<key>` and `events.name`.
 15. FR15 Alerts: rules with trigger, condition, channel (`webhook`, `slack`, `email`), cooldown, test send, delivery log; evaluated in-process after writes; payloads carry deep links.
 16. FR16 Datasets from traces: `items/from-traces` with `expected_from`; `A` in review; bulk add from compare and the trace list; `purpose: judge_labels` datasets calibrate judge versions; items archive, never delete; runs record `item_count` and `items_hash`.
-17. FR17 Judge versioning: judges are immutable versions with one active pointer; any definition change creates a version (hash-deduplicated); `judge.propose` and `judge.activate` through REST and MCP; rollback is activation of an older version; disagreements listable per version.
+17. FR17 Agent method support: `list notes` and `read audit` through MCP; human scores accept optional failure `tags` once a taxonomy exists; a `skills/spotter.md` file in the repo tells an agent the MCP tools and the deep-link contract.
+18. FR18 Judge versioning: judges are immutable versions with one active pointer; any definition change creates a version (hash-deduplicated); `judge.propose` and `judge.activate` through REST and MCP; rollback is activation of an older version; disagreements listable per version.
 
 ## Deep link contract
 
@@ -287,8 +288,8 @@ Mounted at `/mcp` with `@hono/mcp`. Same service layer as REST, so behavior cann
 
 | Tool | Input | Output |
 |---|---|---|
-| `list` | `{type: 'datasets' \| 'items' \| 'runs' \| 'traces' \| 'judges' \| 'disagreements' \| 'alerts' \| 'deliveries', filters?, judge?, version?, limit?}` | rows, each with `url` |
-| `read` | `{type: 'run' \| 'trace' \| 'dataset' \| 'judge', id}` | one object; a run includes aggregates, a trace includes scores and spans |
+| `list` | `{type: 'datasets' \| 'items' \| 'runs' \| 'traces' \| 'notes' \| 'judges' \| 'disagreements' \| 'alerts' \| 'deliveries', filters?, judge?, version?, limit?}` | rows, each with `url`. `notes` returns human review notes with their trace, for clustering into a failure taxonomy |
+| `read` | `{type: 'run' \| 'trace' \| 'dataset' \| 'judge' \| 'audit', id?}` | one object; a run includes aggregates, a trace includes scores and spans, a judge includes versions and disagreements. `audit` reports label counts per judge, uncalibrated versions, datasets with no runs, and runs with no baseline |
 | `write` | `{op: 'dataset.create' \| 'items.upsert' \| 'items.from_traces' \| 'run.create' \| 'traces.insert' \| 'trace.patch_metadata' \| 'scores.put' \| 'judge.propose' \| 'judge.activate' \| 'alert.create' \| 'alert.test', data, dry_run?}` | `{ok, ids, url}` |
 | `compare` | `{dataset_id, run_ids, only?: 'changes'}` | items with per-run cells, per-score summary, `url` |
 
@@ -494,7 +495,7 @@ Each phase: at most three tasks, type-check and tests after each task, commit at
 **Phase 3: MCP**
 1. `McpServer` with `list`, `read`, `write`, `compare` over services.
 2. Mount at `/mcp`; client script exercises all four; results carry `url`.
-3. `claude mcp add` instructions in README.
+3. `claude mcp add` instructions in README; `skills/spotter.md` for agents; `read audit` and `list notes`.
 
 **Phase 4: Pages**
 1. Runs list and run detail.
