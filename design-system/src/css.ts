@@ -143,7 +143,7 @@ ${text}
 textarea.input { min-height: 120px; resize: vertical; }
 
 /* 7. Key */
-.kbd { display: inline-flex; align-items: center; justify-content: center; min-width: 40px; height: 40px; padding-inline: var(--space-8); border-radius: 8px; border: 2px solid var(--border); border-bottom-width: 4px; background: var(--surface); font-family: var(--font-mono); font-size: var(--text-caption); font-weight: ${font.weight.semibold}; }
+.kbd { display: inline-flex; align-items: center; justify-content: center; min-width: 40px; height: 40px; padding-inline: var(--space-8); border-radius: 8px; border: 2px solid var(--border); border-bottom-width: 4px; background: var(--surface); color: var(--ink); font-family: var(--font-mono); font-size: var(--text-caption); font-weight: ${font.weight.semibold}; }
 
 /* Bar (goes inside a card or row) */
 .bar { position: relative; height: 12px; border-radius: var(--radius-pill); background: color-mix(in srgb, var(--ink) 8%, var(--surface)); overflow: hidden; }
