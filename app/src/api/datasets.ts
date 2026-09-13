@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import type { Repos } from '../db/repos/index.ts';
 import { compare } from '../services/compare.ts';
-import { createDataset, getDataset, upsertItems } from '../services/datasets.ts';
+import { createDataset, getDataset, listItems, upsertItems } from '../services/datasets.ts';
 import { compareQuery, datasetCreate, itemsUpsert } from './schemas.ts';
 
 export const datasetsApi = (repos: Repos) => {
@@ -14,6 +14,8 @@ export const datasetsApi = (repos: Repos) => {
   });
 
   api.get('/:id', (c) => c.json(getDataset(repos, c.req.param('id'))));
+
+  api.get('/:id/items', (c) => c.json(listItems(repos, c.req.param('id'))));
 
   api.put('/:id/items', async (c) => {
     const body = itemsUpsert.parse(await c.req.json());

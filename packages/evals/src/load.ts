@@ -1,5 +1,5 @@
 import { basename, extname, resolve } from 'node:path';
-import { isEvalDefinition, type EvalDefinition, type EvalItem, type ItemInput, type Json } from './index.ts';
+import { isEvalDefinition, type EvalDefinition, type EvalItem, type ItemInput } from './index.ts';
 
 export type LoadedEval = { def: EvalDefinition; items: EvalItem[] | null; name: string };
 
@@ -25,5 +25,3 @@ export function gitSha(): string | null {
     return null;
   }
 }
-
-export const parseJsonText = (value: unknown): Json | null => (typeof value === 'string' ? (JSON.parse(value) as Json) : null);

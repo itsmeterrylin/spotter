@@ -7,6 +7,7 @@ import { aggregates, type Aggregates } from './aggregates.ts';
 
 export type RunView = Run & { url: string };
 export type RunDetail = RunView & { aggregates: Aggregates };
+export type RunList = { runs: RunView[]; url: string };
 
 export type RunInput = { id?: string; dataset_id: string; name: string; metadata?: JsonObject | null };
 
@@ -27,4 +28,18 @@ export function getRun(repos: Repos, id: string): RunDetail {
   const run = repos.runs.get(id);
   if (!run) throw notFound('run', id);
   return { ...view(run), aggregates: aggregates(repos, id) };
+}
+
+export function listRuns(repos: Repos, datasetId?: string): RunList {
+  if (datasetId && !repos.datasets.get(datasetId)) throw notFound('dataset', datasetId);
+  return { runs: repos.runs.list(datasetId).map(view), url: urls.runs(datasetId) };
+}
+
+export function baselineOf(repos: Repos, run: Run): Run | null {
+  const pinned = run.metadata?.baseline;
+  const byMeta = typeof pinned === 'string' ? repos.runs.get(pinned) : null;
+  if (byMeta) return byMeta;
+  const list = repos.runs.list(run.dataset_id);
+  const i = list.findIndex((r) => r.id === run.id);
+  return i === -1 ? null : (list[i + 1] ?? null);
 }

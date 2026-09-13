@@ -47,6 +47,18 @@ describe('PUT /api/datasets/:id/items', () => {
     expect((await json<{ item_count: number }>(await send(app, 'GET', `/api/datasets/${ds.id}`))).item_count).toBe(2);
   });
 
+  test('GET lists items with parsed json and a url each', async () => {
+    const ds = await json<{ id: string }>(await send(app, 'POST', '/api/datasets', { project: 'copper', name: 'list-items' }));
+    const id = uuid7();
+    await send(app, 'PUT', `/api/datasets/${ds.id}/items`, { items: [{ id, input: { transcript: 'a' }, expected: { exercise: 'bench' } }] });
+    const res = await send(app, 'GET', `/api/datasets/${ds.id}/items`);
+    expect(res.status).toBe(200);
+    const body = await json<{ items: { id: string; input: unknown; expected: unknown; url: string }[]; url: string }>(res);
+    expect(body.items).toEqual([expect.objectContaining({ id, input: { transcript: 'a' }, expected: { exercise: 'bench' }, url: `http://localhost:3000/datasets/${ds.id}/items/${id}` })]);
+    expect(body.url).toBe(`http://localhost:3000/datasets/${ds.id}/items`);
+    expect((await send(app, 'GET', `/api/datasets/${uuid7()}/items`)).status).toBe(404);
+  });
+
   test('404 on an unknown dataset, 400 on an empty list', async () => {
     expect((await send(app, 'PUT', `/api/datasets/${uuid7()}/items`, { items: [{ id: uuid7(), input: 1 }] })).status).toBe(404);
     const ds = await json<{ id: string }>(await send(app, 'POST', '/api/datasets', { project: 'copper', name: 'empty' }));
@@ -66,6 +78,18 @@ describe('runs', () => {
     expect((await send(app, 'POST', '/api/runs', { id, dataset_id: ds.id, name: 'v1' })).status).toBe(200);
     expect((await send(app, 'POST', '/api/runs', { id, dataset_id: ds.id, name: 'v2' })).status).toBe(409);
     expect((await send(app, 'POST', '/api/runs', { dataset_id: uuid7(), name: 'v1' })).status).toBe(404);
+  });
+
+  test('GET /api/runs?dataset_id= lists runs newest first with a url each', async () => {
+    const s = await seed(app);
+    const res = await send(app, 'GET', `/api/runs?dataset_id=${s.datasetId}`);
+    expect(res.status).toBe(200);
+    const body = await json<{ runs: { id: string; url: string }[]; url: string }>(res);
+    expect(body.runs.map((r) => r.id)).toEqual([s.runB, s.runA]);
+    expect(body.runs[0]?.url).toBe(`http://localhost:3000/runs/${s.runB}`);
+    expect(body.url).toBe(`http://localhost:3000/runs?dataset=${s.datasetId}`);
+    expect((await json<{ runs: unknown[] }>(await send(app, 'GET', '/api/runs'))).runs.length).toBeGreaterThanOrEqual(2);
+    expect((await send(app, 'GET', `/api/runs?dataset_id=${uuid7()}`)).status).toBe(404);
   });
 
   test('GET /api/runs/:id returns aggregates that count only eligible scores', async () => {

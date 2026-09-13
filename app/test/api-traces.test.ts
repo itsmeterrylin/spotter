@@ -48,6 +48,19 @@ describe('PUT /api/traces/:id/scores', () => {
     await send(app, 'POST', '/api/traces/batch', { traces: [t] });
     expect((await send(app, 'PUT', `/api/traces/${t.id}/scores`, { scores: [{ name: 'x', source: 'sdk' }] })).status).toBe(400);
   });
+
+  test('DELETE ?name=&source= clears one score and leaves the rest', async () => {
+    const t = trace({ scores: [{ name: 'match', value: 1, source: 'sdk' }] });
+    await send(app, 'POST', '/api/traces/batch', { traces: [t] });
+    await send(app, 'PUT', `/api/traces/${t.id}/scores`, { scores: [{ name: 'match', verdict: 'fail', source: 'human' }] });
+    const res = await send(app, 'DELETE', `/api/traces/${t.id}/scores?name=match&source=human`);
+    expect(res.status).toBe(200);
+    const body = await json<{ deleted: number; scores: { source: string }[] }>(res);
+    expect(body.deleted).toBe(1);
+    expect(body.scores.map((s) => s.source)).toEqual(['sdk']);
+    expect((await send(app, 'DELETE', `/api/traces/${t.id}/scores?name=match`)).status).toBe(400);
+    expect((await send(app, 'DELETE', `/api/traces/${uuid7()}/scores?name=match&source=human`)).status).toBe(404);
+  });
 });
 
 describe('PATCH /api/traces/:id/metadata', () => {

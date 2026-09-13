@@ -17,8 +17,7 @@ function wire(root: HTMLElement): void {
   const error = document.getElementById('error') as HTMLElement;
   const picker = document.getElementById('picker') as HTMLElement;
   const buttons = [...root.querySelectorAll<HTMLButtonElement>('[data-verdict]')];
-  const loaded = isVerdict(root.dataset.verdict) ? root.dataset.verdict : null;
-  let saved = loaded;
+  let saved: Verdict | null = isVerdict(root.dataset.verdict) ? root.dataset.verdict : null;
   let busy = false;
 
   const go = (url: string | null): void => {
@@ -54,9 +53,20 @@ function wire(root: HTMLElement): void {
     else go(next);
   };
 
-  const undo = async (): Promise<void> => {
-    if (loaded && saved !== loaded) await save(loaded);
-  };
+  async function undo(): Promise<void> {
+    if (busy || !saved) return;
+    setBusy(true);
+    error.textContent = '';
+    const query = `name=${encodeURIComponent(name)}&source=human`;
+    const res = await fetch(`/api/traces/${traceId}/scores?${query}`, { method: 'DELETE' }).catch(() => null);
+    setBusy(false);
+    if (!res || !res.ok) {
+      error.textContent = `Not cleared (${res ? res.status : 'offline'}). Press U again.`;
+      return;
+    }
+    saved = null;
+    press(null);
+  }
 
   const openPicker = (): void => picker.setAttribute('data-open', '');
   const closePicker = (): void => picker.removeAttribute('data-open');

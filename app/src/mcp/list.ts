@@ -1,20 +1,15 @@
-import { parseJson } from '../db/json.ts';
 import type { Repos } from '../db/repos/index.ts';
-import type { Json } from '../db/types.ts';
 import { invalid } from '../errors.ts';
 import type { Filter } from '../services/filters.ts';
+import { listItems } from '../services/datasets.ts';
 import { query } from '../services/query.ts';
+import { listRuns } from '../services/runs.ts';
 import { listTraces, type TraceView } from '../services/traces.ts';
 import { urls } from '../urls.ts';
 import { later, type ToolResult } from './result.ts';
 import type { ListArgs } from './schemas.ts';
 
 type Row = Record<string, unknown>;
-
-const lit = (s: string): string => `'${s.replace(/'/g, "''")}'`;
-
-const parsed = (row: Row, keys: string[]): Row =>
-  Object.fromEntries(Object.entries(row).map(([k, v]) => [k, keys.includes(k) && typeof v === 'string' ? parseJson<Json>(v) : v]));
 
 const rows = (repos: Repos, sql: string): Row[] => query(repos.db, sql).rows;
 
@@ -28,17 +23,13 @@ const datasets = (repos: Repos, limit: number): ToolResult => {
 
 const items = (repos: Repos, datasetId: string | undefined, limit: number): ToolResult => {
   if (!datasetId) throw invalid('dataset_id is required to list items');
-  const list = rows(repos, `SELECT * FROM dataset_item WHERE dataset_id = ${lit(datasetId)} AND archived_at IS NULL ORDER BY id LIMIT ${limit}`).map((r) => ({
-    ...parsed(r, ['input', 'expected', 'metadata', 'tags']),
-    url: urls.datasetItem(datasetId, String(r.id)),
-  }));
-  return { items: list, url: urls.datasetItems(datasetId) };
+  const list = listItems(repos, datasetId);
+  return { items: list.items.slice(0, limit), url: list.url };
 };
 
 const runs = (repos: Repos, datasetId: string | undefined, limit: number): ToolResult => {
-  const where = datasetId ? ` WHERE dataset_id = ${lit(datasetId)}` : '';
-  const list = rows(repos, `SELECT * FROM run${where} ORDER BY started_at DESC LIMIT ${limit}`).map((r) => ({ ...parsed(r, ['metadata']), url: urls.run(String(r.id)) }));
-  return { items: list, url: urls.runs(datasetId) };
+  const list = listRuns(repos, datasetId);
+  return { items: list.runs.slice(0, limit), url: list.url };
 };
 
 const traces = (repos: Repos, args: ListArgs, filters: Filter[]): ToolResult => {

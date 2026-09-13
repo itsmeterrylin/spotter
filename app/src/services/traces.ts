@@ -1,7 +1,7 @@
 import type { Repos } from '../db/repos/index.ts';
 import type { NewScore, Score } from '../db/repos/score.ts';
 import type { NewTrace, Trace } from '../db/repos/trace.ts';
-import type { Json, JsonObject, TraceEvent } from '../db/types.ts';
+import type { Json, JsonObject, ScoreSource, TraceEvent } from '../db/types.ts';
 import { notFound } from '../errors.ts';
 import { urls } from '../urls.ts';
 import { toWhere, type Filter } from './filters.ts';
@@ -45,6 +45,20 @@ export function putScores(repos: Repos, traceId: string, scores: NewScore[]): Tr
   if (!repos.traces.get(traceId)) throw notFound('trace', traceId);
   repos.scores.replace(traceId, scores);
   return getTrace(repos, traceId);
+}
+
+export function deleteScores(repos: Repos, traceId: string, name: string, source: ScoreSource): TraceView & { deleted: number } {
+  if (!repos.traces.get(traceId)) throw notFound('trace', traceId);
+  const deleted = repos.scores.remove(traceId, name, source);
+  return { ...getTrace(repos, traceId), deleted };
+}
+
+export const labeledIds = (repos: Repos, runId: string): Set<string> =>
+  new Set(repos.scores.listByRun(runId).filter((s) => s.source === 'human').map((s) => s.trace_id));
+
+export function unlabeledIds(repos: Repos, runId: string): string[] {
+  const labeled = labeledIds(repos, runId);
+  return repos.traces.listByRun(runId).map((t) => t.id).filter((id) => !labeled.has(id));
 }
 
 const isObject = (v: Json | undefined): v is JsonObject => typeof v === 'object' && v !== null && !Array.isArray(v);

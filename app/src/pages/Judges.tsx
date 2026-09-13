@@ -70,7 +70,7 @@ type DetailProps = { judge: Judge; rows: VersionRow[]; inbox: number };
 
 export const JudgePage = ({ judge, rows, inbox }: DetailProps) => (
   <Layout title={`Spotter · ${judge.name}`} inbox={inbox}>
-    <Crumbs items={[['/judges', 'Judges']]} />
+    <Crumbs items={[[urls.judges(), 'Judges']]} />
     <div class="page-head">
       <h1 class="t-title heavy">{judge.name}</h1>
       <span class="t-caption muted num">{rows.length} {rows.length === 1 ? 'version' : 'versions'}</span>

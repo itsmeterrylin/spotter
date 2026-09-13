@@ -14,6 +14,7 @@ export const Layout = ({ title, inbox, script, children }: Props) => (
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>{title}</title>
+        <link rel="icon" href="/favicon.svg" />
         <link rel="stylesheet" href={font.googleFontsUrl} />
         <link rel="stylesheet" href="/spotter.css" />
         <link rel="stylesheet" href="/pages.css" />

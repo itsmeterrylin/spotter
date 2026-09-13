@@ -2,10 +2,10 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import type { Repos } from '../db/repos/index.ts';
 import { notFound } from '../errors.ts';
-import { createRun, getRun } from '../services/runs.ts';
+import { createRun, getRun, listRuns } from '../services/runs.ts';
 import { summary } from '../services/summary.ts';
 import { deepMerge } from '../services/traces.ts';
-import { runCreate, summaryQuery } from './schemas.ts';
+import { runCreate, runListQuery, summaryQuery } from './schemas.ts';
 
 const runPatch = z.object({ metadata: z.record(z.string(), z.json()).optional() });
 
@@ -17,6 +17,8 @@ export const runsApi = (repos: Repos) => {
     const { run, created } = createRun(repos, body);
     return c.json(run, created ? 201 : 200);
   });
+
+  api.get('/', (c) => c.json(listRuns(repos, runListQuery.parse(c.req.query()).dataset_id)));
 
   api.get('/:id', (c) => c.json(getRun(repos, c.req.param('id'))));
 

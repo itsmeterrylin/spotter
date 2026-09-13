@@ -77,7 +77,7 @@ export const items: ItemInput<Transcript, Tagged>[] = [
 export default defineEval<Transcript, Tagged, Tagged>({
   dataset: 'tagging-golden',
   project: 'copper',
-  metadata: { model: `rules-${rulesVersion()}` },
+  metadata: { model: `rules-${rulesVersion()}`, variant_env: ['TAGGING_RULES'] },
   task: (item) => tagTranscript(item.input.transcript),
   scores: [
     (item, output) => ({

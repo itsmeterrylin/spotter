@@ -22,8 +22,8 @@ const parse = (r: RunRow): Run => ({ ...r, metadata: parseJson<JsonObject>(r.met
 
 export const runRepo = (db: Database) => {
   const byId = db.query<RunRow, [string]>('SELECT * FROM run WHERE id = ?');
-  const all = db.query<RunRow, []>('SELECT * FROM run ORDER BY started_at DESC');
-  const byDataset = db.query<RunRow, [string]>('SELECT * FROM run WHERE dataset_id = ? ORDER BY started_at DESC');
+  const all = db.query<RunRow, []>('SELECT * FROM run ORDER BY started_at DESC, id DESC');
+  const byDataset = db.query<RunRow, [string]>('SELECT * FROM run WHERE dataset_id = ? ORDER BY started_at DESC, id DESC');
   const insert = db.query<RunRow, [string, string, string, string | null, number | null, string | null, string]>(
     'INSERT INTO run (id, dataset_id, name, metadata, item_count, items_hash, started_at) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING *',
   );

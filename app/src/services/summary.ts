@@ -1,6 +1,8 @@
 import type { Repos } from '../db/repos/index.ts';
+import type { Run } from '../db/repos/run.ts';
 import { notFound } from '../errors.ts';
 import { urls } from '../urls.ts';
+import { compare, type CompareItem } from './compare.ts';
 import { itemValues, meanByName, runValues } from './rollup.ts';
 
 export type ScoreSummary = {
@@ -46,3 +48,13 @@ export function summary(repos: Repos, runId: string, compareTo?: string): Summar
   }
   return { run_id: runId, compare_to: compareTo, scores, url: urls.compare(run.dataset_id, [compareTo, runId], 'changes') };
 }
+
+const worse = (item: CompareItem, baseId: string, runId: string): boolean => {
+  const a = item.cells[baseId];
+  const b = item.cells[runId];
+  if (!a || !b) return false;
+  return Object.keys(a.scores).some((name) => (b.scores[name] ?? 0) < (a.scores[name] ?? 0));
+};
+
+export const regressed = (repos: Repos, baseline: Run, run: Run): CompareItem[] =>
+  compare(repos, run.dataset_id, [baseline.id, run.id], 'changes').items.filter((item) => worse(item, baseline.id, run.id));

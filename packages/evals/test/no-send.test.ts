@@ -5,7 +5,7 @@ import { parseArgs } from '../src/cli.ts';
 
 const evalFile = new URL('../../../evals/tagging.example.ts', import.meta.url).pathname;
 
-const options = (): RunOptions => ({ name: 'tagging.example', send: false, create: false, client: { url: 'http://127.0.0.1:1' } });
+const options = (): RunOptions => ({ base: 'tagging.example', send: false, create: false, client: { url: 'http://127.0.0.1:1' } });
 
 describe('spotter run --no-send', () => {
   afterEach(() => {

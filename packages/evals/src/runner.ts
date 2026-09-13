@@ -1,11 +1,11 @@
 import { createClient, type ApiClient, type ClientConfig } from './client.ts';
 import { executeAll, localSummary, type ItemResult } from './execute.ts';
 import type { EvalDefinition, EvalItem, JsonObject } from './index.ts';
-import { gitSha, parseJsonText } from './load.ts';
+import { gitSha } from './load.ts';
 import type { SummaryLinks, SummaryView } from './summary.ts';
 import { uuid7 } from './uuid7.ts';
 
-export type RunOptions = { name: string; send: boolean; create: boolean; baseline?: string; client: ClientConfig };
+export type RunOptions = { base: string; name?: string; send: boolean; create: boolean; baseline?: string; client: ClientConfig; env?: Record<string, string | undefined> };
 export type RunReport = SummaryLinks & { run_id: string | null; dataset_id: string | null; summary: SummaryView; results: ItemResult[] };
 
 export const batchSize = 50;
@@ -26,19 +26,19 @@ async function findDataset(client: ApiClient, project: string, name: string): Pr
 }
 
 async function fetchItems(client: ApiClient, datasetId: string): Promise<EvalItem[]> {
-  const list = await rows(client, `SELECT id, input, expected, metadata FROM dataset_item WHERE dataset_id = ${quote(datasetId)} AND archived_at IS NULL ORDER BY id`);
-  return list.map((r) => ({
-    id: str(r, 'id') ?? '',
-    input: parseJsonText(r.input),
-    expected: parseJsonText(r.expected),
-    metadata: parseJsonText(r.metadata) as JsonObject | null,
-  }));
+  const list = (await client.get(`/api/datasets/${datasetId}/items`)) as { items: EvalItem[] };
+  return list.items.map((r) => ({ id: r.id, input: r.input, expected: r.expected, metadata: r.metadata }));
 }
 
-async function previousRun(client: ApiClient, datasetId: string, runId: string): Promise<string | null> {
-  const found = await rows(client, `SELECT id FROM run WHERE dataset_id = ${quote(datasetId)} AND id != ${quote(runId)} ORDER BY started_at DESC, id DESC LIMIT 1`);
-  return str(found[0], 'id');
+const listRuns = async (client: ApiClient, datasetId: string): Promise<WithId[]> => ((await client.get(`/api/runs?dataset_id=${encodeURIComponent(datasetId)}`)) as { runs: WithId[] }).runs;
+
+export function variantOf(def: EvalDefinition, env: Record<string, string | undefined>): string | null {
+  const names = Array.isArray(def.metadata.variant_env) ? def.metadata.variant_env.filter((n): n is string => typeof n === 'string') : [];
+  const values = names.map((n) => env[n]).filter((v): v is string => typeof v === 'string' && v !== '');
+  return values.length ? values.join(' ') : null;
 }
+
+export const runName = (base: string, count: number, variant: string | null): string => `${base} #${count + 1}${variant ? ` (${variant})` : ''}`;
 
 async function resolveDataset(client: ApiClient, def: EvalDefinition, fileItems: EvalItem[] | null, create: boolean): Promise<{ id: string; items: EvalItem[] }> {
   let id = await findDataset(client, def.project, def.dataset);
@@ -82,8 +82,7 @@ async function postResults(client: ApiClient, def: EvalDefinition, runId: string
   return results;
 }
 
-async function summarize(client: ApiClient, runId: string, datasetId: string, baseline: string | undefined): Promise<Pick<RunReport, 'summary' | 'compare_url' | 'compare_note'>> {
-  const compareTo = baseline ?? (await previousRun(client, datasetId, runId));
+async function summarize(client: ApiClient, runId: string, compareTo: string | null): Promise<Pick<RunReport, 'summary' | 'compare_url' | 'compare_note'>> {
   if (!compareTo) {
     const summary = (await client.get(`/api/runs/${runId}/summary`)) as SummaryView;
     return { summary, compare_url: null, compare_note: 'no previous run on this dataset; nothing to compare' };
@@ -103,12 +102,16 @@ export async function runEval(def: EvalDefinition, fileItems: EvalItem[] | null,
   if (!options.send) return runLocal(def, fileItems);
   const client = createClient(options.client);
   const dataset = await resolveDataset(client, def, fileItems, options.create);
+  const earlier = await listRuns(client, dataset.id);
+  const variant = variantOf(def, options.env ?? process.env);
   const sha = gitSha();
-  const metadata: JsonObject = sha ? { ...def.metadata, git_sha: sha } : def.metadata;
-  const run = (await client.post('/api/runs', { dataset_id: dataset.id, name: options.name, metadata })) as WithId;
+  const metadata: JsonObject = { ...def.metadata, ...(sha ? { git_sha: sha } : {}), ...(variant ? { variant } : {}) };
+  const name = options.name ?? runName(options.base, earlier.length, variant);
+  const run = (await client.post('/api/runs', { dataset_id: dataset.id, name, metadata })) as WithId;
   const results = await postResults(client, def, run.id, dataset.items);
-  await client.patch(`/api/runs/${run.id}`, {});
-  const rest = await summarize(client, run.id, dataset.id, options.baseline);
+  const compareTo = options.baseline ?? earlier[0]?.id ?? null;
+  await client.patch(`/api/runs/${run.id}`, compareTo ? { metadata: { baseline: compareTo } } : {});
+  const rest = await summarize(client, run.id, compareTo);
   return { run_id: run.id, dataset_id: dataset.id, results, run_url: run.url ?? null, ...rest };
 }
 

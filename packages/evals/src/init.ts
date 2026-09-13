@@ -54,6 +54,6 @@ export async function init(ask?: (question: string) => string | null, cwd: strin
   await Bun.write(evalFile, evalTemplate({ ...answers, taskFile: resolve(realCwd, answers.taskFile) }, evalFile, sdkFile));
   const loaded = await loadEval(evalFile);
   const config = configFromEnv();
-  const report = await runEval(loaded.def, loaded.items, { name: loaded.name, send: true, create: true, client: config });
+  const report = await runEval(loaded.def, loaded.items, { base: loaded.name, send: true, create: true, client: config });
   return [`wrote ${relative(realCwd, evalFile)}`, '', formatSummary(report.summary, report), `inbox    ${config.url}/`].join('\n');
 }

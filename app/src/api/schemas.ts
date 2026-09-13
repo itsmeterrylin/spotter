@@ -62,6 +62,8 @@ export const toNewScore = (s: ScoreInput): NewScore => ({
 
 export const scoresPut = z.object({ scores: z.array(scoreInput).min(1) });
 
+export const scoresDelete = z.object({ name: z.string().min(1), source: z.enum(['sdk', 'judge', 'human']) });
+
 export const traceEvent = z.object({ at: isoTime, name: z.string().min(1), data: z.json().optional() });
 
 export const traceInput = z.object({
@@ -108,6 +110,8 @@ export const traceListQuery = z.object({
 export const querySql = z.object({ sql: z.string().min(1) });
 
 export const summaryQuery = z.object({ compare_to: id.optional() });
+
+export const runListQuery = z.object({ dataset_id: id.optional() });
 
 export const compareQuery = z.object({
   runs: z.string().min(1).transform((s) => s.split(',').filter(Boolean)),

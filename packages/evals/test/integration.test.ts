@@ -54,8 +54,11 @@ describe('spotter run against a live server', () => {
     const runUrl = line(out, 'run');
     expect(runUrl).toMatch(/^http:\/\/localhost:3000\/runs\/[0-9a-f-]{36}$/);
     runA = runUrl.split('/').pop() ?? '';
-    const run = (await (await fetch(`${origin()}/api/runs/${runA}`)).json()) as { ended_at: string | null; metadata: { model: string; git_sha: string } };
+    const run = (await (await fetch(`${origin()}/api/runs/${runA}`)).json()) as { name: string; ended_at: string | null; metadata: { model: string; git_sha: string; baseline?: string; variant?: string } };
     expect(run.ended_at).not.toBeNull();
+    expect(run.name).toBe('tagging.example #1');
+    expect(run.metadata.baseline).toBeUndefined();
+    expect(run.metadata.variant).toBeUndefined();
     expect(run.metadata.model).toBe('rules-v1');
     expect(run.metadata.git_sha).toMatch(/^[0-9a-f]{40}$/);
     const page = (await (await fetch(`${origin()}/api/traces?run_id=${runA}&limit=50`)).json()) as {
@@ -72,6 +75,9 @@ describe('spotter run against a live server', () => {
     expect(out).toContain('exercise_match  0.833  -0.083             1            2');
     expect(out).toContain('weight_found    1.000  +0.000             0            0');
     runB = line(out, 'run').split('/').pop() ?? '';
+    const run = (await (await fetch(`${origin()}/api/runs/${runB}`)).json()) as { name: string; metadata: { baseline: string; variant: string } };
+    expect(run.name).toBe('tagging.example #2 (v2)');
+    expect(run.metadata).toMatchObject({ baseline: runA, variant: 'v2' });
     const compareUrl = line(out, 'compare');
     expect(compareUrl).toContain(`/compare?runs=${runA}%2C${runB}&only=changes`);
     expect(await status(line(out, 'run'))).toBe(200);
@@ -85,6 +91,17 @@ describe('spotter run against a live server', () => {
     const runC = line(out, 'run').split('/').pop() ?? '';
     expect(line(out, 'compare')).toContain(`runs=${runB}%2C${runC}`);
     expect(out).toContain('exercise_match  0.833  +0.000             0            0');
+    const run = (await (await fetch(`${origin()}/api/runs/${runC}`)).json()) as { name: string; metadata: { baseline: string } };
+    expect(run.metadata.baseline).toBe(runB);
+    expect(run.name).toBe('tagging.example #3 (v2)');
+  });
+
+  test('--name overrides the generated run name', async () => {
+    const { code, out } = await spotter(['run', evalFile, '--name', 'hand picked']);
+    expect(code).toBe(0);
+    const id = line(out, 'run').split('/').pop() ?? '';
+    const run = (await (await fetch(`${origin()}/api/runs/${id}`)).json()) as { name: string };
+    expect(run.name).toBe('hand picked');
   });
 
   test('spotter compare prints the same table for two run ids', async () => {

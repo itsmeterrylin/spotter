@@ -6,9 +6,9 @@ import { getDataset } from '../services/datasets.ts';
 import { counts, rollup } from '../services/rollup.ts';
 import { getTrace } from '../services/traces.ts';
 import { urls } from '../urls.ts';
-import { clientBundle, pagesCss } from './assets.ts';
+import { clientBundle, favicon, pagesCss } from './assets.ts';
 import { ComparePage } from './Compare.tsx';
-import { humanVerdict, inboxItems, neighbors, primaryScore, queue, runCard, runsNewestFirst, type Queue } from './data.ts';
+import { humanVerdict, inboxItems, neighbors, primaryScore, queue, runCard, type Queue } from './data.ts';
 import { InboxPage } from './Inbox.tsx';
 import { JudgePage, JudgesPage } from './Judges.tsx';
 import { ErrorPage } from './NotFound.tsx';
@@ -19,10 +19,7 @@ import { TracePage } from './Trace.tsx';
 
 const defaultFilter = 'unlabeled';
 
-const reviewUrl = (traceId: string, runId: string, filter: string): string => {
-  const base = urls.reviewTrace(traceId, runId);
-  return filter === defaultFilter ? base : `${base}&filter=${encodeURIComponent(filter)}`;
-};
+const reviewUrl = (traceId: string, runId: string, filter: string): string => urls.reviewTrace(traceId, runId, filter === defaultFilter ? undefined : filter);
 
 export function createPages(repos: Repos): Hono {
   const app = new Hono();
@@ -39,6 +36,8 @@ export function createPages(repos: Repos): Hono {
   });
 
   app.get('/pages.css', () => new Response(pagesCss(), { headers: { 'content-type': 'text/css; charset=utf-8' } }));
+  app.get('/favicon.svg', (c) => c.body(favicon, 200, { 'content-type': 'image/svg+xml' }));
+  app.get('/favicon.ico', (c) => c.redirect('/favicon.svg'));
 
   app.get('/client/:file', async (c) => {
     const file = c.req.param('file');
@@ -49,7 +48,7 @@ export function createPages(repos: Repos): Hono {
 
   const home = (c: Context) => {
     const items = inboxItems(repos);
-    const cards = runsNewestFirst(repos).map((r) => runCard(repos, r));
+    const cards = repos.runs.list().map((r) => runCard(repos, r));
     return c.html(<InboxPage items={items} cards={cards} inbox={items.length} />);
   };
   app.get('/', home);
@@ -59,7 +58,7 @@ export function createPages(repos: Repos): Hono {
     const datasetId = c.req.query('dataset');
     const dataset = datasetId ? repos.datasets.get(datasetId) : null;
     if (datasetId && !dataset) throw notFound('dataset', datasetId);
-    const cards = runsNewestFirst(repos, datasetId).map((r) => runCard(repos, r));
+    const cards = repos.runs.list(datasetId).map((r) => runCard(repos, r));
     return c.html(<RunsPage cards={cards} dataset={dataset} inbox={inbox()} />);
   });
 

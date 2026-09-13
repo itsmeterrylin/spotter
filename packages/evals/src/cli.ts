@@ -8,7 +8,7 @@ import { formatSummary } from './summary.ts';
 export type Parsed = { positional: string[]; flags: Record<string, string | true> };
 
 const usage = `usage:
-  spotter run <file> [--baseline <run_id>] [--no-send] [--create]
+  spotter run <file> [--name <text>] [--baseline <run_id>] [--no-send] [--create]
   spotter compare <baseline_run_id> <run_id>
   spotter init`;
 
@@ -35,7 +35,8 @@ const flagString = (flags: Parsed['flags'], name: string): string | undefined =>
 export async function runCommand(file: string, flags: Parsed['flags']): Promise<string> {
   const loaded = await loadEval(file);
   const report = await runEval(loaded.def, loaded.items, {
-    name: loaded.name,
+    base: loaded.name,
+    name: flagString(flags, 'name'),
     send: flags['no-send'] !== true,
     create: flags.create === true,
     baseline: flagString(flags, 'baseline'),

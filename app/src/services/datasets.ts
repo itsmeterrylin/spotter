@@ -1,10 +1,12 @@
-import type { Dataset, NewItem } from '../db/repos/dataset.ts';
+import type { Dataset, DatasetItem, NewItem } from '../db/repos/dataset.ts';
 import type { Repos } from '../db/repos/index.ts';
 import type { DatasetPurpose } from '../db/types.ts';
 import { conflict, notFound } from '../errors.ts';
 import { urls } from '../urls.ts';
 
 export type DatasetView = Dataset & { item_count: number; url: string };
+export type ItemView = DatasetItem & { url: string };
+export type ItemList = { items: ItemView[]; url: string };
 
 export type DatasetInput = { id?: string; project: string; name: string; description?: string | null; purpose?: DatasetPurpose };
 
@@ -32,4 +34,10 @@ export function getDataset(repos: Repos, id: string): DatasetView {
 export function upsertItems(repos: Repos, datasetId: string, items: NewItem[]): { upserted: number; url: string } {
   getDataset(repos, datasetId);
   return { upserted: repos.datasets.upsertItems(datasetId, items), url: urls.datasetItems(datasetId) };
+}
+
+export function listItems(repos: Repos, datasetId: string): ItemList {
+  getDataset(repos, datasetId);
+  const items = repos.datasets.listItems(datasetId).map((item) => ({ ...item, url: urls.datasetItem(datasetId, item.id) }));
+  return { items, url: urls.datasetItems(datasetId) };
 }

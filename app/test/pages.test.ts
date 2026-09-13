@@ -44,6 +44,17 @@ describe('inbox', () => {
     expect(html).toContain('rules-v1');
     expect(html).toContain('/pages.css');
     expect(html).toContain('<symbol id="i-paw"');
+    expect(html).toContain('<link rel="icon" href="/favicon.svg"');
+  });
+
+  test('serves the paw favicon and redirects /favicon.ico to it', async () => {
+    const svg = await app.request('/favicon.svg');
+    expect(svg.status).toBe(200);
+    expect(svg.headers.get('content-type')).toContain('image/svg+xml');
+    expect(await svg.text()).toContain('<svg');
+    const ico = await app.request('/favicon.ico');
+    expect(ico.status).toBe(302);
+    expect(ico.headers.get('location')).toBe('/favicon.svg');
   });
 
   test('GET /inbox renders the same page', async () => {
@@ -131,6 +142,8 @@ describe('review', () => {
     const res = await app.request(`/review?run=${s.runB}&filter=unlabeled`);
     expect(res.status).toBe(302);
     expect(res.headers.get('location')).toBe(`${base}/review/${b[0]}?run=${s.runB}`);
+    const all = await app.request(`/review?run=${s.runB}&filter=all`);
+    expect(all.headers.get('location')).toBe(`${base}/review/${b[0]}?run=${s.runB}&filter=all`);
     expect((await page('/review?run=nope'))[0]).toBe(404);
   });
 

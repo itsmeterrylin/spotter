@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import type { Repos } from '../db/repos/index.ts';
-import { getTrace, insertBatch, listTraces, patchMetadata, putScores } from '../services/traces.ts';
-import { metadataPatch, scoresPut, toNewScore, traceListQuery, tracesBatch } from './schemas.ts';
+import { deleteScores, getTrace, insertBatch, listTraces, patchMetadata, putScores } from '../services/traces.ts';
+import { metadataPatch, scoresDelete, scoresPut, toNewScore, traceListQuery, tracesBatch } from './schemas.ts';
 
 export const tracesApi = (repos: Repos) => {
   const api = new Hono();
@@ -19,6 +19,11 @@ export const tracesApi = (repos: Repos) => {
   api.put('/:id/scores', async (c) => {
     const body = scoresPut.parse(await c.req.json());
     return c.json(putScores(repos, c.req.param('id'), body.scores.map(toNewScore)));
+  });
+
+  api.delete('/:id/scores', (c) => {
+    const q = scoresDelete.parse(c.req.query());
+    return c.json(deleteScores(repos, c.req.param('id'), q.name, q.source));
   });
 
   api.patch('/:id/metadata', async (c) => {

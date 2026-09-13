@@ -80,7 +80,7 @@ bun spotter run evals/tagging.example.ts --create              # seed the datase
 TAGGING_RULES=v2 bun spotter run evals/tagging.example.ts      # run rules v2, compare against the previous run
 ```
 
-The second run prints a table with mean, diff, improvements, and regressions per score, then the run url and the compare url. Pass `--baseline <run_id>` to pick the baseline, `--no-send` to print the means without a server, or `spotter compare <baseline> <run>` for two existing runs. `bun spotter init` writes `evals/<name>.ts` from three answers and runs it once.
+The second run prints a table with mean, diff, improvements, and regressions per score, then the run url and the compare url. Runs are named `<file> #<n>`, plus the value of any env var listed in the eval's `metadata.variant_env`, for example `tagging.example #2 (v2)`; pass `--name <text>` to name a run yourself. The baseline run id is recorded as `metadata.baseline`. Pass `--baseline <run_id>` to pick the baseline, `--no-send` to print the means without a server, or `spotter compare <baseline> <run>` for two existing runs. `bun spotter init` writes `evals/<name>.ts` from three answers and runs it once.
 
 | Variable | Default | Purpose |
 |---|---|---|
