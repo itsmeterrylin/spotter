@@ -1,4 +1,5 @@
 import { beforeAll, describe, expect, test } from 'bun:test';
+import { uuid7 } from '@spotter/evals/uuid7';
 import { page, pageApp, type PageSeed, seedPages, send } from './helpers.ts';
 
 const { app } = pageApp();
@@ -56,6 +57,31 @@ describe('review', () => {
     expect(html).toContain('/client/review.js');
     expect(html).toContain(`data-dataset="${s.datasetId}"`);
     expect((await page(app, '/review/nope'))[0]).toBe(404);
+  });
+
+  test('a conversation renders a verdict row per assistant turn plus one for the transcript; ?turn= focuses that row', async () => {
+    const id = uuid7();
+    const messages = [
+      { turn: 1, role: 'user', content: 'log bench' },
+      { turn: 2, role: 'assistant', content: 'bench press logged' },
+      { turn: 3, role: 'user', content: 'and squat' },
+      { turn: 4, role: 'assistant', content: 'squat logged' },
+    ];
+    await send(app, 'POST', '/api/traces/batch', { traces: [{ id, project: 'copper', run_id: s.runA, messages, start: '2026-09-13T10:00:00.000Z' }] });
+    await send(app, 'PUT', `/api/traces/${id}/scores`, { scores: [{ name: 'exercise_match', source: 'human', verdict: 'fail', turn: 4 }, { name: 'tone', value: 1, turn: 2, source: 'sdk' }] });
+    const [status, html] = await page(app, `/review/${id}?run=${s.runA}`);
+    expect(status).toBe(200);
+    expect(html.match(/class="verdict-row verdict-row-turn"/g)).toHaveLength(2);
+    expect(html).toContain('class="verdict-row" data-turn="" data-verdict="" data-focus="1"');
+    expect(html).toContain('data-turn="4" data-verdict="fail"');
+    expect(html).toContain('data-turn="2" data-verdict=""');
+    expect(html).toContain('tone · sdk');
+    const [, focused] = await page(app, `/review/${id}?run=${s.runA}&turn=2`);
+    expect(focused).toContain('data-turn="2" data-verdict="" data-focus="1"');
+    expect(focused).not.toContain('data-turn="" data-verdict="" data-focus="1"');
+    const [, tracePage] = await page(app, `/traces/${id}?turn=4`);
+    expect(tracePage).toContain('id="turn-4" data-focus="1"');
+    expect(tracePage).toContain('exercise_match · human');
   });
 
   test('a fully labeled run shows the empty state', async () => {

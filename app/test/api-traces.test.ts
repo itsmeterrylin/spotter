@@ -126,3 +126,41 @@ describe('POST /api/query', () => {
     expect((await send(app, 'GET', '/api/nope')).status).toBe(404);
   });
 });
+
+describe('conversations', () => {
+  const app = testApp();
+  const messages = [
+    { turn: 1, role: 'user', content: 'log bench' },
+    { turn: 2, role: 'assistant', content: 'bench press logged' },
+    { turn: 3, role: 'user', content: 'and squat' },
+    { turn: 4, role: 'assistant', content: 'squat logged' },
+  ];
+
+  test('input and output default to the first user and last assistant message', async () => {
+    const t = trace({ input: undefined, output: undefined, messages });
+    expect((await send(app, 'POST', '/api/traces/batch', { traces: [t] })).status).toBe(201);
+    const got = await json<{ input: unknown; output: unknown; messages: unknown[] }>(await send(app, 'GET', `/api/traces/${t.id}`));
+    expect(got.input).toBe('log bench');
+    expect(got.output).toBe('squat logged');
+    expect(got.messages).toHaveLength(4);
+  });
+
+  test('turn scores replace per turn, roll up as the mean, and a trace-level score wins', async () => {
+    const s = await seed(app);
+    const t = trace({ run_id: s.runA, dataset_item_id: s.itemIds[0], messages });
+    await send(app, 'POST', '/api/traces/batch', { traces: [t] });
+    await send(app, 'PUT', `/api/traces/${t.id}/scores`, { scores: [{ name: 'helpful', value: 1, turn: 2, source: 'sdk' }, { name: 'helpful', value: 0, turn: 4, source: 'sdk' }] });
+    await send(app, 'PUT', `/api/traces/${t.id}/scores`, { scores: [{ name: 'helpful', value: 0, turn: 2, source: 'sdk' }] });
+    const scores = (await json<{ scores: { turn: number | null; value: number }[] }>(await send(app, 'GET', `/api/traces/${t.id}`))).scores;
+    expect(scores.map((x) => [x.turn, x.value])).toEqual([[2, 0], [4, 0]]);
+    await send(app, 'PUT', `/api/traces/${t.id}/scores`, { scores: [{ name: 'helpful', value: 1, turn: 4, source: 'sdk' }] });
+    const run = async () => json<{ aggregates: { scores: Record<string, { mean: number; n: number }> } }>(await send(app, 'GET', `/api/runs/${s.runA}`));
+    expect((await run()).aggregates.scores.helpful).toEqual({ mean: 0.5, n: 1 });
+    await send(app, 'PUT', `/api/traces/${t.id}/scores`, { scores: [{ name: 'helpful', value: 1, source: 'sdk' }] });
+    expect((await run()).aggregates.scores.helpful).toEqual({ mean: 1, n: 1 });
+    const del = await json<{ deleted: number; scores: { turn: number | null }[] }>(await send(app, 'DELETE', `/api/traces/${t.id}/scores?name=helpful&source=sdk&turn=null`));
+    expect(del.deleted).toBe(1);
+    expect(del.scores.map((x) => x.turn)).toEqual([2, 4]);
+    expect((await json<{ deleted: number }>(await send(app, 'DELETE', `/api/traces/${t.id}/scores?name=helpful&source=sdk&turn=2`))).deleted).toBe(1);
+  });
+});

@@ -28,7 +28,7 @@ export function insertBatch(repos: Repos, traces: TraceInput[]): BatchResult {
   const projects = new Map(distinct(traces.map((t) => t.project)).map((name) => [name, repos.projects.ensure(name).id]));
   const result = repos.tx(() => {
     let inserted = 0;
-    for (const { project, scores, ...rest } of traces) {
+    for (const { project, scores, ...rest } of traces.map(transcriptDefaults)) {
       const row: NewTrace = { ...rest, project_id: projects.get(project) ?? '' };
       if (!repos.traces.insert(row)) continue;
       inserted += 1;
@@ -41,15 +41,22 @@ export function insertBatch(repos: Repos, traces: TraceInput[]): BatchResult {
   return { inserted: result, skipped: traces.length - result, urls: traces.map((t) => urls.trace(t.id)), url };
 }
 
+const transcriptDefaults = (t: TraceInput): TraceInput => {
+  if (!t.messages?.length) return t;
+  const first = t.messages.find((m) => m.role === 'user');
+  const last = [...t.messages].reverse().find((m) => m.role === 'assistant');
+  return { ...t, input: t.input ?? first?.content ?? null, output: t.output ?? last?.content ?? null };
+};
+
 export function putScores(repos: Repos, traceId: string, scores: NewScore[]): TraceView {
   if (!repos.traces.get(traceId)) throw notFound('trace', traceId);
   repos.scores.replace(traceId, scores);
   return getTrace(repos, traceId);
 }
 
-export function deleteScores(repos: Repos, traceId: string, name: string, source: ScoreSource): TraceView & { deleted: number } {
+export function deleteScores(repos: Repos, traceId: string, name: string, source: ScoreSource, turn?: number | null): TraceView & { deleted: number } {
   if (!repos.traces.get(traceId)) throw notFound('trace', traceId);
-  const deleted = repos.scores.remove(traceId, name, source);
+  const deleted = repos.scores.remove(traceId, name, source, turn);
   return { ...getTrace(repos, traceId), deleted };
 }
 

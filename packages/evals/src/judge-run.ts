@@ -6,7 +6,9 @@ export type JudgeTarget = { run?: string; dataset?: string };
 export type JudgeRunOptions = { name: string; version: string; target: JudgeTarget; client: ClientConfig; env?: Record<string, string | undefined>; model?: JudgeModel };
 export type JudgeRunReport = { judge: string; version: number; model: string; scored: number; pass: number; fail: number; url: string; dataset_id: string | null };
 
-type TraceBody = { id: string; input: Json | null; output: Json | null; expected: Json | null };
+type Message = { turn: number; role: string; content: Json };
+type TraceBody = { id: string; input: Json | null; output: Json | null; expected: Json | null; messages: Message[] | null };
+type ScoreBody = { name: string; value: number; label: string; reason: string | null; source: 'judge'; judge_version_id: string; turn: number | null };
 type TracePage = { traces: TraceBody[]; next_cursor: string | null };
 type JudgeBody = { name: string; url: string; versions: (JudgeVersionDef & { active: boolean })[] };
 
@@ -49,6 +51,31 @@ async function eachTrace(traces: TraceBody[], fn: (t: TraceBody) => Promise<void
   await Promise.all(Array.from({ length: Math.min(concurrency, traces.length) }, worker));
 }
 
+const toScore = (name: string, def: JudgeVersionDef, verdict: Verdict, turn: number | null): ScoreBody => ({
+  name,
+  value: verdict.pass ? 1 : 0,
+  label: verdict.pass ? 'pass' : 'fail',
+  reason: verdict.reason || null,
+  source: 'judge',
+  judge_version_id: def.id,
+  turn,
+});
+
+async function judgeTrace(model: JudgeModel, def: JudgeVersionDef, name: string, trace: TraceBody): Promise<ScoreBody[]> {
+  const base = { input: trace.input, expected: trace.expected, examples: def.examples };
+  const messages = trace.messages ?? [];
+  if (def.scope !== 'turn' || messages.length === 0) {
+    return [toScore(name, def, await judgeOne(model, def, { ...base, output: trace.output, transcript: trace.messages }), null)];
+  }
+  const out: ScoreBody[] = [];
+  for (const [i, m] of messages.entries()) {
+    if (m.role !== 'assistant') continue;
+    const verdict = await judgeOne(model, def, { ...base, output: m.content, transcript: messages.slice(0, i + 1) });
+    out.push(toScore(name, def, verdict, m.turn));
+  }
+  return out;
+}
+
 export async function judgeRun(options: JudgeRunOptions): Promise<JudgeRunReport> {
   if (!options.target.run && !options.target.dataset) throw new Error('judge run needs --run <run_id> or --dataset <id>');
   const client = createClient(options.client);
@@ -56,14 +83,15 @@ export async function judgeRun(options: JudgeRunOptions): Promise<JudgeRunReport
   const model = options.model ?? modelFor(def, options.env ?? process.env);
   const traces = options.target.run ? await tracesOfRun(client, options.target.run) : await tracesOfDataset(client, options.target.dataset ?? '');
   let pass = 0;
+  let scored = 0;
   await eachTrace(traces, async (trace) => {
-    const verdict: Verdict = await judgeOne(model, def, { input: trace.input, output: trace.output, expected: trace.expected, examples: def.examples });
-    if (verdict.pass) pass += 1;
-    const score = { name: options.name, value: verdict.pass ? 1 : 0, label: verdict.pass ? 'pass' : 'fail', reason: verdict.reason || null, source: 'judge', judge_version_id: def.id };
-    await client.put(`/api/traces/${trace.id}/scores`, { scores: [score] });
+    const scores = await judgeTrace(model, def, options.name, trace);
+    scored += scores.length;
+    pass += scores.filter((s) => s.value === 1).length;
+    await client.put(`/api/traces/${trace.id}/scores`, { scores });
   });
-  return { judge: options.name, version: def.number, model: model.name, scored: traces.length, pass, fail: traces.length - pass, url, dataset_id: options.target.dataset ?? null };
+  return { judge: options.name, version: def.number, model: model.name, scored, pass, fail: scored - pass, url, dataset_id: options.target.dataset ?? null };
 }
 
 export const formatJudgeRun = (r: JudgeRunReport): string =>
-  [`judge ${r.judge} v${r.version} (${r.model})`, `scored ${r.scored} traces: ${r.pass} pass, ${r.fail} fail`, '', `judge    ${r.url}`].join('\n');
+  [`judge ${r.judge} v${r.version} (${r.model})`, `scored ${r.scored}: ${r.pass} pass, ${r.fail} fail`, '', `judge    ${r.url}`].join('\n');

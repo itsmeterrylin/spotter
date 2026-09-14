@@ -23,7 +23,7 @@ export const tracesApi = (repos: Repos) => {
 
   api.delete('/:id/scores', (c) => {
     const q = scoresDelete.parse(c.req.query());
-    return c.json(deleteScores(repos, c.req.param('id'), q.name, q.source));
+    return c.json(deleteScores(repos, c.req.param('id'), q.name, q.source, q.turn));
   });
 
   api.patch('/:id/metadata', async (c) => {

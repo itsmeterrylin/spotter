@@ -9,22 +9,24 @@ import { Icon, JsonView, pct, short, summarize, Values, VerdictPill } from './ui
 
 const scoreIcon = (s: Score): 'pass' | 'fail' | 'score' => (s.value === 1 ? 'pass' : s.value === 0 ? 'fail' : 'score');
 
+export const Turn = ({ message: m, scores, focus }: { message: Message; scores: Score[]; focus?: boolean }) => (
+  <div class="turn" id={`turn-${m.turn}`} data-focus={focus ? '1' : undefined}>
+    <span class="who">{m.role} · {m.turn}</span>
+    <span>
+      {summarize(m.content)}
+      {scores.filter((s) => s.turn === m.turn).map((s) => (
+        <>
+          <br />
+          <span class={`pill pill-${s.value === 1 ? 'pass' : 'fail'}`}><Icon name={s.value === 1 ? 'pass' : 'fail'} size="sm" />{s.name} · {s.source}</span>
+        </>
+      ))}
+    </span>
+  </div>
+);
+
 export const Turns = ({ messages, scores, focus }: { messages: Message[]; scores: Score[]; focus?: number }) => (
   <div class="transcript">
-    {messages.map((m) => (
-      <div class="turn" id={`turn-${m.turn}`} data-focus={m.turn === focus ? '1' : undefined}>
-        <span class="who">{m.role} · {m.turn}</span>
-        <span>
-          {summarize(m.content)}
-          {scores.filter((s) => s.turn === m.turn).map((s) => (
-            <>
-              <br />
-              <span class={`pill pill-${s.value === 1 ? 'pass' : 'fail'}`}><Icon name={s.value === 1 ? 'pass' : 'fail'} size="sm" />{s.name}</span>
-            </>
-          ))}
-        </span>
-      </div>
-    ))}
+    {messages.map((m) => <Turn message={m} scores={scores} focus={m.turn === focus} />)}
   </div>
 );
 

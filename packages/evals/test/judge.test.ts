@@ -77,7 +77,7 @@ describe('spotter judge run against a live server', () => {
     const [out, code] = await Promise.all([new Response(proc.stdout).text(), proc.exited]);
     expect(code).toBe(0);
     expect(out).toContain('judge exercise_match v1 (fake:contains)');
-    expect(out).toContain('scored 3 traces: 2 pass, 1 fail');
+    expect(out).toContain('scored 3: 2 pass, 1 fail');
     expect(out).toContain('judge    http://localhost:3000/judges/exercise_match');
     await expect(judgeRun({ name: 'exercise_match', version: '2', target: { run: runId }, client: { url: origin() } })).rejects.toThrow('version 2');
     await expect(judgeRun({ name: 'exercise_match', version: 'active', target: {}, client: { url: origin() } })).rejects.toThrow('--run');
@@ -94,6 +94,24 @@ describe('spotter judge run against a live server', () => {
     expect(out).toMatch(/test\s+n=\d+\s+TPR\s+\d+%\s+TNR\s+\d+%/);
     expect(out).toContain('over 3 judge scores');
     expect(out).toContain('version  http://localhost:3000/judges/exercise_match/versions/1');
+  });
+
+  test('a turn-scoped version scores each assistant turn with the transcript up to that turn', async () => {
+    const run2 = ((await api('POST', '/api/runs', { dataset_id: datasetId, name: 'r2' })) as { id: string }).id;
+    const messages = [
+      { turn: 1, role: 'user', content: 'log bench' },
+      { turn: 2, role: 'assistant', content: 'bench press logged' },
+      { turn: 3, role: 'user', content: 'and squat' },
+      { turn: 4, role: 'assistant', content: 'squat logged' },
+    ];
+    await api('POST', '/api/traces/batch', { traces: [{ id: uuid7(), project: 'copper', run_id: run2, messages, expected: { exercise: 'bench press' }, start: '2026-09-13T10:00:00.000Z' }] });
+    const v2 = (await api('POST', '/api/judges/exercise_match/versions', { scope: 'turn', note: 'per turn', created_by: 'agent' })) as { id: string; number: number };
+    const report = await judgeRun({ name: 'exercise_match', version: String(v2.number), target: { run: run2 }, client: { url: origin() } });
+    expect(report).toMatchObject({ version: v2.number, scored: 2, pass: 1, fail: 1 });
+    const page = (await api('GET', `/api/traces?run_id=${run2}`)) as { traces: { scores: { turn: number | null; value: number; judge_version_id: string }[] }[] };
+    const judged = page.traces[0]?.scores ?? [];
+    expect(judged.map((s) => [s.turn, s.value])).toEqual([[2, 1], [4, 0]]);
+    expect(judged.every((s) => s.judge_version_id === v2.id)).toBe(true);
   });
 
   test('--dataset scores the source traces of the items and skips items without one', async () => {

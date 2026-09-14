@@ -1,9 +1,11 @@
 import type { Dataset } from '../db/repos/dataset.ts';
+import type { Score } from '../db/repos/score.ts';
+import type { Message } from '../db/types.ts';
 import type { TraceView } from '../services/traces.ts';
 import { urls } from '../urls.ts';
 import type { HumanVerdict, JudgeSaid, Queue } from './data.ts';
 import { Layout } from './Layout.tsx';
-import { Turns } from './Trace.tsx';
+import { Turn } from './Trace.tsx';
 import { type Crumb, Empty, Icon, JsonView, type Verdict } from './ui.tsx';
 
 type Props = {
@@ -15,6 +17,7 @@ type Props = {
   next: string | null;
   prev: string | null;
   datasets: Dataset[];
+  turn?: number;
   unread: number;
 };
 
@@ -23,6 +26,36 @@ const verdicts: Array<[Verdict, string, string]> = [
   ['fail', 'Fail', '2'],
   ['defer', 'Defer', 'D'],
 ];
+
+const isVerdict = (s: string | null): s is Verdict => s === 'pass' || s === 'fail' || s === 'defer';
+
+const turnVerdict = (scores: Score[], name: string, turn: number): Verdict | null => {
+  const s = scores.find((x) => x.source === 'human' && x.name === name && x.turn === turn);
+  return s && isVerdict(s.label) ? s.label : null;
+};
+
+type RowProps = { turn: number | null; verdict: Verdict | null; focus: boolean };
+
+const VerdictRow = ({ turn, verdict, focus }: RowProps) => (
+  <div class={turn === null ? 'verdict-row' : 'verdict-row verdict-row-turn'} data-turn={turn ?? ''} data-verdict={verdict ?? ''} data-focus={focus ? '1' : undefined}>
+    {verdicts.map(([v, label, key]) => (
+      <button class={`btn btn-${v}${turn === null ? '' : ' btn-compact'}`} type="button" data-verdict={v} aria-pressed={verdict === v ? 'true' : 'false'}>
+        <Icon name={v} />{label}{turn === null ? <span class="kbd">{key}</span> : null}
+      </button>
+    ))}
+  </div>
+);
+
+const Conversation = ({ messages, scores, name, focus }: { messages: Message[]; scores: Score[]; name: string; focus?: number }) => (
+  <div class="transcript">
+    {messages.map((m) => (
+      <>
+        <Turn message={m} scores={scores.filter((s) => s.source !== 'human')} />
+        {m.role === 'assistant' ? <VerdictRow turn={m.turn} verdict={turnVerdict(scores, name, m.turn)} focus={m.turn === focus} /> : null}
+      </>
+    ))}
+  </div>
+);
 
 const Nav = ({ href, name, label }: { href: string | null; name: 'previous' | 'next'; label: string }) =>
   href ? (
@@ -36,7 +69,7 @@ const crumbsOf = (queue: Queue): Crumb[] => {
   return queue.run ? [[urls.runs(queue.run.dataset_id), 'Runs'], [urls.run(queue.run.id), queue.run.name]] : [[urls.traces(), 'Traces']];
 };
 
-export const ReviewPage = ({ trace, verdict, judgeSaid, score, queue, next, prev, datasets, unread }: Props) => (
+export const ReviewPage = ({ trace, verdict, judgeSaid, score, queue, next, prev, datasets, turn, unread }: Props) => (
   <Layout title="Review" section={queue.judge ? 'judges' : 'traces'} unread={unread} crumbs={crumbsOf(queue)} script="review">
     <div
       class="review"
@@ -46,7 +79,6 @@ export const ReviewPage = ({ trace, verdict, judgeSaid, score, queue, next, prev
       data-next={next ?? ''}
       data-prev={prev ?? ''}
       data-home={urls.notifications()}
-      data-verdict={verdict?.verdict ?? ''}
     >
       <div class="cluster" style="justify-content: space-between">
         <span class="t-title num">
@@ -60,7 +92,7 @@ export const ReviewPage = ({ trace, verdict, judgeSaid, score, queue, next, prev
       </div>
       <div class="block">
         <span class="block-label"><Icon name="trace" size="sm" />{trace.messages?.length ? 'Conversation' : 'Input'}</span>
-        {trace.messages?.length ? <Turns messages={trace.messages} scores={trace.scores} /> : <JsonView value={trace.input} />}
+        {trace.messages?.length ? <Conversation messages={trace.messages} scores={trace.scores} name={score} focus={turn} /> : <JsonView value={trace.input} />}
       </div>
       <div class="block">
         <span class="block-label"><Icon name="score" size="sm" />Output</span>
@@ -76,13 +108,7 @@ export const ReviewPage = ({ trace, verdict, judgeSaid, score, queue, next, prev
           {judgeSaid.reason ? <span class="muted"> · {judgeSaid.reason}</span> : null}
         </p>
       ) : null}
-      <div class="verdict-row">
-        {verdicts.map(([v, label, key]) => (
-          <button class={`btn btn-${v}`} type="button" data-verdict={v} aria-pressed={verdict?.verdict === v ? 'true' : 'false'}>
-            <Icon name={v} />{label}<span class="kbd">{key}</span>
-          </button>
-        ))}
-      </div>
+      <VerdictRow turn={null} verdict={verdict?.verdict ?? null} focus={turn === undefined} />
       <p class="error" id="error" aria-live="polite"></p>
       <div class="field">
         <label for="note">Note</label>

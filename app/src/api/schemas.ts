@@ -62,7 +62,9 @@ export const toNewScore = (s: ScoreInput): NewScore => ({
 
 export const scoresPut = z.object({ scores: z.array(scoreInput).min(1) });
 
-export const scoresDelete = z.object({ name: z.string().min(1), source: z.enum(['sdk', 'judge', 'human']) });
+export const turnParam = z.union([z.literal('null').transform(() => null), z.coerce.number().int().nonnegative()]);
+
+export const scoresDelete = z.object({ name: z.string().min(1), source: z.enum(['sdk', 'judge', 'human']), turn: turnParam.optional() });
 
 export const traceEvent = z.object({ at: isoTime, name: z.string().min(1), data: z.json().optional() });
 

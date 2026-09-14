@@ -26,6 +26,8 @@ const reviewUrl = (traceId: string, q: Queue): string =>
 
 const versionOf = (raw: string | undefined): number | undefined => (raw === undefined ? undefined : versionNumber.parse(raw));
 
+const turnOf = (raw: string | undefined): number | undefined => (raw === undefined || raw === '' || Number.isNaN(Number(raw)) ? undefined : Number(raw));
+
 export function createPages(repos: Repos): Hono {
   const app = new Hono();
   const unread = (): number => unreadCount(repos);
@@ -76,9 +78,7 @@ export function createPages(repos: Repos): Hono {
   app.get('/traces/:id', (c) => {
     const trace = getTrace(repos, c.req.param('id'));
     const run = trace.run_id ? repos.runs.get(trace.run_id) : null;
-    const turnParam = c.req.query('turn');
-    const turn = turnParam === undefined || Number.isNaN(Number(turnParam)) ? undefined : Number(turnParam);
-    return c.html(<TracePage trace={trace} run={run} verdict={humanVerdict(trace.scores)} turn={turn} unread={unread()} />);
+    return c.html(<TracePage trace={trace} run={run} verdict={humanVerdict(trace.scores)} turn={turnOf(c.req.query('turn'))} unread={unread()} />);
   });
 
   app.get('/review', (c) => {
@@ -112,6 +112,7 @@ export function createPages(repos: Repos): Hono {
         next={to(next)}
         prev={to(prev)}
         datasets={repos.datasets.list()}
+        turn={turnOf(c.req.query('turn'))}
         unread={unread()}
       />,
     );

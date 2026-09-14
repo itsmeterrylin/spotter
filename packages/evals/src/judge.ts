@@ -1,16 +1,16 @@
 import type { Json, JsonObject } from './index.ts';
 
-export type JudgeContext = { input: Json | null; output: Json | null; expected: Json | null; examples: Json | null };
+export type JudgeContext = { input: Json | null; output: Json | null; expected: Json | null; examples: Json | null; transcript?: Json | null };
 export type Verdict = { pass: boolean; reason: string };
 export type JudgeModel = { name: string; complete: (prompt: string, ctx: JudgeContext) => Promise<string> };
-export type JudgeVersionDef = { id: string; number: number; prompt: string; model: string; params: JsonObject | null; examples: Json | null };
+export type JudgeVersionDef = { id: string; number: number; scope?: 'turn' | 'transcript'; prompt: string; model: string; params: JsonObject | null; examples: Json | null };
 
 export const defaultBaseUrl = 'https://api.openai.com/v1';
 
 const text = (value: Json | null): string => (typeof value === 'string' ? value : value === null ? '' : JSON.stringify(value, null, 2));
 
 export const renderPrompt = (template: string, ctx: JudgeContext): string =>
-  template.replace(/\{\{\s*(input|output|expected|examples)\s*\}\}/g, (_, key: keyof JudgeContext) => text(ctx[key]));
+  template.replace(/\{\{\s*(input|output|expected|examples|transcript)\s*\}\}/g, (_, key: keyof JudgeContext) => text(ctx[key] ?? null));
 
 function firstObject(source: string): string | null {
   const start = source.indexOf('{');

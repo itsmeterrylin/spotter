@@ -2,10 +2,18 @@ import { uuid7 } from '@spotter/evals/uuid7';
 
 type Verdict = 'pass' | 'fail' | 'defer';
 type TraceBody = { input: unknown; output: unknown; expected: unknown };
+type Row = { el: HTMLElement; turn: number | null; buttons: HTMLButtonElement[]; saved: Verdict | null };
 
 const isVerdict = (v: string | undefined): v is Verdict => v === 'pass' || v === 'fail' || v === 'defer';
 
 const headers = { 'content-type': 'application/json' };
+
+const rowOf = (el: HTMLElement): Row => ({
+  el,
+  turn: el.dataset.turn ? Number(el.dataset.turn) : null,
+  buttons: [...el.querySelectorAll<HTMLButtonElement>('button[data-verdict]')],
+  saved: isVerdict(el.dataset.verdict) ? el.dataset.verdict : null,
+});
 
 function wire(root: HTMLElement): void {
   const traceId = root.dataset.trace ?? '';
@@ -16,56 +24,66 @@ function wire(root: HTMLElement): void {
   const note = document.getElementById('note') as HTMLTextAreaElement;
   const error = document.getElementById('error') as HTMLElement;
   const picker = document.getElementById('picker') as HTMLElement;
-  const buttons = [...root.querySelectorAll<HTMLButtonElement>('[data-verdict]')];
-  let saved: Verdict | null = isVerdict(root.dataset.verdict) ? root.dataset.verdict : null;
+  const rows = [...root.querySelectorAll<HTMLElement>('.verdict-row')].map(rowOf);
+  const whole = rows[rows.length - 1];
+  let focused = Math.max(0, rows.findIndex((r) => r.el.hasAttribute('data-focus')));
   let busy = false;
 
   const go = (url: string | null): void => {
     location.href = url ?? home;
   };
-  const press = (v: Verdict | null): void => {
-    for (const b of buttons) b.setAttribute('aria-pressed', String(b.dataset.verdict === v));
+  const press = (row: Row, v: Verdict | null): void => {
+    row.saved = v;
+    for (const b of row.buttons) b.setAttribute('aria-pressed', String(b.dataset.verdict === v));
   };
   const setBusy = (on: boolean): void => {
     busy = on;
-    for (const b of buttons) b.disabled = on;
+    for (const r of rows) for (const b of r.buttons) b.disabled = on;
   };
+  const focus = (index: number): void => {
+    focused = Math.min(rows.length - 1, Math.max(0, index));
+    for (const [i, r] of rows.entries()) {
+      if (i === focused) r.el.setAttribute('data-focus', '1');
+      else r.el.removeAttribute('data-focus');
+    }
+    rows[focused]?.el.scrollIntoView({ block: 'nearest' });
+  };
+  const current = (): Row | undefined => rows[focused];
 
-  async function save(v: Verdict): Promise<boolean> {
+  async function save(row: Row, v: Verdict): Promise<boolean> {
     if (busy) return false;
     setBusy(true);
     error.textContent = '';
-    const body = JSON.stringify({ scores: [{ name, source: 'human', verdict: v, note: note.value || null }] });
-    const res = await fetch(`/api/traces/${traceId}/scores`, { method: 'PUT', headers, body }).catch(() => null);
+    const score = { name, source: 'human', verdict: v, note: row.turn === null ? note.value || null : null, turn: row.turn };
+    const res = await fetch(`/api/traces/${traceId}/scores`, { method: 'PUT', headers, body: JSON.stringify({ scores: [score] }) }).catch(() => null);
     setBusy(false);
     if (!res || !res.ok) {
       error.textContent = `Not saved (${res ? res.status : 'offline'}). Press again.`;
       return false;
     }
-    saved = v;
-    press(v);
+    press(row, v);
     return true;
   }
 
-  const verdictThenMove = async (v: Verdict): Promise<void> => {
-    if (!(await save(v))) return;
-    if (v === 'fail') note.focus();
+  const verdictThenMove = async (row: Row, v: Verdict): Promise<void> => {
+    if (!(await save(row, v))) return;
+    if (row.turn !== null) focus(rows.indexOf(row) + 1);
+    else if (v === 'fail') note.focus();
     else go(next);
   };
 
-  async function undo(): Promise<void> {
-    if (busy || !saved) return;
+  async function undo(row: Row): Promise<void> {
+    if (busy || !row.saved) return;
     setBusy(true);
     error.textContent = '';
-    const query = `name=${encodeURIComponent(name)}&source=human`;
+    const query = `name=${encodeURIComponent(name)}&source=human&turn=${row.turn ?? 'null'}`;
     const res = await fetch(`/api/traces/${traceId}/scores?${query}`, { method: 'DELETE' }).catch(() => null);
     setBusy(false);
     if (!res || !res.ok) {
       error.textContent = `Not cleared (${res ? res.status : 'offline'}). Press U again.`;
       return;
     }
-    saved = null;
-    press(null);
+    press(row, null);
   }
 
   const openPicker = (): void => picker.setAttribute('data-open', '');
@@ -75,7 +93,7 @@ function wire(root: HTMLElement): void {
     const res = await fetch(`/api/traces/${traceId}`).catch(() => null);
     if (!res || !res.ok) return;
     const t = (await res.json()) as TraceBody;
-    const expected = t.expected ?? (saved === 'pass' ? t.output : undefined);
+    const expected = t.expected ?? (whole?.saved === 'pass' ? t.output : undefined);
     const item = { id: uuid7(), input: t.input ?? null, expected, source_trace_id: traceId };
     const put = await fetch(`/api/datasets/${datasetId}/items`, { method: 'PUT', headers, body: JSON.stringify({ items: [item] }) }).catch(() => null);
     closePicker();
@@ -89,7 +107,14 @@ function wire(root: HTMLElement): void {
     root.querySelector('.hint')?.append(pill);
   }
 
-  for (const b of buttons) b.addEventListener('click', () => void verdictThenMove(b.dataset.verdict as Verdict));
+  for (const row of rows) {
+    for (const b of row.buttons) {
+      b.addEventListener('click', () => {
+        focus(rows.indexOf(row));
+        void verdictThenMove(row, b.dataset.verdict as Verdict);
+      });
+    }
+  }
   for (const opt of picker.querySelectorAll<HTMLButtonElement>('[data-dataset]')) {
     opt.addEventListener('click', () => void addTo(opt.dataset.dataset ?? '', opt.textContent?.trim() ?? ''));
   }
@@ -102,16 +127,20 @@ function wire(root: HTMLElement): void {
     }
     if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
       e.preventDefault();
-      if (saved) void save(saved).then((ok) => ok && go(next));
+      if (whole?.saved) void save(whole, whole.saved).then((ok) => ok && go(next));
       return;
     }
     if (document.activeElement === note) return;
+    const row = current();
+    if (!row) return;
     const key = e.key.toLowerCase();
-    if (key === '1') void verdictThenMove('pass');
-    else if (key === '2') void verdictThenMove('fail');
-    else if (key === 'd') void verdictThenMove('defer');
-    else if (key === 'u') void undo();
+    if (key === '1') void verdictThenMove(row, 'pass');
+    else if (key === '2') void verdictThenMove(row, 'fail');
+    else if (key === 'd') void verdictThenMove(row, 'defer');
+    else if (key === 'u') void undo(row);
     else if (key === 'a') openPicker();
+    else if (e.key === 'ArrowDown') focus(focused + 1);
+    else if (e.key === 'ArrowUp') focus(focused - 1);
     else if (e.key === 'ArrowRight') go(next);
     else if (e.key === 'ArrowLeft') go(prev);
     else if (e.key === 'Escape') go(home);
