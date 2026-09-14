@@ -59,7 +59,7 @@ export const judgeRepo = (db: Database) => {
   const setNote = db.query<VersionRow, [string | null, string]>('UPDATE judge_version SET note = ? WHERE id = ? RETURNING *');
   const pairs = db.query<LabelPair, [string]>(pairsSql);
   const labels = db.query<{ n: number }, [string]>("SELECT COUNT(*) AS n FROM score WHERE source = 'human' AND name = ? AND (label IS NULL OR label != 'defer')");
-  const judged = db.query<{ n: number }, [string]>("SELECT COUNT(*) AS n FROM score WHERE source = 'judge' AND judge_version_id = ?");
+  const judged = db.query<{ value: number }, [string]>("SELECT value FROM score WHERE source = 'judge' AND judge_version_id = ?");
   const insertVersion = db.query<VersionRow, [string, string, number, string | null, JudgeScope, string, string, string | null, string | null, string, CreatedBy, string | null, string]>(
     `INSERT INTO judge_version (id, judge_name, number, parent_id, scope, prompt, model, params, examples, content_hash, created_by, note, created_at)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *`,
@@ -71,7 +71,7 @@ export const judgeRepo = (db: Database) => {
      ON CONFLICT(judge_version_id, split) DO UPDATE SET dataset_id = excluded.dataset_id, n = excluded.n, tpr = excluded.tpr, tnr = excluded.tnr, created_at = excluded.created_at
      RETURNING *`,
   );
-  const calibrated = db.query<{ judge_version_id: string }, []>("SELECT judge_version_id FROM judge_calibration WHERE split = 'test'");
+  const calibrated = db.query<{ judge_version_id: string }, [number, number]>("SELECT judge_version_id FROM judge_calibration WHERE split = 'test' AND tpr >= ? AND tnr >= ?");
 
   return {
     get: (name: string): Judge | null => byName.get(name),
@@ -93,7 +93,7 @@ export const judgeRepo = (db: Database) => {
     setNote: (id: string, note: string | null): JudgeVersion => parse(must(setNote.get(note, id), 'judge_version')),
     pairs: (versionId: string): LabelPair[] => pairs.all(versionId),
     labelCount: (name: string): number => labels.get(name)?.n ?? 0,
-    judgedCount: (versionId: string): number => judged.get(versionId)?.n ?? 0,
+    judgedValues: (versionId: string): number[] => judged.all(versionId).map((r) => r.value),
     createVersion: (v: NewJudgeVersion): JudgeVersion =>
       parse(
         must(
@@ -104,7 +104,7 @@ export const judgeRepo = (db: Database) => {
     activate: (name: string, versionId: string): Judge | null => activate.get(versionId, name),
     calibrations: (versionId: string): Calibration[] => calibrations.all(versionId),
     putCalibration: (c: Omit<Calibration, 'created_at'>): Calibration => must(insertCalibration.get(c.judge_version_id, c.dataset_id, c.split, c.n, c.tpr, c.tnr, nowIso()), 'calibration'),
-    calibratedVersionIds: (): Set<string> => new Set(calibrated.all().map((r) => r.judge_version_id)),
+    calibratedVersionIds: (bar: number): Set<string> => new Set(calibrated.all(bar, bar).map((r) => r.judge_version_id)),
   };
 };
 

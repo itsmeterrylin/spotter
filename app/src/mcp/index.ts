@@ -40,7 +40,7 @@ const descriptions = {
   list: 'List datasets, items, runs, traces, notes (human scores with a reason), judges (with status and label counts), or disagreements {judge, version?} (traces where human and judge differ). Rows carry url. alerts, deliveries arrive in phase 9.',
   read: 'Read one run (with aggregates), trace (with scores), dataset (with item count and runs), judge (versions with calibration, active marker, disagreements), or the audit counts with per-judge label counts and status. Result carries url.',
   write:
-    'Write through the same validation as REST: dataset.create, items.upsert {dataset_id, items}, run.create, traces.insert {traces}, trace.patch_metadata {trace_id, metadata?, events?}, scores.put {trace_id, scores}, judge.propose {judge, from_version?, prompt?, model?, params?, examples?, note}, judge.activate {judge, version}. dry_run validates only.',
+    'Write through the same validation as REST: dataset.create, items.upsert {dataset_id, items}, run.create, traces.insert {traces}, trace.patch_metadata {trace_id, metadata?, events?}, scores.put {trace_id, scores}, judge.propose {judge, from_version?, prompt?, model?, params?, examples?, note}, judge.activate {judge, version}, judge.calibrate {judge, version, dataset_id?} (TPR and TNR per split, bias-corrected pass rate with a 95 percent interval). dry_run validates only.',
   compare: 'Compare two or more runs on one dataset: per-item cells, per-score means, diff, improvements, regressions, and the compare page url.',
 };
 

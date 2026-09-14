@@ -3,6 +3,7 @@ import type { Repos } from '../db/repos/index.ts';
 import { ApiError, notFound } from '../errors.ts';
 import { compare } from '../services/compare.ts';
 import { getDataset } from '../services/datasets.ts';
+import { calibrationBar } from '../services/judges.ts';
 import { counts, rollup } from '../services/rollup.ts';
 import { getTrace } from '../services/traces.ts';
 import { urls } from '../urls.ts';
@@ -114,7 +115,7 @@ export function createPages(repos: Repos): Hono {
   });
 
   app.get('/judges', (c) => {
-    const calibrated = repos.judges.calibratedVersionIds();
+    const calibrated = repos.judges.calibratedVersionIds(calibrationBar);
     const judges = repos.judges.list().map((judge) => ({
       judge,
       versions: repos.judges.versions(judge.name).length,

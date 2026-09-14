@@ -1,8 +1,9 @@
 import { Hono } from 'hono';
 import type { Repos } from '../db/repos/index.ts';
+import { calibrate } from '../services/calibration.ts';
 import { disagreements } from '../services/disagreements.ts';
 import { activate, getJudge, listJudges, propose } from '../services/judges.ts';
-import { disagreementsQuery, judgeActivate, judgePropose } from './schemas.ts';
+import { disagreementsQuery, judgeActivate, judgeCalibrate, judgePropose, versionNumber } from './schemas.ts';
 
 export const judgesApi = (repos: Repos) => {
   const api = new Hono();
@@ -20,6 +21,11 @@ export const judgesApi = (repos: Repos) => {
   api.post('/:name/activate', async (c) => {
     const body = judgeActivate.parse(await c.req.json());
     return c.json(activate(repos, c.req.param('name'), body.version));
+  });
+
+  api.post('/:name/versions/:number/calibrate', async (c) => {
+    const body = judgeCalibrate.parse(await c.req.json());
+    return c.json(calibrate(repos, c.req.param('name'), versionNumber.parse(c.req.param('number')), body.dataset_id ?? null));
   });
 
   api.get('/:name/disagreements', (c) => {

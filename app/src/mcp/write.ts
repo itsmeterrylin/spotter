@@ -1,6 +1,7 @@
 import { z } from 'zod';
-import { datasetCreate, itemsUpsert, judgeActivate, judgePropose, metadataPatch, runCreate, scoresPut, toNewScore, tracesBatch } from '../api/schemas.ts';
+import { datasetCreate, itemsUpsert, judgeActivate, judgeCalibrate, judgePropose, metadataPatch, runCreate, scoresPut, toNewScore, tracesBatch } from '../api/schemas.ts';
 import type { Repos } from '../db/repos/index.ts';
+import { calibrate } from '../services/calibration.ts';
 import { createDataset, upsertItems } from '../services/datasets.ts';
 import { activate, propose } from '../services/judges.ts';
 import { createRun } from '../services/runs.ts';
@@ -50,6 +51,10 @@ const ops: Record<WriteOp, Handler | number> = {
   'judge.activate': op(judgeActivate.extend({ judge: z.string().min(1) }), (repos, body) => {
     const view = activate(repos, body.judge, body.version);
     return { ids: [view.active_version_id ?? ''], active_version: view.active_version, url: view.url };
+  }),
+  'judge.calibrate': op(judgeCalibrate.extend({ judge: z.string().min(1), version: z.number().int().positive() }), (repos, body) => {
+    const { judge_version_id, ...report } = calibrate(repos, body.judge, body.version, body.dataset_id ?? null);
+    return { ids: [judge_version_id], ...report };
   }),
   'alert.create': 9,
   'alert.test': 9,

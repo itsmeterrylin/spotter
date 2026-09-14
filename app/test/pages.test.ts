@@ -183,7 +183,7 @@ describe('judges', () => {
     repos.judges.ensure('exercise_match');
     const v = repos.judges.createVersion({ judge_name: 'exercise_match', number: 1, prompt: 'p', model: 'm', content_hash: 'h', created_by: 'human', note: 'first draft' });
     repos.judges.activate('exercise_match', v.id);
-    repos.judges.putCalibration({ judge_version_id: v.id, dataset_id: null, split: 'test', n: 40, tpr: 0.94, tnr: 0.88 });
+    repos.judges.putCalibration({ judge_version_id: v.id, dataset_id: null, split: 'test', n: 40, tpr: 0.94, tnr: 0.91 });
     const [, list] = await page('/judges');
     expect(list).toContain('exercise_match');
     expect(list).toContain('Calibrated');

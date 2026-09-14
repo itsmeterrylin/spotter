@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 import { configFromEnv } from './client.ts';
 import { init } from './init.ts';
+import { formatCalibration, judgeCalibrate } from './judge-calibrate.ts';
 import { formatJudgeRun, judgeRun } from './judge-run.ts';
 import { loadEval } from './load.ts';
 import { compareRuns, runEval } from './runner.ts';
@@ -12,6 +13,7 @@ const usage = `usage:
   spotter run <file> [--name <text>] [--baseline <run_id>] [--no-send] [--create]
   spotter compare <baseline_run_id> <run_id>
   spotter judge run <name> [--version <n|active>] --run <run_id> | --dataset <id>
+  spotter judge calibrate <name> --version <n> [--dataset <id>]
   spotter init`;
 
 export function parseArgs(argv: string[]): Parsed {
@@ -53,14 +55,11 @@ export async function compareCommand(baseline: string, current: string): Promise
 }
 
 export async function judgeCommand(sub: string, name: string, flags: Parsed['flags']): Promise<string> {
-  if (sub !== 'run') throw new Error(`unknown judge command ${sub}; use: judge run <name>`);
-  const report = await judgeRun({
-    name,
-    version: flagString(flags, 'version') ?? 'active',
-    target: { run: flagString(flags, 'run'), dataset: flagString(flags, 'dataset') },
-    client: configFromEnv(),
-  });
-  return formatJudgeRun(report);
+  const version = flagString(flags, 'version') ?? 'active';
+  const dataset = flagString(flags, 'dataset');
+  if (sub === 'run') return formatJudgeRun(await judgeRun({ name, version, target: { run: flagString(flags, 'run'), dataset }, client: configFromEnv() }));
+  if (sub === 'calibrate') return formatCalibration(await judgeCalibrate({ name, version, dataset, client: configFromEnv() }));
+  throw new Error(`unknown judge command ${sub}; use: judge run <name> or judge calibrate <name>`);
 }
 
 export async function main(argv: string[]): Promise<number> {

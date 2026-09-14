@@ -1,13 +1,14 @@
 import type { Repos } from '../db/repos/index.ts';
 import type { RunScore, Score } from '../db/repos/score.ts';
 import type { ScoreSource } from '../db/types.ts';
+import { calibrationBar } from './judges.ts';
 
 const priority: Record<ScoreSource, number> = { human: 0, sdk: 1, judge: 2 };
 
 export type TraceValues = { trace_id: string; dataset_item_id: string | null; values: Map<string, number> };
 
 export const counts = (repos: Repos, scores: Score[]): Score[] => {
-  const calibrated = repos.judges.calibratedVersionIds();
+  const calibrated = repos.judges.calibratedVersionIds(calibrationBar);
   return scores.filter((s) => s.label !== 'defer' && (s.source !== 'judge' || (s.judge_version_id !== null && calibrated.has(s.judge_version_id))));
 };
 
@@ -29,9 +30,9 @@ export function rollup(scores: Score[]): Map<string, number> {
   return out;
 }
 
-export function runValues(repos: Repos, runId: string): TraceValues[] {
+export function runValues(repos: Repos, runId: string, scores: RunScore[] = repos.scores.listByRun(runId)): TraceValues[] {
   const byTrace = new Map<string, RunScore[]>();
-  for (const s of counts(repos, repos.scores.listByRun(runId)) as RunScore[]) {
+  for (const s of counts(repos, scores) as RunScore[]) {
     byTrace.set(s.trace_id, [...(byTrace.get(s.trace_id) ?? []), s]);
   }
   return [...byTrace.entries()].map(([trace_id, list]) => ({ trace_id, dataset_item_id: list[0]?.dataset_item_id ?? null, values: rollup(list) }));

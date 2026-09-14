@@ -15,6 +15,7 @@ export const writeOps = [
   'items.from_traces',
   'judge.propose',
   'judge.activate',
+  'judge.calibrate',
   'alert.create',
   'alert.test',
 ] as const;

@@ -156,6 +156,17 @@ describe('MCP /mcp', () => {
     expect((audit.judges as unknown[])[0]).toMatchObject({ name: 'exercise_match', active_version: 2, status: 'needs_labels', labels: 2, labels_needed: 98, disagreements: 0 });
   });
 
+  test('judge.calibrate stores the splits and reports rates for the version', async () => {
+    const cal = await call('write', { op: 'judge.calibrate', data: { judge: 'exercise_match', version: 1 } });
+    expect(cal).toMatchObject({ ok: true, judge: 'exercise_match', version: 1, dataset_id: null, url: 'http://localhost:3000/judges/exercise_match/versions/1' });
+    const { dev, test: held, examples } = cal as { dev: { n: number }; test: { n: number }; examples: number };
+    expect(dev.n + held.n + examples).toBe(2);
+    expect(cal.scored).toBe(2);
+    const judge = await call('read', { type: 'judge', id: 'exercise_match' });
+    const v1 = (judge.versions as { number: number; calibration: unknown[] }[]).find((v) => v.number === 1);
+    expect(v1?.calibration.length).toBe([dev.n, held.n].filter(Boolean).length);
+  });
+
   test('placeholders name their phase', async () => {
     expect(await call('list', { type: 'alerts' })).toEqual({ items: [], note: 'available after phase 9' });
     expect(await call('write', { op: 'alert.test', data: {} })).toEqual({ ok: false, op: 'alert.test', note: 'available after phase 9' });

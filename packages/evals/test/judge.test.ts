@@ -83,6 +83,19 @@ describe('spotter judge run against a live server', () => {
     await expect(judgeRun({ name: 'exercise_match', version: 'active', target: {}, client: { url: origin() } })).rejects.toThrow('--run');
   });
 
+  test('the CLI calibrates a version against the human labels and prints both splits', async () => {
+    const page = (await api('GET', `/api/traces?run_id=${runId}`)) as { traces: { id: string; output: { exercise: string } }[] };
+    for (const t of page.traces) await api('PUT', `/api/traces/${t.id}/scores`, { scores: [{ name: 'exercise_match', source: 'human', verdict: t.output.exercise.includes('bench') ? 'pass' : 'fail' }] });
+    const proc = Bun.spawn(['bun', cli, 'judge', 'calibrate', 'exercise_match', '--version', '1'], { cwd: root, env: { ...process.env, SPOTTER_URL: origin() }, stdout: 'pipe', stderr: 'pipe' });
+    const [out, code] = await Promise.all([new Response(proc.stdout).text(), proc.exited]);
+    expect(code).toBe(0);
+    expect(out).toContain('judge exercise_match v1 calibration:');
+    expect(out).toMatch(/dev\s+n=\d+\s+TPR\s+\d+%\s+TNR\s+\d+%/);
+    expect(out).toMatch(/test\s+n=\d+\s+TPR\s+\d+%\s+TNR\s+\d+%/);
+    expect(out).toContain('over 3 judge scores');
+    expect(out).toContain('version  http://localhost:3000/judges/exercise_match/versions/1');
+  });
+
   test('--dataset scores the source traces of the items and skips items without one', async () => {
     const labels = (await api('POST', '/api/datasets', { project: 'copper', name: 'labels', purpose: 'judge_labels' })) as { id: string };
     const page = (await api('GET', `/api/traces?run_id=${runId}`)) as { traces: { id: string }[] };

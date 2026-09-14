@@ -80,9 +80,11 @@ describe('repositories', () => {
     const judge = repos.judges.ensure('exercise_match', 'checks the exercise');
     const v1 = repos.judges.createVersion({ judge_name: judge.name, number: 1, prompt: 'p', model: 'm', content_hash: 'h1', created_by: 'human' });
     expect(repos.judges.activate(judge.name, v1.id)?.active_version_id).toBe(v1.id);
-    expect(repos.judges.calibratedVersionIds().has(v1.id)).toBe(false);
+    expect(repos.judges.calibratedVersionIds(0.9).has(v1.id)).toBe(false);
+    repos.judges.putCalibration({ judge_version_id: v1.id, dataset_id: null, split: 'test', n: 40, tpr: 0.94, tnr: 0.88 });
+    expect(repos.judges.calibratedVersionIds(0.9).has(v1.id)).toBe(false);
     repos.judges.putCalibration({ judge_version_id: v1.id, dataset_id: null, split: 'test', n: 40, tpr: 0.94, tnr: 0.91 });
-    expect(repos.judges.calibratedVersionIds().has(v1.id)).toBe(true);
+    expect(repos.judges.calibratedVersionIds(0.9).has(v1.id)).toBe(true);
     expect(repos.judges.versions(judge.name)).toHaveLength(1);
     expect(repos.judges.calibrations(v1.id)[0]?.tpr).toBe(0.94);
   });

@@ -132,3 +132,7 @@ export const judgePropose = z.object({
 export const judgeActivate = z.object({ version: z.number().int().positive() });
 
 export const disagreementsQuery = z.object({ version: z.coerce.number().int().positive().optional() });
+
+export const versionNumber = z.coerce.number().int().positive();
+
+export const judgeCalibrate = z.object({ dataset_id: id.nullish() });

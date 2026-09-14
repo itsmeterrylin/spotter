@@ -48,7 +48,7 @@ Every successful result carries `url`. Every list row carries `url`. Errors come
 {type: 'run' | 'trace' | 'dataset' | 'judge' | 'audit', id?}
 ```
 
-- `run` returns the run with `aggregates` (trace count, per-score mean, p50 duration, tokens).
+- `run` returns the run with `aggregates` (trace count, per-score mean, p50 duration, tokens, and `pending`: score names whose judge version is not yet calibrated, so those judge scores are excluded).
 - `trace` returns the trace with its `scores`.
 - `dataset` returns the dataset with `item_count` and its `runs`.
 - `judge` returns the judge with `versions` (newest first, each with `calibration`, `active`, `calibrated`, `url`) and the active version's `disagreements`.
@@ -70,6 +70,7 @@ Every successful result carries `url`. Every list row carries `url`. Errors come
 | `scores.put` | `{trace_id, scores: [{name, value or verdict, reason?, source, judge_version_id?}]}` |
 | `judge.propose` | `{judge, from_version?, prompt?, model?, params?, examples?, scope?, note}`; returns the new version, or the existing one with `existing: true` when the definition hash matches; a first version needs `prompt` and `model` and becomes active |
 | `judge.activate` | `{judge, version}`; rollback is activation of an older version |
+| `judge.calibrate` | `{judge, version, dataset_id?}`; pairs human and judge scores by trace, splits them by trace id (15 percent examples pool, 45 dev, 40 test), stores TPR and TNR per split, and returns the bias-corrected pass rate with a 95 percent bootstrap interval. A version counts in aggregates once its test TPR and TNR are both at least 0.9 |
 
 - `dry_run: true` validates `data` and returns `{ok: true, dry_run: true}` without writing.
 - Set `metadata.baseline` on a run to the run id you compare against. `read audit` counts runs that lack it.
