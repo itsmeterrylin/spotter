@@ -63,17 +63,8 @@ const Events = ({ events }: { events: TraceEvent[] }) => (
   </div>
 );
 
-type Props = { trace: TraceView; run: Run | null; verdict: HumanVerdict | null; turn?: number; unread: number };
-
-export const TracePage = ({ trace, run, verdict, turn, unread }: Props) => (
-  <Layout
-    title={short(trace.id)}
-    section="traces"
-    unread={unread}
-    crumbs={run ? [[urls.runs(run.dataset_id), 'Runs'], [urls.run(run.id), run.name]] : [[urls.traces(), 'Traces']]}
-    action={<a class="btn btn-primary" href={urls.reviewTrace(trace.id, { run: run?.id })}><Icon name="human" />{verdict ? 'Change verdict' : 'Label'}</a>}
-  >
-    <div class="review">
+export const TraceBody = ({ trace, verdict, turn }: { trace: TraceView; verdict: HumanVerdict | null; turn?: number }) => (
+  <div class="review">
       <div class="block">
         <span class="block-label"><Icon name="trace" size="sm" />{trace.messages?.length ? 'Conversation' : 'Input'}</span>
         {trace.messages?.length ? <Turns messages={trace.messages} scores={trace.scores} focus={turn} /> : <JsonView value={trace.input} />}
@@ -96,6 +87,36 @@ export const TracePage = ({ trace, run, verdict, turn, unread }: Props) => (
           <Events events={trace.events} />
         </div>
       ) : null}
-    </div>
+  </div>
+);
+
+type Props = { trace: TraceView; run: Run | null; verdict: HumanVerdict | null; turn?: number; unread: number };
+
+export const TracePage = ({ trace, run, verdict, turn, unread }: Props) => (
+  <Layout
+    title={short(trace.id)}
+    section="traces"
+    unread={unread}
+    crumbs={run ? [[urls.runs(run.dataset_id), 'Runs'], [urls.run(run.id), run.name]] : [[urls.traces(), 'Traces']]}
+    action={<a class="btn btn-primary" href={urls.reviewTrace(trace.id, { run: run?.id })}><Icon name="human" />{verdict ? 'Change verdict' : 'Label'}</a>}
+  >
+    <TraceBody trace={trace} verdict={verdict} turn={turn} />
   </Layout>
+);
+
+export const TracePane = ({ trace, run, verdict, closeHref }: { trace: TraceView; run: Run | null; verdict: HumanVerdict | null; closeHref: string }) => (
+  <div class="pane-inner" data-trace={trace.id}>
+    <div class="pane-head">
+      <div class="stack" style="--gap: 2px">
+        <a class="link strong mono" href={urls.trace(trace.id)}>{short(trace.id)}</a>
+        {run ? <a class="link t-caption" href={urls.run(run.id)}>{run.name}</a> : null}
+      </div>
+      <div class="cluster" style="--gap: var(--space-8)">
+        <a class="btn btn-primary btn-compact" href={urls.reviewTrace(trace.id, { run: run?.id })}><Icon name="human" size="sm" />{verdict ? 'Change' : 'Label'}</a>
+        <a class="btn btn-secondary btn-compact" href={urls.trace(trace.id)} aria-label="Open trace page"><Icon name="open" size="sm" />Open</a>
+        <a class="btn btn-ghost btn-icon" href={closeHref} data-pane-close aria-label="Close"><Icon name="fail" /></a>
+      </div>
+    </div>
+    <TraceBody trace={trace} verdict={verdict} />
+  </div>
 );

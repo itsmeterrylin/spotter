@@ -19,7 +19,7 @@ import { ReviewEmpty, ReviewPage } from './Review.tsx';
 import { SettingsPage } from './Settings.tsx';
 import { getAttributeMap } from '../services/attributeMap.ts';
 import { RunPage, type TraceRow } from './Run.tsx';
-import { TracePage } from './Trace.tsx';
+import { TracePage, TracePane } from './Trace.tsx';
 
 const defaultFilter = 'unlabeled';
 
@@ -75,6 +75,13 @@ export function createPages(repos: Repos): Hono {
     const only = c.req.query('only') === 'changes';
     const comparison = compare(repos, id, runs, only ? 'changes' : undefined);
     return c.html(<ComparePage comparison={comparison} dataset={getDataset(repos, id)} only={only} score={c.req.query('score')} unread={unread()} />);
+  });
+
+  app.get('/traces/:id/pane', (c) => {
+    const trace = getTrace(repos, c.req.param('id'));
+    const run = trace.run_id ? repos.runs.get(trace.run_id) : null;
+    const closeHref = c.req.query('close') ?? urls.traces();
+    return c.html(<TracePane trace={trace} run={run} verdict={humanVerdict(trace.scores)} closeHref={closeHref} />);
   });
 
   app.get('/traces/:id', (c) => {

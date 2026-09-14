@@ -4,13 +4,14 @@ import type { Repos } from '../db/repos/index.ts';
 import { notFound } from '../errors.ts';
 import { notifications } from '../services/notifications.ts';
 import { counts, rollup } from '../services/rollup.ts';
-import { listTraces } from '../services/traces.ts';
+import { getTrace, listTraces } from '../services/traces.ts';
 import { urls } from '../urls.ts';
 import { humanVerdict, runCard } from './data.ts';
 import { DatasetsPage, DatasetPage, type DatasetRow } from './Datasets.tsx';
 import { NotificationsPage } from './Notifications.tsx';
 import { RunsPage } from './Runs.tsx';
 import { type TraceListRow, TracesPage } from './Traces.tsx';
+import { TracePane } from './Trace.tsx';
 
 const traceLimit = 200;
 
@@ -59,7 +60,17 @@ export function listRoutes(repos: Repos, unread: () => number): Hono {
       verdict: humanVerdict(trace.scores)?.verdict ?? null,
     }));
     const names = [...new Set(rows.flatMap((r) => [...r.values.keys()]))].sort();
-    return c.html(<TracesPage rows={rows} names={names} run={run} score={c.req.query('score')} filters={filters.length} unread={unread()} />);
+    const selected = c.req.query('trace');
+    const query = new URL(c.req.url).searchParams;
+    query.delete('trace');
+    const closeHref = `${urls.traces()}${query.size ? `?${query}` : ''}`;
+    const pane = selected
+      ? (() => {
+          const t = getTrace(repos, selected);
+          return <TracePane trace={t} run={t.run_id ? repos.runs.get(t.run_id) : null} verdict={humanVerdict(t.scores)} closeHref={closeHref} />;
+        })()
+      : undefined;
+    return c.html(<TracesPage rows={rows} names={names} run={run} score={c.req.query('score')} filters={filters.length} unread={unread()} selected={selected} pane={pane} />);
   });
 
   app.get('/notifications', (c) => {

@@ -55,7 +55,7 @@ describe('traces', () => {
     expect(html).toContain('pill pill-fail');
     expect(html).toContain('unlabeled</span>');
     expect(html).not.toContain('Review unlabeled');
-    expect(html).toContain('/client/rows.js');
+    expect(html).toContain('/client/traces.js');
   });
 
   test('?run= narrows to one run, adds the breadcrumb, and offers Review unlabeled', async () => {
