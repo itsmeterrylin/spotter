@@ -27,7 +27,7 @@
 .bell .badge { position: absolute; top: -6px; right: -6px; }
 main { padding-block: var(--space-32) var(--space-64); }
 .table td .link { text-decoration: none; }
-.table td.wrap { max-width: 32ch; overflow-wrap: anywhere; }
+.table td.wrap { max-width: 32ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .table td.nowrap { white-space: nowrap; }
 .table td .pill, .table th .ic { vertical-align: middle; }
 @media (max-width: 899px) {
