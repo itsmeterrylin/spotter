@@ -87,7 +87,7 @@ export const Layout = ({ title, section, unread, crumbs = [], action, script, ch
             </main>
           </div>
         </div>
-        {raw(themeToggle)}
+        {section === 'settings' ? raw(themeToggle) : null}
       </body>
     </html>
   </>

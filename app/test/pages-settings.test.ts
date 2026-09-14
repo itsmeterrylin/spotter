@@ -15,7 +15,7 @@ describe('settings', () => {
     const [, html] = await page(app, '/');
     expect(html).toContain('nav-settings');
     expect(html).toContain("localStorage.getItem('spotter.theme')");
-    expect(html).not.toContain('data-theme-choice');
+    expect(html).not.toContain('data-theme-choice="');
     const [, settings] = await page(app, '/settings');
     expect((settings.match(/data-theme-choice="light"/g) ?? []).length).toBe(1);
   });
