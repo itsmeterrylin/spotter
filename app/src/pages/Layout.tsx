@@ -69,7 +69,6 @@ export const Layout = ({ title, section, unread, crumbs = [], action, script, ch
       </head>
       <body>
         {sprite}
-        {raw(themeToggle)}
         <div class="shell">
           <Sidebar section={section} />
           <div class="content">
@@ -93,6 +92,7 @@ export const Layout = ({ title, section, unread, crumbs = [], action, script, ch
             </main>
           </div>
         </div>
+        {raw(themeToggle)}
       </body>
     </html>
   </>
