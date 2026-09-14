@@ -24,7 +24,7 @@ const Sidebar = ({ section }: { section: Section | null }) => (
       Spotter
     </a>
     <input class="nav-toggle" type="checkbox" id="nav-toggle" />
-    <label class="btn btn-ghost btn-icon menu" for="nav-toggle"><Icon name="expand" label="Menu" /></label>
+    <label class="btn btn-ghost btn-icon menu" for="nav-toggle"><Icon name="menu" label="Menu" /></label>
     <nav class="nav" aria-label="Sections">
       {sections.map(([key, label, icon, href]) => (
         <a class={`nav-item${key === section ? ' pill-brand' : ''}`} href={href} aria-current={key === section ? 'page' : undefined}>
@@ -65,7 +65,7 @@ export const Layout = ({ title, section, unread, crumbs = [], action, script, ch
                 <div class="actions">
                   {action}
                   <a class={`btn btn-ghost btn-icon bell${section === 'notifications' ? ' pill-brand' : ''}`} href={urls.notifications()} aria-label="Notifications">
-                    <Icon name="flag" />
+                    <Icon name="bell" />
                     {unread > 0 ? <span class="badge">{unread}</span> : null}
                   </a>
                 </div>
