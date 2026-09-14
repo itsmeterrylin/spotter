@@ -28,7 +28,7 @@ describe('layout', () => {
     for (const [path, label] of [['runs', 'Runs'], ['datasets', 'Datasets'], ['traces', 'Traces'], ['judges', 'Judges']]) expect(html).toContain(`href="${base}/${path}"`);
     expect(html).toContain('class="nav-item pill-brand" href="http://localhost:3000/runs" aria-current="page"');
     expect(html).toContain('class="nav-item" href="http://localhost:3000/datasets"');
-    expect(html).toContain('<span class="version t-caption">v0.1.0</span>');
+    expect(html).toContain('<span class="build t-caption">v0.1.0</span>');
     expect(html).toContain('id="nav-toggle"');
     expect(html).toContain('aria-label="Menu"');
     expect(html).toContain('<h1 class="t-title heavy">Runs</h1>');
