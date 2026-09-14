@@ -5,7 +5,7 @@ import { Layout } from './Layout.tsx';
 import { Icon } from './ui.tsx';
 import pkg from '../../package.json' with { type: 'json' };
 
-type Props = { maps: AttributeMapView[]; authSet: boolean; unread: number };
+type Props = { maps: AttributeMapView[]; authSet: boolean; judge: { baseUrl: string; keySet: boolean }; unread: number };
 
 const Code = ({ text }: { text: string }) => <pre class="code">{text}</pre>;
 
@@ -19,6 +19,15 @@ const restExample = `curl -X POST ${config.baseUrl}/api/traces/batch \\
   -H 'content-type: application/json' \\
   -d '{"traces":[{"project":"default","input":{"transcript":"..."},"output":{"exercise":"Squat"},
        "start":"2026-09-14T00:00:00Z","scores":[{"name":"exercise_match","value":1,"source":"sdk"}]}]}'`;
+
+const providers: Array<[string, string]> = [
+  ['OpenAI', 'https://api.openai.com/v1'],
+  ['OpenRouter (one key, many models)', 'https://openrouter.ai/api/v1'],
+  ['Ollama (local)', 'http://localhost:11434/v1'],
+  ['LM Studio (local)', 'http://localhost:1234/v1'],
+  ['Gemini (OpenAI-compatible)', 'https://generativelanguage.googleapis.com/v1beta/openai'],
+  ['Gateway (LiteLLM, Portkey, Bifrost)', 'http://localhost:4000/v1'],
+];
 
 const tools: Array<[string, string]> = [
   ['list', 'datasets · items · runs · traces · notes · judges · disagreements'],
@@ -34,7 +43,7 @@ const Section = ({ icon, title, children }: { icon: Parameters<typeof Icon>[0]['
   </section>
 );
 
-export const SettingsPage = ({ maps, authSet, unread }: Props) => (
+export const SettingsPage = ({ maps, authSet, judge, unread }: Props) => (
   <Layout title="Settings" section="settings" unread={unread}>
     <div class="stack settings">
       <Section icon="human" title="Appearance">
@@ -88,6 +97,23 @@ export const SettingsPage = ({ maps, authSet, unread }: Props) => (
             ) : <div class="row"><span class="muted">No promoted attributes</span></div>}
           </div>
         ))}
+      </Section>
+
+      <Section icon="judge" title="Model providers">
+        <div class="card stack">
+          <dl class="kv">
+            <dt>Base URL</dt><dd class="mono">{judge.baseUrl}</dd>
+            <dt>API key</dt><dd><span class={`pill ${judge.keySet ? 'pill-pass' : ''}`}>{judge.keySet ? 'set' : 'not set'}</span></dd>
+            <dt>Model</dt><dd class="muted">per judge version · <span class="mono">fake:contains</span> for tests</dd>
+          </dl>
+          <Code text={`SPOTTER_JUDGE_BASE_URL=${judge.baseUrl}\nSPOTTER_JUDGE_API_KEY=...`} />
+        </div>
+        <div class="card card-flush scroll-x">
+          <table class="table">
+            <thead><tr><th>Provider</th><th>Base URL</th></tr></thead>
+            <tbody>{providers.map(([name, url]) => <tr><td class="strong">{name}</td><td class="mono muted">{url}</td></tr>)}</tbody>
+          </table>
+        </div>
       </Section>
 
       <Section icon="tokens" title="About">

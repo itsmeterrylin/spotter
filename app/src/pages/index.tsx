@@ -123,7 +123,8 @@ export function createPages(repos: Repos): Hono {
   app.get('/settings', (c) => {
     const projects = [...new Set(repos.datasets.list().map((d) => d.project_id))];
     const maps = (projects.length ? projects : ['default']).map((ref) => getAttributeMap(repos, ref));
-    return c.html(<SettingsPage maps={maps} authSet={Boolean(process.env.SPOTTER_AUTH_TOKEN)} unread={unread()} />);
+    const judge = { baseUrl: process.env.SPOTTER_JUDGE_BASE_URL ?? 'https://api.openai.com/v1', keySet: Boolean(process.env.SPOTTER_JUDGE_API_KEY) };
+    return c.html(<SettingsPage maps={maps} authSet={Boolean(process.env.SPOTTER_AUTH_TOKEN)} judge={judge} unread={unread()} />);
   });
   app.route('/judges', judgeRoutes(repos, unread));
 

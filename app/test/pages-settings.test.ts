@@ -7,7 +7,7 @@ describe('settings', () => {
     await seedPages(app);
     const [status, html] = await page(app, '/settings');
     expect(status).toBe(200);
-    for (const s of ['claude mcp add --transport http spotter', '/mcp', 'OTEL_EXPORTER_OTLP_ENDPOINT', '/api/otel/v1/traces', 'Attribute map', 'attribute_map.set', 'Base URL', 'data-theme-choice="dark"']) expect(html).toContain(s);
+    for (const s of ['claude mcp add --transport http spotter', '/mcp', 'OTEL_EXPORTER_OTLP_ENDPOINT', '/api/otel/v1/traces', 'Attribute map', 'attribute_map.set', 'Base URL', 'SPOTTER_JUDGE_BASE_URL', 'openrouter.ai', 'data-theme-choice="dark"']) expect(html).toContain(s);
   });
 
   test('sidebar has settings and the theme toggle on every page', async () => {

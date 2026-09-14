@@ -41,7 +41,7 @@ const Sidebar = ({ section }: { section: Section | null }) => (
         Settings
       </a>
       <div class="foot">
-        <span class="version t-caption">v{pkg.version}</span>
+        <span class="build t-caption">v{pkg.version}</span>
         <div class="cluster theme" style="--gap: 4px" role="group" aria-label="Theme">
           <button type="button" class="btn btn-ghost btn-compact" data-theme-choice="system" aria-pressed="true">Auto</button>
           <button type="button" class="btn btn-ghost btn-compact" data-theme-choice="light" aria-pressed="false">Light</button>

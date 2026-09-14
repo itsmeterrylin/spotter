@@ -8,7 +8,8 @@
 .nav-item.pill-brand:hover { color: var(--brand); }
 .nav .nav-settings { margin-top: auto; }
 .nav .foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-8); padding: var(--space-16) var(--space-16) 0; }
-.nav .version { color: var(--ink-muted); }
+.nav .build { color: var(--ink-muted); }
+.nav .theme .btn { min-height: 36px; padding-inline: var(--space-8); font-size: 14px; }
 .btn-ghost[aria-pressed="true"] { color: var(--ink); background: color-mix(in srgb, var(--ink) 10%, var(--surface)); }
 .code { font-family: var(--font-mono); font-size: var(--text-caption); line-height: 1.6; background: color-mix(in srgb, var(--ink) 6%, var(--surface)); border-radius: var(--radius); padding: var(--space-16); overflow-x: auto; white-space: pre; margin: 0; }
 .settings-section h2 { display: flex; align-items: center; gap: var(--space-8); margin-bottom: var(--space-16); }
