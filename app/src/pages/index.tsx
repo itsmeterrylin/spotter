@@ -1,4 +1,4 @@
-import { type Context, Hono } from 'hono';
+import { Hono } from 'hono';
 import { ZodError } from 'zod';
 import { versionNumber } from '../api/schemas.ts';
 import type { Repos } from '../db/repos/index.ts';
@@ -6,17 +6,17 @@ import { ApiError, notFound } from '../errors.ts';
 import { compare } from '../services/compare.ts';
 import { getDataset } from '../services/datasets.ts';
 import { counts, rollup } from '../services/rollup.ts';
+import { unreadCount } from '../services/notifications.ts';
 import { getTrace } from '../services/traces.ts';
 import { urls } from '../urls.ts';
 import { clientBundle, favicon, pagesCss } from './assets.ts';
 import { ComparePage } from './Compare.tsx';
-import { humanVerdict, inboxItems, judgeSaid, neighbors, primaryScore, queue, runCard, type Queue } from './data.ts';
-import { InboxPage } from './Inbox.tsx';
+import { humanVerdict, judgeSaid, neighbors, primaryScore, queue, runCard, type Queue } from './data.ts';
 import { judgeRoutes } from './judgeRoutes.tsx';
+import { listRoutes } from './listRoutes.tsx';
 import { ErrorPage } from './NotFound.tsx';
 import { ReviewEmpty, ReviewPage } from './Review.tsx';
 import { RunPage, type TraceRow } from './Run.tsx';
-import { RunsPage } from './Runs.tsx';
 import { TracePage } from './Trace.tsx';
 
 const defaultFilter = 'unlabeled';
@@ -28,7 +28,7 @@ const versionOf = (raw: string | undefined): number | undefined => (raw === unde
 
 export function createPages(repos: Repos): Hono {
   const app = new Hono();
-  const inbox = (): number => inboxItems(repos).length;
+  const unread = (): number => unreadCount(repos);
   const runOrThrow = (id: string) => {
     const run = repos.runs.get(id);
     if (!run) throw notFound('run', id);
@@ -36,8 +36,8 @@ export function createPages(repos: Repos): Hono {
   };
 
   app.onError((err, c) => {
-    if (err instanceof ApiError) return c.html(<ErrorPage status={err.status} inbox={inbox()} />, err.status);
-    if (err instanceof ZodError) return c.html(<ErrorPage status={400} inbox={inbox()} />, 400);
+    if (err instanceof ApiError) return c.html(<ErrorPage status={err.status} unread={unread()} />, err.status);
+    if (err instanceof ZodError) return c.html(<ErrorPage status={400} unread={unread()} />, 400);
     throw err;
   });
 
@@ -52,21 +52,7 @@ export function createPages(repos: Repos): Hono {
     return c.body(js, 200, { 'content-type': 'text/javascript; charset=utf-8' });
   });
 
-  const home = (c: Context) => {
-    const items = inboxItems(repos);
-    const cards = repos.runs.list().map((r) => runCard(repos, r));
-    return c.html(<InboxPage items={items} cards={cards} inbox={items.length} />);
-  };
-  app.get('/', home);
-  app.get('/inbox', home);
-
-  app.get('/runs', (c) => {
-    const datasetId = c.req.query('dataset');
-    const dataset = datasetId ? repos.datasets.get(datasetId) : null;
-    if (datasetId && !dataset) throw notFound('dataset', datasetId);
-    const cards = repos.runs.list(datasetId).map((r) => runCard(repos, r));
-    return c.html(<RunsPage cards={cards} dataset={dataset} inbox={inbox()} />);
-  });
+  app.route('/', listRoutes(repos, unread));
 
   app.get('/runs/:id', (c) => {
     const run = runOrThrow(c.req.param('id'));
@@ -76,7 +62,7 @@ export function createPages(repos: Repos): Hono {
       const values = rollup(counts(repos, scores));
       return { trace, verdict: humanVerdict(scores), value: card.primary ? (values.get(card.primary) ?? null) : null };
     });
-    return c.html(<RunPage card={card} rows={rows} inbox={inbox()} />);
+    return c.html(<RunPage card={card} rows={rows} unread={unread()} />);
   });
 
   app.get('/datasets/:id/compare', (c) => {
@@ -84,7 +70,7 @@ export function createPages(repos: Repos): Hono {
     const runs = (c.req.query('runs') ?? '').split(',').filter(Boolean);
     const only = c.req.query('only') === 'changes';
     const comparison = compare(repos, id, runs, only ? 'changes' : undefined);
-    return c.html(<ComparePage comparison={comparison} dataset={getDataset(repos, id)} only={only} score={c.req.query('score')} inbox={inbox()} />);
+    return c.html(<ComparePage comparison={comparison} dataset={getDataset(repos, id)} only={only} score={c.req.query('score')} unread={unread()} />);
   });
 
   app.get('/traces/:id', (c) => {
@@ -92,7 +78,7 @@ export function createPages(repos: Repos): Hono {
     const run = trace.run_id ? repos.runs.get(trace.run_id) : null;
     const turnParam = c.req.query('turn');
     const turn = turnParam === undefined || Number.isNaN(Number(turnParam)) ? undefined : Number(turnParam);
-    return c.html(<TracePage trace={trace} run={run} verdict={humanVerdict(trace.scores)} turn={turn} inbox={inbox()} />);
+    return c.html(<TracePage trace={trace} run={run} verdict={humanVerdict(trace.scores)} turn={turn} unread={unread()} />);
   });
 
   app.get('/review', (c) => {
@@ -101,7 +87,7 @@ export function createPages(repos: Repos): Hono {
     if (runId) runOrThrow(runId);
     const q = queue(repos, { run: runId, filter, judge: c.req.query('judge'), version: versionOf(c.req.query('version')) });
     const first = q.ids[0];
-    if (!first || (!q.run && !q.judge)) return c.html(<ReviewEmpty inbox={inbox()} />);
+    if (!first || (!q.run && !q.judge)) return c.html(<ReviewEmpty unread={unread()} />);
     return c.redirect(reviewUrl(first, q));
   });
 
@@ -126,12 +112,12 @@ export function createPages(repos: Repos): Hono {
         next={to(next)}
         prev={to(prev)}
         datasets={repos.datasets.list()}
-        inbox={inbox()}
+        unread={unread()}
       />,
     );
   });
 
-  app.route('/judges', judgeRoutes(repos, inbox));
+  app.route('/judges', judgeRoutes(repos, unread));
 
   return app;
 }

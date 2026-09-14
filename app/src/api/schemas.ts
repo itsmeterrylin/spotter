@@ -91,17 +91,19 @@ export const metadataPatch = z.object({ metadata: jsonObject.optional(), events:
 
 export const filter = z.object({ field: z.string().min(1), key: z.string().optional(), operator: z.enum(operators), value: z.json().optional() });
 
+export const filterList = z
+  .string()
+  .optional()
+  .transform((s, ctx) => {
+    const parsed = s === undefined ? null : z.array(filter).safeParse(JSON.parse(s));
+    if (parsed === null) return [];
+    if (parsed.success) return parsed.data;
+    ctx.addIssue({ code: 'custom', message: 'filters must be a JSON array of {field, key?, operator, value?}' });
+    return z.NEVER;
+  });
+
 export const traceListQuery = z.object({
-  filters: z
-    .string()
-    .optional()
-    .transform((s, ctx) => {
-      if (s === undefined) return [];
-      const parsed = z.array(filter).safeParse(JSON.parse(s));
-      if (parsed.success) return parsed.data;
-      ctx.addIssue({ code: 'custom', message: 'filters must be a JSON array of {field, key?, operator, value?}' });
-      return z.NEVER;
-    }),
+  filters: filterList,
   run_id: id.optional(),
   limit: z.coerce.number().int().min(1).max(500).default(50),
   cursor: id.optional(),

@@ -5,6 +5,7 @@ import { invalid } from '../errors.ts';
 import { getDataset } from '../services/datasets.ts';
 import { disagreements } from '../services/disagreements.ts';
 import { getJudge, labelTarget, listJudges } from '../services/judges.ts';
+import { notifications } from '../services/notifications.ts';
 import { query } from '../services/query.ts';
 import { getRun } from '../services/runs.ts';
 import { getTrace } from '../services/traces.ts';
@@ -47,7 +48,8 @@ const audit = (repos: Repos): ToolResult => ({
     disagreements: j.disagreements,
     url: j.url,
   })),
-  url: urls.inbox(),
+  notifications: notifications(repos),
+  url: urls.home(),
 });
 
 export function read(repos: Repos, args: ReadArgs): ToolResult {

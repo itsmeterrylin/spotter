@@ -4,23 +4,19 @@ import { urls } from '../urls.ts';
 import { ActivateForm, DisagreementsLink, Rates, StatusPill, versionStatus } from './Judges.tsx';
 import { Layout } from './Layout.tsx';
 import { when } from './Runs.tsx';
-import { Crumbs, Empty, Icon, short } from './ui.tsx';
+import { Empty, Icon, short } from './ui.tsx';
 
-type Props = { judge: JudgeView; version: VersionView; disagreements: number | null; inbox: number };
+type Props = { judge: JudgeView; version: VersionView; disagreements: number | null; unread: number };
 
 const Pre = ({ value }: { value: Json | string | null }) =>
   value === null ? <p class="muted">none</p> : <div class="transcript"><pre class="mono">{typeof value === 'string' ? value : JSON.stringify(value, null, 2)}</pre></div>;
 
-export const JudgeVersionPage = ({ judge, version: v, disagreements, inbox }: Props) => {
+export const JudgeVersionPage = ({ judge, version: v, disagreements, unread }: Props) => {
   const parent = v.parent_id ? judge.versions.find((x) => x.id === v.parent_id) : undefined;
   return (
-    <Layout title={`Spotter · ${judge.name} v${v.number}`} inbox={inbox}>
-      <Crumbs items={[[urls.judges(), 'Judges'], [judge.url, judge.name]]} />
+    <Layout title={`${judge.name} v${v.number}`} section="judges" unread={unread} crumbs={[[urls.judges(), 'Judges'], [judge.url, judge.name]]}>
       <div class="review definition">
         <div class="page-head">
-          <h1 class="t-title heavy">
-            {judge.name} <span class="num">v{v.number}</span>
-          </h1>
           <div class="chips">
             {v.active ? <span class="pill pill-pass"><Icon name="pass" size="sm" />Active</span> : null}
             <StatusPill status={versionStatus(v)} />

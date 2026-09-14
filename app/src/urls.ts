@@ -12,13 +12,16 @@ const abs = (path: string, query: Query = {}): string => {
 };
 
 export const urls = {
-  inbox: (): string => abs('/'),
+  home: (): string => abs('/'),
+  notifications: (): string => abs('/notifications'),
   runs: (datasetId?: string): string => abs('/runs', { dataset: datasetId }),
   run: (id: string, score?: string): string => abs(`/runs/${id}`, { score }),
   compare: (datasetId: string, runIds: string[], only?: 'changes', score?: string): string =>
     abs(`/datasets/${datasetId}/compare`, { runs: runIds.join(','), only, score }),
   trace: (id: string, turn?: number): string => abs(`/traces/${id}`, { turn }),
   traces: (query: Query = {}): string => abs('/traces', query),
+  datasets: (): string => abs('/datasets'),
+  dataset: (id: string): string => abs(`/datasets/${id}`),
   datasetItems: (datasetId: string, tag?: string): string => abs(`/datasets/${datasetId}/items`, { tag }),
   datasetItem: (datasetId: string, itemId: string): string => abs(`/datasets/${datasetId}/items/${itemId}`),
   review: (q: ReviewQuery = {}): string => abs('/review', q),

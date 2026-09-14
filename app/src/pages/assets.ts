@@ -1,7 +1,7 @@
 import { basename, join } from 'node:path';
 import { iconPaths } from '../../../design-system/src/icons.ts';
 
-const clientNames = ['review', 'compare'] as const;
+const clientNames = ['review', 'compare', 'rows'] as const;
 
 export const favicon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#b5651d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${iconPaths.paw}</svg>`;
 

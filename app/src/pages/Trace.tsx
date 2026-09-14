@@ -5,7 +5,7 @@ import type { TraceView } from '../services/traces.ts';
 import { urls } from '../urls.ts';
 import type { HumanVerdict } from './data.ts';
 import { Layout } from './Layout.tsx';
-import { Crumbs, Icon, JsonView, pct, short, summarize, Values, VerdictPill } from './ui.tsx';
+import { Icon, JsonView, pct, short, summarize, Values, VerdictPill } from './ui.tsx';
 
 const scoreIcon = (s: Score): 'pass' | 'fail' | 'score' => (s.value === 1 ? 'pass' : s.value === 0 ? 'fail' : 'score');
 
@@ -49,16 +49,17 @@ const Scores = ({ scores, verdict }: { scores: Score[]; verdict: HumanVerdict | 
   </div>
 );
 
-type Props = { trace: TraceView; run: Run | null; verdict: HumanVerdict | null; turn?: number; inbox: number };
+type Props = { trace: TraceView; run: Run | null; verdict: HumanVerdict | null; turn?: number; unread: number };
 
-export const TracePage = ({ trace, run, verdict, turn, inbox }: Props) => (
-  <Layout title={`Spotter · ${short(trace.id)}`} inbox={inbox}>
-    <Crumbs items={run ? [[urls.run(run.id), run.name]] : []} />
+export const TracePage = ({ trace, run, verdict, turn, unread }: Props) => (
+  <Layout
+    title={short(trace.id)}
+    section="traces"
+    unread={unread}
+    crumbs={run ? [[urls.runs(run.dataset_id), 'Runs'], [urls.run(run.id), run.name]] : [[urls.traces(), 'Traces']]}
+    action={<a class="btn btn-primary" href={urls.reviewTrace(trace.id, { run: run?.id })}><Icon name="human" />{verdict ? 'Change verdict' : 'Label'}</a>}
+  >
     <div class="review">
-      <div class="page-head">
-        <h1 class="t-title heavy mono">{short(trace.id)}</h1>
-        <a class="btn btn-primary" href={urls.reviewTrace(trace.id, { run: run?.id })}><Icon name="human" />{verdict ? 'Change verdict' : 'Label'}</a>
-      </div>
       <div class="block">
         <span class="block-label"><Icon name="trace" size="sm" />{trace.messages?.length ? 'Conversation' : 'Input'}</span>
         {trace.messages?.length ? <Turns messages={trace.messages} scores={trace.scores} focus={turn} /> : <JsonView value={trace.input} />}

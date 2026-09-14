@@ -1,7 +1,9 @@
 import { uuid7 } from '@spotter/evals/uuid7';
-import type { Hono } from 'hono';
+import { Hono } from 'hono';
 import { createApp } from '../src/app.ts';
 import { openDatabase } from '../src/db/client.ts';
+import { createRepos, type Repos } from '../src/db/repos/index.ts';
+import { createPages } from '../src/pages/index.tsx';
 
 export const testApp = (): Hono => createApp(openDatabase(':memory:'));
 
@@ -39,4 +41,29 @@ export async function seed(app: Hono): Promise<Seed> {
     traces: [trace(runB.id, itemIds[0] ?? '', 1, 'bench'), trace(runB.id, itemIds[1] ?? '', 1, 'bench'), trace(runB.id, itemIds[2] ?? '', 0, 'row')],
   });
   return { datasetId: ds.id, itemIds, runA: runA.id, runB: runB.id };
+}
+
+export type PageSeed = Seed & { a: string[]; b: string[] };
+
+export function pageApp(): { app: Hono; repos: Repos } {
+  const db = openDatabase(':memory:');
+  const repos = createRepos(db);
+  const app = new Hono();
+  app.route('/', createPages(repos));
+  app.route('/', createApp(db));
+  return { app, repos };
+}
+
+export const page = async (app: Hono, path: string): Promise<[number, string]> => {
+  const res = await app.request(path);
+  return [res.status, await res.text()];
+};
+
+export async function seedPages(app: Hono): Promise<PageSeed> {
+  const s = await seed(app);
+  const byRun = async (run: string) => (await json<{ traces: Array<{ id: string }> }>(await send(app, 'GET', `/api/traces?run_id=${run}`))).traces.map((t) => t.id).sort();
+  const a = await byRun(s.runA);
+  const b = await byRun(s.runB);
+  await send(app, 'PUT', `/api/traces/${b[2]}/scores`, { scores: [{ name: 'exercise_match', source: 'human', verdict: 'fail', note: 'wrong lift' }] });
+  return { ...s, a, b };
 }

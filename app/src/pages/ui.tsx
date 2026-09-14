@@ -2,7 +2,6 @@ import { raw } from 'hono/html';
 import type { Child } from 'hono/jsx';
 import { type IconName, iconNames, iconPaths } from '../../../design-system/src/icons.ts';
 import type { Json } from '../db/types.ts';
-import { urls } from '../urls.ts';
 
 export const sprite = raw(
   `<svg hidden xmlns="http://www.w3.org/2000/svg">${iconNames.map((n) => `<symbol id="i-${n}" viewBox="0 0 24 24">${iconPaths[n]}</symbol>`).join('')}</svg>`,
@@ -29,12 +28,13 @@ export const Delta = ({ value }: { value: number | null }) => {
   );
 };
 
-export const Crumbs = ({ items }: { items: Array<[string, string]> }) => (
+export type Crumb = [string, string];
+
+export const Crumbs = ({ items }: { items: Crumb[] }) => (
   <nav class="crumbs t-caption">
-    <a href={urls.inbox()}>Inbox</a>
-    {items.map(([href, label]) => (
+    {items.map(([href, label], i) => (
       <>
-        <Icon name="next" size="sm" />
+        {i > 0 ? <Icon name="next" size="sm" /> : null}
         <a href={href}>{label}</a>
       </>
     ))}

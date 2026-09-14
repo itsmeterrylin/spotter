@@ -4,7 +4,7 @@ import { urls } from '../urls.ts';
 import type { HumanVerdict, JudgeSaid, Queue } from './data.ts';
 import { Layout } from './Layout.tsx';
 import { Turns } from './Trace.tsx';
-import { Crumbs, Empty, Icon, JsonView, type Verdict } from './ui.tsx';
+import { type Crumb, Empty, Icon, JsonView, type Verdict } from './ui.tsx';
 
 type Props = {
   trace: TraceView;
@@ -15,7 +15,7 @@ type Props = {
   next: string | null;
   prev: string | null;
   datasets: Dataset[];
-  inbox: number;
+  unread: number;
 };
 
 const verdicts: Array<[Verdict, string, string]> = [
@@ -31,14 +31,13 @@ const Nav = ({ href, name, label }: { href: string | null; name: 'previous' | 'n
     <span class="btn btn-ghost btn-icon" aria-disabled="true" aria-label={label}><Icon name={name} /></span>
   );
 
-const crumbsOf = (queue: Queue): Array<[string, string]> => {
-  if (queue.judge) return [[urls.judge(queue.judge.name), queue.judge.name]];
-  return queue.run ? [[urls.run(queue.run.id), queue.run.name]] : [];
+const crumbsOf = (queue: Queue): Crumb[] => {
+  if (queue.judge) return [[urls.judges(), 'Judges'], [urls.judge(queue.judge.name), queue.judge.name]];
+  return queue.run ? [[urls.runs(queue.run.dataset_id), 'Runs'], [urls.run(queue.run.id), queue.run.name]] : [[urls.traces(), 'Traces']];
 };
 
-export const ReviewPage = ({ trace, verdict, judgeSaid, score, queue, next, prev, datasets, inbox }: Props) => (
-  <Layout title="Spotter Review" inbox={inbox} script="review">
-    <Crumbs items={crumbsOf(queue)} />
+export const ReviewPage = ({ trace, verdict, judgeSaid, score, queue, next, prev, datasets, unread }: Props) => (
+  <Layout title="Review" section={queue.judge ? 'judges' : 'traces'} unread={unread} crumbs={crumbsOf(queue)} script="review">
     <div
       class="review"
       id="review"
@@ -46,7 +45,7 @@ export const ReviewPage = ({ trace, verdict, judgeSaid, score, queue, next, prev
       data-score={score}
       data-next={next ?? ''}
       data-prev={prev ?? ''}
-      data-inbox={urls.inbox()}
+      data-home={urls.notifications()}
       data-verdict={verdict?.verdict ?? ''}
     >
       <div class="cluster" style="justify-content: space-between">
@@ -107,9 +106,8 @@ export const ReviewPage = ({ trace, verdict, judgeSaid, score, queue, next, prev
   </Layout>
 );
 
-export const ReviewEmpty = ({ inbox }: { inbox: number }) => (
-  <Layout title="Spotter Review" inbox={inbox}>
-    <Crumbs items={[]} />
-    <Empty icon="pass" title="Nothing to label" action={<a class="btn btn-primary" href={urls.inbox()}>Inbox</a>} />
+export const ReviewEmpty = ({ unread }: { unread: number }) => (
+  <Layout title="Review" section="traces" unread={unread}>
+    <Empty icon="pass" title="Nothing to label" action={<a class="btn btn-primary" href={urls.notifications()}>Notifications</a>} />
   </Layout>
 );

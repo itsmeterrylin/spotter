@@ -12,7 +12,7 @@ function wire(root: HTMLElement): void {
   const name = root.dataset.score || 'human';
   const next = root.dataset.next || null;
   const prev = root.dataset.prev || null;
-  const inbox = root.dataset.inbox ?? '/';
+  const home = root.dataset.home ?? '/';
   const note = document.getElementById('note') as HTMLTextAreaElement;
   const error = document.getElementById('error') as HTMLElement;
   const picker = document.getElementById('picker') as HTMLElement;
@@ -21,7 +21,7 @@ function wire(root: HTMLElement): void {
   let busy = false;
 
   const go = (url: string | null): void => {
-    location.href = url ?? inbox;
+    location.href = url ?? home;
   };
   const press = (v: Verdict | null): void => {
     for (const b of buttons) b.setAttribute('aria-pressed', String(b.dataset.verdict === v));
@@ -114,7 +114,7 @@ function wire(root: HTMLElement): void {
     else if (key === 'a') openPicker();
     else if (e.key === 'ArrowRight') go(next);
     else if (e.key === 'ArrowLeft') go(prev);
-    else if (e.key === 'Escape') go(inbox);
+    else if (e.key === 'Escape') go(home);
   });
 }
 

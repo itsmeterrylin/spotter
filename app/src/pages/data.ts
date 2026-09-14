@@ -1,27 +1,26 @@
 import type { Repos } from '../db/repos/index.ts';
+import type { Dataset } from '../db/repos/dataset.ts';
 import type { Run } from '../db/repos/run.ts';
 import type { Score } from '../db/repos/score.ts';
 import type { CompareItem } from '../services/compare.ts';
 import { disagreementIds } from '../services/disagreements.ts';
-import { labelTarget, listJudges, requireVersion } from '../services/judges.ts';
+import { requireVersion } from '../services/judges.ts';
 import { baselineOf } from '../services/runs.ts';
 import { regressed, summary, type ScoreSummary } from '../services/summary.ts';
 import { unlabeledIds } from '../services/traces.ts';
-import { urls } from '../urls.ts';
 import type { Verdict } from './ui.tsx';
 
 export type HumanVerdict = { name: string; verdict: Verdict; note: string | null };
 
 export type RunCard = {
   run: Run;
+  dataset: Dataset | null;
   baseline: Run | null;
   scores: Record<string, ScoreSummary>;
   primary: string | null;
   unlabeled: number;
   regressed: CompareItem[];
 };
-
-export type InboxItem = { icon: 'down' | 'human' | 'judge'; prefix?: string; count: number; label: string; href: string; cta: string };
 
 export type JudgeQueue = { name: string; version: number; version_id: string };
 export type Queue = { run: Run | null; filter: string | undefined; ids: string[]; judge: JudgeQueue | null };
@@ -52,36 +51,13 @@ export function runCard(repos: Repos, run: Run, selected?: string): RunCard {
   const scores = summary(repos, run.id, baseline?.id).scores;
   return {
     run,
+    dataset: repos.datasets.get(run.dataset_id),
     baseline,
     scores,
     primary: primaryScore(Object.keys(scores), selected),
     unlabeled: unlabeledIds(repos, run.id).length,
     regressed: baseline ? regressed(repos, baseline, run) : [],
   };
-}
-
-export function inboxItems(repos: Repos): InboxItem[] {
-  const runs = repos.runs.list();
-  const items: InboxItem[] = [];
-  const latest = runs[0];
-  if (latest) {
-    const card = runCard(repos, latest);
-    if (card.baseline && card.regressed.length) {
-      const href = urls.compare(latest.dataset_id, [card.baseline.id, latest.id], 'changes');
-      items.push({ icon: 'down', count: card.regressed.length, label: `regressions · ${latest.name} vs ${card.baseline.name}`, href, cta: 'Verify' });
-    }
-  }
-  for (const run of runs) {
-    const n = unlabeledIds(repos, run.id).length;
-    if (n) items.push({ icon: 'human', count: n, label: `unlabeled · ${run.name}`, href: urls.review({ run: run.id, filter: 'unlabeled' }), cta: 'Label' });
-  }
-  for (const j of listJudges(repos).judges) {
-    if (j.disagreements && j.disagreements_url) {
-      items.push({ icon: 'judge', count: j.disagreements, label: `disagreements with ${j.name} v${j.active_version}`, href: j.disagreements_url, cta: 'Resolve' });
-    }
-    if (j.labels < labelTarget) items.push({ icon: 'human', prefix: `${j.name} needs`, count: labelTarget - j.labels, label: 'more labels', href: urls.review({ filter: 'unlabeled' }), cta: 'Label' });
-  }
-  return items;
 }
 
 export function queue(repos: Repos, q: QueueQuery): Queue {

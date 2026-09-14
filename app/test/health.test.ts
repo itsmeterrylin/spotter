@@ -13,11 +13,11 @@ describe('health', () => {
     expect(body.version).toMatch(/^\d+\.\d+\.\d+$/);
   });
 
-  test('GET / renders the inbox page', async () => {
+  test('GET / renders the runs page', async () => {
     const res = await app.request('/');
     expect(res.status).toBe(200);
     const html = await res.text();
-    expect(html).toContain('Inbox');
+    expect(html).toContain('Runs');
     expect(html).toContain('/spotter.css');
   });
 });

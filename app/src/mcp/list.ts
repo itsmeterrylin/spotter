@@ -20,7 +20,7 @@ const datasets = (repos: Repos, limit: number): ToolResult => {
     repos,
     `SELECT d.*, (SELECT COUNT(*) FROM dataset_item i WHERE i.dataset_id = d.id AND i.archived_at IS NULL) AS item_count FROM dataset d ORDER BY d.created_at DESC LIMIT ${limit}`,
   ).map((r) => ({ ...r, url: urls.datasetItems(String(r.id)) }));
-  return { items, url: urls.inbox() };
+  return { items, url: urls.datasets() };
 };
 
 const items = (repos: Repos, datasetId: string | undefined, limit: number): ToolResult => {

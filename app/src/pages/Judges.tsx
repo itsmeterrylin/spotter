@@ -3,7 +3,7 @@ import type { Calibration } from '../db/repos/judge.ts';
 import { calibrationBar, type JudgeRow, type JudgeStatus, type JudgeView, type VersionView } from '../services/judges.ts';
 import { urls } from '../urls.ts';
 import { Layout } from './Layout.tsx';
-import { Crumbs, Empty, Icon, pct } from './ui.tsx';
+import { Empty, Icon, pct } from './ui.tsx';
 
 const pills: Record<JudgeStatus, [string, IconName, string]> = {
   calibrated: ['pill-pass', 'pass', 'Calibrated'],
@@ -46,14 +46,10 @@ export const DisagreementsLink = ({ name, number, count }: { name: string; numbe
   <a class="link num" href={urls.judgeDisagreements(name, number)}>{count} {count === 1 ? 'disagreement' : 'disagreements'}</a>
 );
 
-type ListProps = { judges: JudgeRow[]; inbox: number };
+type ListProps = { judges: JudgeRow[]; unread: number };
 
-export const JudgesPage = ({ judges, inbox }: ListProps) => (
-  <Layout title="Spotter Judges" inbox={inbox}>
-    <Crumbs items={[]} />
-    <div class="page-head">
-      <h1 class="t-title heavy">Judges</h1>
-    </div>
+export const JudgesPage = ({ judges, unread }: ListProps) => (
+  <Layout title="Judges" section="judges" unread={unread}>
     {judges.length ? (
       <div class="card card-flush">
         {judges.map((j) => (
@@ -100,13 +96,11 @@ const Version = ({ name, version: v, disagreements }: VersionProps) => {
   );
 };
 
-type DetailProps = { judge: JudgeView; disagreements: number | null; inbox: number };
+type DetailProps = { judge: JudgeView; disagreements: number | null; unread: number };
 
-export const JudgePage = ({ judge, disagreements, inbox }: DetailProps) => (
-  <Layout title={`Spotter · ${judge.name}`} inbox={inbox}>
-    <Crumbs items={[[urls.judges(), 'Judges']]} />
+export const JudgePage = ({ judge, disagreements, unread }: DetailProps) => (
+  <Layout title={judge.name} section="judges" unread={unread} crumbs={[[urls.judges(), 'Judges']]}>
     <div class="page-head">
-      <h1 class="t-title heavy">{judge.name}</h1>
       <div class="chips">
         <span class="t-caption muted num">{judge.versions.length} {judge.versions.length === 1 ? 'version' : 'versions'}</span>
         <StatusPill status={judge.status} />

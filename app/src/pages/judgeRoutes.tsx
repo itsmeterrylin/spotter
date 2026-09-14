@@ -9,14 +9,14 @@ import { JudgeVersionPage } from './JudgeVersion.tsx';
 
 const activeDisagreements = (repos: Repos, judge: JudgeView): number | null => (judge.active_version_id ? disagreementCount(repos, judge.active_version_id) : null);
 
-export function judgeRoutes(repos: Repos, inbox: () => number): Hono {
+export function judgeRoutes(repos: Repos, unread: () => number): Hono {
   const app = new Hono();
 
-  app.get('/', (c) => c.html(<JudgesPage judges={listJudges(repos).judges} inbox={inbox()} />));
+  app.get('/', (c) => c.html(<JudgesPage judges={listJudges(repos).judges} unread={unread()} />));
 
   app.get('/:name', (c) => {
     const judge = getJudge(repos, c.req.param('name'));
-    return c.html(<JudgePage judge={judge} disagreements={activeDisagreements(repos, judge)} inbox={inbox()} />);
+    return c.html(<JudgePage judge={judge} disagreements={activeDisagreements(repos, judge)} unread={unread()} />);
   });
 
   app.post('/:name/activate', async (c) => {
@@ -31,7 +31,7 @@ export function judgeRoutes(repos: Repos, inbox: () => number): Hono {
     const version = judge.versions.find((v) => v.number === number);
     if (!version) throw notFound(`judge ${judge.name} version`, String(number));
     const disagreements = version.active ? activeDisagreements(repos, judge) : null;
-    return c.html(<JudgeVersionPage judge={judge} version={version} disagreements={disagreements} inbox={inbox()} />);
+    return c.html(<JudgeVersionPage judge={judge} version={version} disagreements={disagreements} unread={unread()} />);
   });
 
   app.get('/:name/disagreements', (c) => {

@@ -112,13 +112,14 @@ describe('judges pages', () => {
       expect((await page('/review?judge=exercise_match&version=2'))[1]).toContain('Nothing to label');
     });
 
-    test('the inbox lists disagreements with the active version and the labels still needed', async () => {
-      const [, html] = await page('/');
-      expect(html).toContain('disagreements with exercise_match v1');
-      expect(html).toContain(`href="${base}/judges/exercise_match/disagreements?version=1"`);
-      expect(html).toContain('exercise_match needs <span class="strong num">70</span> more labels');
-      expect(html).toContain(`href="${base}/review?filter=unlabeled"`);
+    test('notifications list disagreements with the active version and the labels still needed', async () => {
+      const [, html] = await page('/notifications');
+      expect(html).toContain('<span class="strong num">2</span> disagreements <span class="muted">· exercise_match v1</span>');
+      expect(html).toContain(`href="${base}/judges/exercise_match/disagreements?version=1">Resolve</a>`);
+      expect(html).toContain('<span class="strong num">70</span> labels needed <span class="muted">· exercise_match</span>');
+      expect(html).toContain(`href="${base}/review?filter=unlabeled">Label</a>`);
     });
+
     test('POST /judges/:name/activate moves the pointer and redirects; a bad version is 400 or 404', async () => {
       const post = (version: string) => app.request('/judges/exercise_match/activate', { method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' }, body: `version=${version}` });
       const res = await post('2');
