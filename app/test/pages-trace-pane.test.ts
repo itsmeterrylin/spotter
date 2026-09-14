@@ -33,4 +33,11 @@ describe('trace pane', () => {
     const [missing] = await page(app, '/traces/nope/pane');
     expect(missing).toBe(404);
   });
+
+  test('the pane client module is served', async () => {
+    const { app } = pageApp();
+    const [status, js] = await page(app, '/client/traces.js');
+    expect(status).toBe(200);
+    expect(js).toContain('data-pane-close');
+  });
 });
