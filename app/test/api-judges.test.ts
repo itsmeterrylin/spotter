@@ -86,7 +86,7 @@ describe('disagreements', () => {
     expect(body.version).toBe(1);
     expect(body.traces).toHaveLength(1);
     expect(body.traces[0]).toMatchObject({ trace_id: ids[1], human: { value: 0 }, judge: { value: 1, reason: 'looks right' } });
-    expect(body.traces[0]?.url).toBe(`${base}/review/${ids[1]}?run=${s.runA}&filter=judge%3Aexercise_match%3A1`);
+    expect(body.traces[0]?.url).toBe(`${base}/review/${ids[1]}?run=${s.runA}&judge=exercise_match&version=1`);
     expect(body.url).toBe(`${base}/judges/exercise_match/disagreements?version=1`);
     const active = await json<{ version: number }>(await send(app, 'GET', '/api/judges/exercise_match/disagreements'));
     expect(active.version).toBe(1);

@@ -45,7 +45,7 @@ const noteOf = (t: TraceView) =>
     .map((s) => ({
       ...s,
       trace: { id: t.id, run_id: t.run_id, dataset_item_id: t.dataset_item_id, input: t.input, output: t.output, expected: t.expected, url: t.url },
-      url: urls.reviewTrace(t.id, t.run_id ?? undefined),
+      url: urls.reviewTrace(t.id, { run: t.run_id }),
     }));
 
 const notes = (repos: Repos, args: ListArgs): ToolResult => {

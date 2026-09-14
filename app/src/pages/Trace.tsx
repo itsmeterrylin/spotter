@@ -5,7 +5,7 @@ import type { TraceView } from '../services/traces.ts';
 import { urls } from '../urls.ts';
 import type { HumanVerdict } from './data.ts';
 import { Layout } from './Layout.tsx';
-import { Crumbs, Icon, JsonView, pct, short, summarize, VerdictPill } from './ui.tsx';
+import { Crumbs, Icon, JsonView, pct, short, summarize, Values, VerdictPill } from './ui.tsx';
 
 const scoreIcon = (s: Score): 'pass' | 'fail' | 'score' => (s.value === 1 ? 'pass' : s.value === 0 ? 'fail' : 'score');
 
@@ -57,7 +57,7 @@ export const TracePage = ({ trace, run, verdict, turn, inbox }: Props) => (
     <div class="review">
       <div class="page-head">
         <h1 class="t-title heavy mono">{short(trace.id)}</h1>
-        <a class="btn btn-primary" href={urls.reviewTrace(trace.id, run?.id)}><Icon name="human" />{verdict ? 'Change verdict' : 'Label'}</a>
+        <a class="btn btn-primary" href={urls.reviewTrace(trace.id, { run: run?.id })}><Icon name="human" />{verdict ? 'Change verdict' : 'Label'}</a>
       </div>
       <div class="block">
         <span class="block-label"><Icon name="trace" size="sm" />{trace.messages?.length ? 'Conversation' : 'Input'}</span>
@@ -65,11 +65,11 @@ export const TracePage = ({ trace, run, verdict, turn, inbox }: Props) => (
       </div>
       <div class="block">
         <span class="block-label"><Icon name="score" size="sm" />Output</span>
-        <JsonView value={trace.output} />
+        <Values value={trace.output} />
       </div>
       <div class="block">
         <span class="block-label"><Icon name="flag" size="sm" />Expected</span>
-        <JsonView value={trace.expected} />
+        <Values value={trace.expected} />
       </div>
       <div class="block">
         <span class="block-label"><Icon name="judge" size="sm" />Scores</span>

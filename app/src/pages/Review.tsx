@@ -1,7 +1,7 @@
 import type { Dataset } from '../db/repos/dataset.ts';
 import type { TraceView } from '../services/traces.ts';
 import { urls } from '../urls.ts';
-import type { HumanVerdict, Queue } from './data.ts';
+import type { HumanVerdict, JudgeSaid, Queue } from './data.ts';
 import { Layout } from './Layout.tsx';
 import { Turns } from './Trace.tsx';
 import { Crumbs, Empty, Icon, JsonView, type Verdict } from './ui.tsx';
@@ -9,6 +9,7 @@ import { Crumbs, Empty, Icon, JsonView, type Verdict } from './ui.tsx';
 type Props = {
   trace: TraceView;
   verdict: HumanVerdict | null;
+  judgeSaid: JudgeSaid | null;
   score: string;
   queue: Queue;
   next: string | null;
@@ -30,9 +31,14 @@ const Nav = ({ href, name, label }: { href: string | null; name: 'previous' | 'n
     <span class="btn btn-ghost btn-icon" aria-disabled="true" aria-label={label}><Icon name={name} /></span>
   );
 
-export const ReviewPage = ({ trace, verdict, score, queue, next, prev, datasets, inbox }: Props) => (
+const crumbsOf = (queue: Queue): Array<[string, string]> => {
+  if (queue.judge) return [[urls.judge(queue.judge.name), queue.judge.name]];
+  return queue.run ? [[urls.run(queue.run.id), queue.run.name]] : [];
+};
+
+export const ReviewPage = ({ trace, verdict, judgeSaid, score, queue, next, prev, datasets, inbox }: Props) => (
   <Layout title="Spotter Review" inbox={inbox} script="review">
-    <Crumbs items={queue.run ? [[urls.run(queue.run.id), queue.run.name]] : []} />
+    <Crumbs items={crumbsOf(queue)} />
     <div
       class="review"
       id="review"
@@ -46,7 +52,7 @@ export const ReviewPage = ({ trace, verdict, score, queue, next, prev, datasets,
       <div class="cluster" style="justify-content: space-between">
         <span class="t-title num">
           {queue.ids.length} <span class="muted">left</span>
-          {queue.run ? <span class="muted"> · {queue.run.name}</span> : null}
+          {queue.judge ? <span class="muted"> · disagreements with {queue.judge.name} v{queue.judge.version}</span> : queue.run ? <span class="muted"> · {queue.run.name}</span> : null}
         </span>
         <div class="cluster">
           <Nav href={prev} name="previous" label="Previous" />
@@ -65,6 +71,12 @@ export const ReviewPage = ({ trace, verdict, score, queue, next, prev, datasets,
         <span class="block-label"><Icon name="flag" size="sm" />Expected</span>
         <JsonView value={trace.expected} />
       </div>
+      {judgeSaid ? (
+        <p class="judge-said">
+          <Icon name="judge" size="sm" />Judge v{judgeSaid.version} said {judgeSaid.verdict}
+          {judgeSaid.reason ? <span class="muted"> · {judgeSaid.reason}</span> : null}
+        </p>
+      ) : null}
       <div class="verdict-row">
         {verdicts.map(([v, label, key]) => (
           <button class={`btn btn-${v}`} type="button" data-verdict={v} aria-pressed={verdict?.verdict === v ? 'true' : 'false'}>

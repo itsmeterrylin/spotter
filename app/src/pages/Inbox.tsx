@@ -18,7 +18,7 @@ export const InboxPage = ({ items, cards, inbox }: Props) => (
             <div class="row">
               <Icon name={i.icon} />
               <div class="grow">
-                <span class="strong num">{i.count}</span> {i.label}
+                {i.prefix ? `${i.prefix} ` : ''}<span class="strong num">{i.count}</span> {i.label}
               </div>
               <a class="btn btn-primary btn-compact" href={i.href}>{i.cta}</a>
             </div>

@@ -60,7 +60,7 @@ export const RunPage = ({ card, rows, inbox }: Props) => {
       )}
       {unlabeled ? (
         <p style="margin-top: var(--space-16)">
-          <a class="btn btn-secondary" href={urls.review(run.id, 'unlabeled')}><Icon name="human" />Review {unlabeled} unlabeled</a>
+          <a class="btn btn-secondary" href={urls.review({ run: run.id, filter: 'unlabeled' })}><Icon name="human" />Review {unlabeled} unlabeled</a>
         </p>
       ) : null}
     </Layout>

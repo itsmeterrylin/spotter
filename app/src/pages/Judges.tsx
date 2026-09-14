@@ -1,11 +1,52 @@
-import type { Calibration, Judge, JudgeVersion } from '../db/repos/judge.ts';
+import type { IconName } from '../../../design-system/src/icons.ts';
+import type { Calibration } from '../db/repos/judge.ts';
+import { calibrationBar, type JudgeRow, type JudgeStatus, type JudgeView, type VersionView } from '../services/judges.ts';
 import { urls } from '../urls.ts';
 import { Layout } from './Layout.tsx';
 import { Crumbs, Empty, Icon, pct } from './ui.tsx';
 
-export type VersionRow = { version: JudgeVersion; calibration: Calibration | null; active: boolean };
+const pills: Record<JudgeStatus, [string, IconName, string]> = {
+  calibrated: ['pill-pass', 'pass', 'Calibrated'],
+  needs_labels: ['pill-defer', 'time', 'Needs labels'],
+  pending: ['pill-brand', 'time', 'Pending'],
+};
 
-type ListProps = { judges: Array<{ judge: Judge; versions: number; calibrated: boolean }>; inbox: number };
+export const versionStatus = (v: VersionView): JudgeStatus => (v.calibrated ? 'calibrated' : v.calibration.length ? 'pending' : 'needs_labels');
+
+export const shownRow = (cals: Calibration[]): Calibration | null => cals.find((c) => c.split === 'test') ?? cals[0] ?? null;
+
+export const StatusPill = ({ status }: { status: JudgeStatus }) => {
+  const [cls, icon, text] = pills[status];
+  return <span class={`pill ${cls}`}><Icon name={icon} size="sm" />{text}</span>;
+};
+
+const Rate = ({ label, value }: { label: string; value: number }) => (
+  <div class="stat">
+    <span class="label">{label}</span>
+    <span class="t-title num">{pct(value)}</span>
+    <div class={`bar ${value >= calibrationBar ? 'bar-pass' : 'bar-fail'}`}><i style={`width:${pct(value)}`}></i></div>
+  </div>
+);
+
+export const Rates = ({ row }: { row: Calibration }) => (
+  <div class="cal">
+    <Rate label={`TPR · ${row.split} · n=${row.n}`} value={row.tpr} />
+    <Rate label={`TNR · ${row.split} · n=${row.n}`} value={row.tnr} />
+  </div>
+);
+
+export const ActivateForm = ({ name, number }: { name: string; number: number }) => (
+  <form method="post" action={`/judges/${name}/activate`}>
+    <input type="hidden" name="version" value={String(number)} />
+    <button class="btn btn-secondary btn-compact" type="submit"><Icon name="pass" size="sm" />Activate v{number}</button>
+  </form>
+);
+
+export const DisagreementsLink = ({ name, number, count }: { name: string; number: number; count: number }) => (
+  <a class="link num" href={urls.judgeDisagreements(name, number)}>{count} {count === 1 ? 'disagreement' : 'disagreements'}</a>
+);
+
+type ListProps = { judges: JudgeRow[]; inbox: number };
 
 export const JudgesPage = ({ judges, inbox }: ListProps) => (
   <Layout title="Spotter Judges" inbox={inbox}>
@@ -15,17 +56,17 @@ export const JudgesPage = ({ judges, inbox }: ListProps) => (
     </div>
     {judges.length ? (
       <div class="card card-flush">
-        {judges.map(({ judge, versions, calibrated }) => (
+        {judges.map((j) => (
           <div class="row">
             <Icon name="judge" />
             <div class="grow">
-              <a class="link" href={urls.judge(judge.name)}>{judge.name}</a> <span class="muted num">· {versions} {versions === 1 ? 'version' : 'versions'}</span>
+              <a class="link" href={j.url}>{j.name}</a>{' '}
+              <span class="muted num">
+                · {j.active_version === null ? 'no active version' : `v${j.active_version} active`} · {j.version_count} {j.version_count === 1 ? 'version' : 'versions'}
+              </span>
             </div>
-            {calibrated ? (
-              <span class="pill pill-pass"><Icon name="pass" size="sm" />Calibrated</span>
-            ) : (
-              <span class="pill pill-defer"><Icon name="time" size="sm" />Needs labels</span>
-            )}
+            {j.active_version !== null ? <DisagreementsLink name={j.name} number={j.active_version} count={j.disagreements} /> : null}
+            <StatusPill status={j.status} />
           </div>
         ))}
       </div>
@@ -35,48 +76,44 @@ export const JudgesPage = ({ judges, inbox }: ListProps) => (
   </Layout>
 );
 
-const Rate = ({ label, value }: { label: string; value: number }) => (
-  <div class="stat">
-    <span class="label">{label}</span>
-    <span class="t-title num">{pct(value)}</span>
-    <div class={`bar ${value >= 0.9 ? 'bar-pass' : 'bar-fail'}`}><i style={`width:${pct(value)}`}></i></div>
-  </div>
-);
+type VersionProps = { name: string; version: VersionView; disagreements: number | null };
 
-const Version = ({ version, calibration, active }: VersionRow) => (
-  <div class="version" data-active={active ? '1' : undefined}>
-    <div class="stack" style="--gap: 4px">
-      <span class="t-title num">v{version.number}</span>
-      {active ? <span class="pill pill-pass"><Icon name="pass" size="sm" />Active</span> : null}
+const Version = ({ name, version: v, disagreements }: VersionProps) => {
+  const row = shownRow(v.calibration);
+  return (
+    <div class="version" data-active={v.active ? '1' : undefined}>
+      <div class="stack" style="--gap: 4px">
+        <a class="link t-title num" href={v.url}>v{v.number}</a>
+        {v.active ? <span class="pill pill-pass"><Icon name="pass" size="sm" />Active</span> : null}
+      </div>
+      <div class="stack">
+        <span class="muted note">
+          {v.note ?? v.model} <span class="muted">· {v.created_by}</span>
+        </span>
+        {row ? <Rates row={row} /> : <StatusPill status="needs_labels" />}
+      </div>
+      <div class="actions">
+        {v.active && disagreements !== null ? <DisagreementsLink name={name} number={v.number} count={disagreements} /> : null}
+        {!v.active && v.calibrated ? <ActivateForm name={name} number={v.number} /> : null}
+      </div>
     </div>
-    <div class="stack">
-      <span class="muted">
-        {version.note ?? version.model} <span class="muted">· {version.created_by}</span>
-      </span>
-      {calibration ? (
-        <div class="cal">
-          <Rate label={`TPR · n=${calibration.n}`} value={calibration.tpr} />
-          <Rate label={`TNR · n=${calibration.n}`} value={calibration.tnr} />
-        </div>
-      ) : (
-        <span class="pill pill-defer"><Icon name="time" size="sm" />Needs labels</span>
-      )}
-    </div>
-    <div class="stack"></div>
-  </div>
-);
+  );
+};
 
-type DetailProps = { judge: Judge; rows: VersionRow[]; inbox: number };
+type DetailProps = { judge: JudgeView; disagreements: number | null; inbox: number };
 
-export const JudgePage = ({ judge, rows, inbox }: DetailProps) => (
+export const JudgePage = ({ judge, disagreements, inbox }: DetailProps) => (
   <Layout title={`Spotter · ${judge.name}`} inbox={inbox}>
     <Crumbs items={[[urls.judges(), 'Judges']]} />
     <div class="page-head">
       <h1 class="t-title heavy">{judge.name}</h1>
-      <span class="t-caption muted num">{rows.length} {rows.length === 1 ? 'version' : 'versions'}</span>
+      <div class="chips">
+        <span class="t-caption muted num">{judge.versions.length} {judge.versions.length === 1 ? 'version' : 'versions'}</span>
+        <StatusPill status={judge.status} />
+      </div>
     </div>
-    {rows.length ? (
-      <div class="timeline">{rows.map((r) => <Version {...r} />)}</div>
+    {judge.versions.length ? (
+      <div class="timeline">{judge.versions.map((v) => <Version name={judge.name} version={v} disagreements={disagreements} />)}</div>
     ) : (
       <Empty icon="judge" title="No versions yet" />
     )}

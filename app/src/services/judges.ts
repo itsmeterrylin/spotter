@@ -22,6 +22,7 @@ export type ProposeInput = {
 };
 
 export const calibrationBar = 0.9;
+export const labelTarget = 100;
 
 export const isCalibrated = (cals: Calibration[]): boolean => cals.some((c) => c.split === 'test' && c.tpr >= calibrationBar && c.tnr >= calibrationBar);
 

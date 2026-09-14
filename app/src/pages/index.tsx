@@ -1,17 +1,18 @@
 import { type Context, Hono } from 'hono';
+import { ZodError } from 'zod';
+import { versionNumber } from '../api/schemas.ts';
 import type { Repos } from '../db/repos/index.ts';
 import { ApiError, notFound } from '../errors.ts';
 import { compare } from '../services/compare.ts';
 import { getDataset } from '../services/datasets.ts';
-import { calibrationBar } from '../services/judges.ts';
 import { counts, rollup } from '../services/rollup.ts';
 import { getTrace } from '../services/traces.ts';
 import { urls } from '../urls.ts';
 import { clientBundle, favicon, pagesCss } from './assets.ts';
 import { ComparePage } from './Compare.tsx';
-import { humanVerdict, inboxItems, neighbors, primaryScore, queue, runCard, type Queue } from './data.ts';
+import { humanVerdict, inboxItems, judgeSaid, neighbors, primaryScore, queue, runCard, type Queue } from './data.ts';
 import { InboxPage } from './Inbox.tsx';
-import { JudgePage, JudgesPage } from './Judges.tsx';
+import { judgeRoutes } from './judgeRoutes.tsx';
 import { ErrorPage } from './NotFound.tsx';
 import { ReviewEmpty, ReviewPage } from './Review.tsx';
 import { RunPage, type TraceRow } from './Run.tsx';
@@ -20,7 +21,10 @@ import { TracePage } from './Trace.tsx';
 
 const defaultFilter = 'unlabeled';
 
-const reviewUrl = (traceId: string, runId: string, filter: string): string => urls.reviewTrace(traceId, runId, filter === defaultFilter ? undefined : filter);
+const reviewUrl = (traceId: string, q: Queue): string =>
+  urls.reviewTrace(traceId, { run: q.run?.id, filter: q.filter === defaultFilter ? undefined : q.filter, judge: q.judge?.name, version: q.judge?.version });
+
+const versionOf = (raw: string | undefined): number | undefined => (raw === undefined ? undefined : versionNumber.parse(raw));
 
 export function createPages(repos: Repos): Hono {
   const app = new Hono();
@@ -33,6 +37,7 @@ export function createPages(repos: Repos): Hono {
 
   app.onError((err, c) => {
     if (err instanceof ApiError) return c.html(<ErrorPage status={err.status} inbox={inbox()} />, err.status);
+    if (err instanceof ZodError) return c.html(<ErrorPage status={400} inbox={inbox()} />, 400);
     throw err;
   });
 
@@ -94,49 +99,39 @@ export function createPages(repos: Repos): Hono {
     const filter = c.req.query('filter') ?? defaultFilter;
     const runId = c.req.query('run');
     if (runId) runOrThrow(runId);
-    const q = queue(repos, runId, filter);
+    const q = queue(repos, { run: runId, filter, judge: c.req.query('judge'), version: versionOf(c.req.query('version')) });
     const first = q.ids[0];
-    if (!first || !q.run) return c.html(<ReviewEmpty inbox={inbox()} />);
-    return c.redirect(reviewUrl(first, q.run.id, filter));
+    if (!first || (!q.run && !q.judge)) return c.html(<ReviewEmpty inbox={inbox()} />);
+    return c.redirect(reviewUrl(first, q));
   });
 
   app.get('/review/:id', (c) => {
     const trace = getTrace(repos, c.req.param('id'));
     const filter = c.req.query('filter') ?? defaultFilter;
-    const runId = c.req.query('run') ?? trace.run_id;
-    const q: Queue = runId ? queue(repos, runOrThrow(runId).id, filter) : { run: null, filter, ids: [] };
+    const judge = c.req.query('judge');
+    const runId = c.req.query('run') ?? trace.run_id ?? undefined;
+    if (runId) runOrThrow(runId);
+    const q: Queue = runId || judge ? queue(repos, { run: runId, filter, judge, version: versionOf(c.req.query('version')) }) : { run: null, filter, ids: [], judge: null };
     const { next, prev } = neighbors(q.ids, trace.id);
-    const to = (id: string | null): string | null => (id && q.run ? reviewUrl(id, q.run.id, filter) : null);
+    const to = (id: string | null): string | null => (id && (q.run || q.judge) ? reviewUrl(id, q) : null);
     const verdict = humanVerdict(trace.scores);
-    const score = verdict?.name ?? primaryScore([...new Set(trace.scores.map((s) => s.name))]) ?? 'human';
+    const score = verdict?.name ?? q.judge?.name ?? primaryScore([...new Set(trace.scores.map((s) => s.name))]) ?? 'human';
     return c.html(
-      <ReviewPage trace={trace} verdict={verdict} score={score} queue={q} next={to(next)} prev={to(prev)} datasets={repos.datasets.list()} inbox={inbox()} />,
+      <ReviewPage
+        trace={trace}
+        verdict={verdict}
+        judgeSaid={judgeSaid(trace.scores, q.judge)}
+        score={score}
+        queue={q}
+        next={to(next)}
+        prev={to(prev)}
+        datasets={repos.datasets.list()}
+        inbox={inbox()}
+      />,
     );
   });
 
-  app.get('/judges', (c) => {
-    const calibrated = repos.judges.calibratedVersionIds(calibrationBar);
-    const judges = repos.judges.list().map((judge) => ({
-      judge,
-      versions: repos.judges.versions(judge.name).length,
-      calibrated: judge.active_version_id !== null && calibrated.has(judge.active_version_id),
-    }));
-    return c.html(<JudgesPage judges={judges} inbox={inbox()} />);
-  });
-
-  app.get('/judges/:name', (c) => {
-    const name = c.req.param('name');
-    const judge = repos.judges.get(name);
-    if (!judge) throw notFound('judge', name);
-    const rows = repos.judges
-      .versions(name)
-      .reverse()
-      .map((version) => {
-        const cals = repos.judges.calibrations(version.id);
-        return { version, calibration: cals.find((x) => x.split === 'test') ?? cals[0] ?? null, active: version.id === judge.active_version_id };
-      });
-    return c.html(<JudgePage judge={judge} rows={rows} inbox={inbox()} />);
-  });
+  app.route('/judges', judgeRoutes(repos, inbox));
 
   return app;
 }

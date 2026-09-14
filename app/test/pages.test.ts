@@ -7,9 +7,8 @@ import { createPages } from '../src/pages/index.tsx';
 import { json, seed, send, type Seed } from './helpers.ts';
 
 const db = openDatabase(':memory:');
-const repos = createRepos(db);
 const app = new Hono();
-app.route('/', createPages(repos));
+app.route('/', createPages(createRepos(db)));
 app.route('/', createApp(db));
 
 const base = 'http://localhost:3000';
@@ -113,6 +112,24 @@ describe('compare', () => {
     expect(html).toContain('data-score="exercise_match" data-selected="1"');
   });
 
+  test('object outputs render as their values joined, ids never wrap, and deltas show raw values', async () => {
+    const runC = (await json<{ id: string }>(await send(app, 'POST', '/api/runs', { dataset_id: s.datasetId, name: 'rules-v3' }))).id;
+    await send(app, 'POST', '/api/traces/batch', {
+      traces: [{ id: 'obj-1', project: 'copper', run_id: runC, dataset_item_id: s.itemIds[0], input: { transcript: 'x' }, output: { exercise: 'squat', sets: 5, reps: 5, weight: 315 }, expected: { exercise: 'bench' }, start: '2026-09-13T10:00:00.000Z', scores: [{ name: 'exercise_match', value: 0, source: 'sdk' }] }],
+    });
+    const [status, html] = await page(`/datasets/${s.datasetId}/compare?runs=${s.runA},${runC}`);
+    expect(status).toBe(200);
+    expect(html).toContain('<td class="out">squat · 5 · 5 · 315</td>');
+    expect(html).not.toContain('{"');
+    expect(html).not.toContain('{&quot;');
+    expect(html).toContain('<td class="item">');
+    expect(html).toContain('class="strong mono id"');
+    expect(html).toContain('1 → 0');
+    const [, trace] = await page('/traces/obj-1');
+    expect(trace).toContain('<p class="transcript values">squat · 5 · 5 · 315</p>');
+    expect(trace).toContain('<p class="transcript values">bench</p>');
+  });
+
   test('unknown dataset is 404, one run is 400', async () => {
     expect((await page(`/datasets/nope/compare?runs=${s.runA},${s.runB}`))[0]).toBe(404);
     expect((await page(`/datasets/${s.datasetId}/compare?runs=${s.runA}`))[0]).toBe(400);
@@ -168,31 +185,6 @@ describe('review', () => {
     const [status, html] = await page(`/review?run=${s.runB}`);
     expect(status).toBe(200);
     expect(html).toContain('Nothing to label');
-  });
-});
-
-describe('judges', () => {
-  test('empty card when there are no judges; unknown name is 404', async () => {
-    const [status, html] = await page('/judges');
-    expect(status).toBe(200);
-    expect(html).toContain('No judges yet');
-    expect((await page('/judges/nope'))[0]).toBe(404);
-  });
-
-  test('renders judges and versions from the repository', async () => {
-    repos.judges.ensure('exercise_match');
-    const v = repos.judges.createVersion({ judge_name: 'exercise_match', number: 1, prompt: 'p', model: 'm', content_hash: 'h', created_by: 'human', note: 'first draft' });
-    repos.judges.activate('exercise_match', v.id);
-    repos.judges.putCalibration({ judge_version_id: v.id, dataset_id: null, split: 'test', n: 40, tpr: 0.94, tnr: 0.91 });
-    const [, list] = await page('/judges');
-    expect(list).toContain('exercise_match');
-    expect(list).toContain('Calibrated');
-    const [status, html] = await page('/judges/exercise_match');
-    expect(status).toBe(200);
-    expect(html).toContain('v1');
-    expect(html).toContain('Active');
-    expect(html).toContain('94%');
-    expect(html).toContain('first draft');
   });
 });
 

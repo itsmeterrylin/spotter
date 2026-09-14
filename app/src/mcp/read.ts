@@ -4,15 +4,13 @@ import type { Json } from '../db/types.ts';
 import { invalid } from '../errors.ts';
 import { getDataset } from '../services/datasets.ts';
 import { disagreements } from '../services/disagreements.ts';
-import { getJudge, listJudges } from '../services/judges.ts';
+import { getJudge, labelTarget, listJudges } from '../services/judges.ts';
 import { query } from '../services/query.ts';
 import { getRun } from '../services/runs.ts';
 import { getTrace } from '../services/traces.ts';
 import { urls } from '../urls.ts';
 import type { ToolResult } from './result.ts';
 import type { ReadArgs } from './schemas.ts';
-
-export const labelTarget = 100;
 
 const need = (id: string | undefined): string => {
   if (!id) throw invalid('id is required');

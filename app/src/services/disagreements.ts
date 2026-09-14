@@ -35,7 +35,7 @@ const row = (repos: Repos, judgeName: string, number: number, p: LabelPair): Dis
     expected: trace?.expected ?? null,
     human: { value: p.human, note: p.human_note },
     judge: { value: p.judge, reason: p.judge_reason },
-    url: urls.reviewTrace(p.trace_id, trace?.run_id ?? undefined, `judge:${judgeName}:${number}`),
+    url: urls.reviewTrace(p.trace_id, { run: trace?.run_id, judge: judgeName, version: number }),
   };
 };
 

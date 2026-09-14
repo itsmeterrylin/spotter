@@ -2,6 +2,8 @@ import type { Repos } from '../db/repos/index.ts';
 import type { Run } from '../db/repos/run.ts';
 import type { Score } from '../db/repos/score.ts';
 import type { CompareItem } from '../services/compare.ts';
+import { disagreementIds } from '../services/disagreements.ts';
+import { labelTarget, listJudges, requireVersion } from '../services/judges.ts';
 import { baselineOf } from '../services/runs.ts';
 import { regressed, summary, type ScoreSummary } from '../services/summary.ts';
 import { unlabeledIds } from '../services/traces.ts';
@@ -19,11 +21,21 @@ export type RunCard = {
   regressed: CompareItem[];
 };
 
-export type InboxItem = { icon: 'down' | 'human'; count: number; label: string; href: string; cta: string };
+export type InboxItem = { icon: 'down' | 'human' | 'judge'; prefix?: string; count: number; label: string; href: string; cta: string };
 
-export type Queue = { run: Run | null; filter: string | undefined; ids: string[] };
+export type JudgeQueue = { name: string; version: number; version_id: string };
+export type Queue = { run: Run | null; filter: string | undefined; ids: string[]; judge: JudgeQueue | null };
+export type QueueQuery = { run?: string; filter?: string; judge?: string; version?: number };
 
 const isVerdict = (s: string | null): s is Verdict => s === 'pass' || s === 'fail' || s === 'defer';
+
+export type JudgeSaid = { version: number; verdict: 'pass' | 'fail'; reason: string | null };
+
+export const judgeSaid = (scores: Score[], judge: JudgeQueue | null): JudgeSaid | null => {
+  if (!judge) return null;
+  const s = scores.find((x) => x.source === 'judge' && x.judge_version_id === judge.version_id && x.turn === null);
+  return s ? { version: judge.version, verdict: s.value >= 0.5 ? 'pass' : 'fail', reason: s.reason } : null;
+};
 
 export const humanVerdict = (scores: Score[]): HumanVerdict | null => {
   const s = scores.find((x) => x.source === 'human' && x.turn === null);
@@ -61,16 +73,27 @@ export function inboxItems(repos: Repos): InboxItem[] {
   }
   for (const run of runs) {
     const n = unlabeledIds(repos, run.id).length;
-    if (n) items.push({ icon: 'human', count: n, label: `unlabeled · ${run.name}`, href: urls.review(run.id, 'unlabeled'), cta: 'Label' });
+    if (n) items.push({ icon: 'human', count: n, label: `unlabeled · ${run.name}`, href: urls.review({ run: run.id, filter: 'unlabeled' }), cta: 'Label' });
+  }
+  for (const j of listJudges(repos).judges) {
+    if (j.disagreements && j.disagreements_url) {
+      items.push({ icon: 'judge', count: j.disagreements, label: `disagreements with ${j.name} v${j.active_version}`, href: j.disagreements_url, cta: 'Resolve' });
+    }
+    if (j.labels < labelTarget) items.push({ icon: 'human', prefix: `${j.name} needs`, count: labelTarget - j.labels, label: 'more labels', href: urls.review({ filter: 'unlabeled' }), cta: 'Label' });
   }
   return items;
 }
 
-export function queue(repos: Repos, runId?: string, filter?: string): Queue {
-  const run = runId ? repos.runs.get(runId) : (repos.runs.list()[0] ?? null);
-  if (!run) return { run: null, filter, ids: [] };
-  const ids = filter === 'unlabeled' ? unlabeledIds(repos, run.id) : repos.traces.listByRun(run.id).map((t) => t.id);
-  return { run, filter, ids };
+export function queue(repos: Repos, q: QueueQuery): Queue {
+  if (q.judge) {
+    const { version } = requireVersion(repos, q.judge, q.version ?? 'active');
+    const run = q.run ? repos.runs.get(q.run) : null;
+    return { run, filter: undefined, ids: disagreementIds(repos, version.id), judge: { name: q.judge, version: version.number, version_id: version.id } };
+  }
+  const run = q.run ? repos.runs.get(q.run) : (repos.runs.list()[0] ?? null);
+  if (!run) return { run: null, filter: q.filter, ids: [], judge: null };
+  const ids = q.filter === 'unlabeled' ? unlabeledIds(repos, run.id) : repos.traces.listByRun(run.id).map((t) => t.id);
+  return { run, filter: q.filter, ids, judge: null };
 }
 
 export function neighbors(ids: string[], current: string): { next: string | null; prev: string | null } {

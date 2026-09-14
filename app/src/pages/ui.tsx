@@ -51,13 +51,22 @@ export const Empty = ({ icon, title, action }: { icon: IconName; title: string; 
 
 const scalar = (v: Json): v is string | number | boolean => typeof v !== 'object' || v === null;
 
-export const summarize = (v: Json | null | undefined): string => {
+const scalarText = (v: Json): string => (scalar(v) ? String(v) : JSON.stringify(v));
+
+export const joined = (v: Json | null | undefined): string => {
   if (v === null || v === undefined) return '';
-  if (typeof v === 'string') return v;
-  if (typeof v === 'object' && !Array.isArray(v) && typeof v.transcript === 'string') return v.transcript;
-  const s = JSON.stringify(v);
-  return s.length > 80 ? `${s.slice(0, 77)}...` : s;
+  if (scalar(v)) return String(v);
+  if (Array.isArray(v)) return v.map(scalarText).join(' · ');
+  return typeof v.transcript === 'string' ? v.transcript : Object.values(v).map(scalarText).join(' · ');
 };
+
+export const summarize = (v: Json | null | undefined): string => {
+  const s = joined(v);
+  return typeof v !== 'string' && s.length > 80 ? `${s.slice(0, 77)}...` : s;
+};
+
+export const Values = ({ value }: { value: Json | null | undefined }) =>
+  value === null || value === undefined ? <p class="muted">none</p> : <p class="transcript values">{joined(value)}</p>;
 
 export const JsonView = ({ value }: { value: Json | null | undefined }) => {
   if (value === null || value === undefined) return <p class="muted">none</p>;

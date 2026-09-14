@@ -2,19 +2,21 @@ import type { Cell, Comparison } from '../services/compare.ts';
 import type { DatasetView } from '../services/datasets.ts';
 import { urls } from '../urls.ts';
 import { Layout } from './Layout.tsx';
-import { Crumbs, Empty, Icon, pct, short, summarize } from './ui.tsx';
+import { Crumbs, Empty, Icon, short, summarize } from './ui.tsx';
 
 type Props = { comparison: Comparison; dataset: DatasetView; only: boolean; score?: string; inbox: number };
 
+const raw = (v: number): string => (Number.isInteger(v) ? String(v) : v.toFixed(2));
+
 const CellDiff = ({ a, b }: { a: number | undefined; b: number | undefined }) => {
   if (a === undefined && b === undefined) return <span class="muted">–</span>;
-  if (a === undefined || b === undefined) return <span class="num">{pct(a ?? b ?? 0)}</span>;
+  if (a === undefined || b === undefined) return <span class="num">{raw(a ?? b ?? 0)}</span>;
   const d = Math.round((b - a) * 1000);
   const name = d > 0 ? 'up' : d < 0 ? 'down' : 'flat';
   return (
     <span class={`cell-diff ${d > 0 ? 'pos' : d < 0 ? 'neg' : ''}`}>
       <Icon name={name} size="sm" label={name} />
-      {d === 0 ? pct(b) : `${pct(a)} → ${pct(b)}`}
+      {d === 0 ? raw(b) : `${raw(a)} → ${raw(b)}`}
     </span>
   );
 };
@@ -67,9 +69,9 @@ export const ComparePage = ({ comparison, dataset, only, score, inbox }: Props) 
                 const open = b ?? a;
                 return (
                   <tr class={`linkrow ${rowClass(a, b, names)}`} data-href={open?.url}>
-                    <td>
+                    <td class="item">
                       <div class="stack" style="--gap: 2px">
-                        <span class="strong mono">{short(item.item_id)}</span>
+                        <span class="strong mono id">{short(item.item_id)}</span>
                         <span class="t-caption muted">{summarize(item.input)}</span>
                       </div>
                     </td>

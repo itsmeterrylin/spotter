@@ -2,6 +2,8 @@ import { config } from './config.ts';
 
 type Query = Record<string, string | number | undefined | null>;
 
+export type ReviewQuery = { run?: string | null; filter?: string; judge?: string; version?: number };
+
 const abs = (path: string, query: Query = {}): string => {
   const params = new URLSearchParams();
   for (const [k, v] of Object.entries(query)) if (v !== undefined && v !== null && v !== '') params.set(k, String(v));
@@ -19,8 +21,8 @@ export const urls = {
   traces: (query: Query = {}): string => abs('/traces', query),
   datasetItems: (datasetId: string, tag?: string): string => abs(`/datasets/${datasetId}/items`, { tag }),
   datasetItem: (datasetId: string, itemId: string): string => abs(`/datasets/${datasetId}/items/${itemId}`),
-  review: (runId: string, filter?: string): string => abs('/review', { run: runId, filter }),
-  reviewTrace: (traceId: string, runId?: string, filter?: string): string => abs(`/review/${traceId}`, { run: runId, filter }),
+  review: (q: ReviewQuery = {}): string => abs('/review', q),
+  reviewTrace: (traceId: string, q: ReviewQuery = {}): string => abs(`/review/${traceId}`, q),
   judges: (): string => abs('/judges'),
   judge: (name: string): string => abs(`/judges/${name}`),
   judgeVersion: (name: string, n: number): string => abs(`/judges/${name}/versions/${n}`),
