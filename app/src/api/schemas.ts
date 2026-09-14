@@ -117,3 +117,18 @@ export const compareQuery = z.object({
   runs: z.string().min(1).transform((s) => s.split(',').filter(Boolean)),
   only: z.literal('changes').optional(),
 });
+
+export const judgePropose = z.object({
+  from_version: z.number().int().positive().nullish(),
+  prompt: z.string().min(1).optional(),
+  model: z.string().min(1).optional(),
+  params: jsonObject.nullish(),
+  examples: z.json().nullish(),
+  scope: z.enum(['turn', 'transcript']).optional(),
+  note: z.string().nullish(),
+  created_by: z.enum(['human', 'agent']),
+});
+
+export const judgeActivate = z.object({ version: z.number().int().positive() });
+
+export const disagreementsQuery = z.object({ version: z.coerce.number().int().positive().optional() });

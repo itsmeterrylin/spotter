@@ -40,6 +40,12 @@ export type NewJudgeVersion = {
 
 export type Calibration = { judge_version_id: string; dataset_id: string | null; split: Split; n: number; tpr: number; tnr: number; created_at: string };
 
+export type LabelPair = { trace_id: string; name: string; turn: number | null; human: number; judge: number; human_note: string | null; judge_reason: string | null };
+
+const pairsSql = `SELECT j.trace_id, j.name, j.turn, h.value AS human, j.value AS judge, h.reason AS human_note, j.reason AS judge_reason
+   FROM score j JOIN score h ON h.trace_id = j.trace_id AND h.name = j.name AND h.source = 'human' AND h.turn IS j.turn
+   WHERE j.source = 'judge' AND j.judge_version_id = ? AND (h.label IS NULL OR h.label != 'defer') ORDER BY j.trace_id`;
+
 const parse = (r: VersionRow): JudgeVersion => ({ ...r, params: parseJson<JsonObject>(r.params), examples: parseJson<Json>(r.examples) });
 
 export const judgeRepo = (db: Database) => {
@@ -48,6 +54,12 @@ export const judgeRepo = (db: Database) => {
   const insert = db.query<Judge, [string, string | null, string]>('INSERT INTO judge (name, description, created_at) VALUES (?, ?, ?) RETURNING *');
   const versions = db.query<VersionRow, [string]>('SELECT * FROM judge_version WHERE judge_name = ? ORDER BY number');
   const versionById = db.query<VersionRow, [string]>('SELECT * FROM judge_version WHERE id = ?');
+  const versionByNumber = db.query<VersionRow, [string, number]>('SELECT * FROM judge_version WHERE judge_name = ? AND number = ?');
+  const versionByHash = db.query<VersionRow, [string, string]>('SELECT * FROM judge_version WHERE judge_name = ? AND content_hash = ?');
+  const setNote = db.query<VersionRow, [string | null, string]>('UPDATE judge_version SET note = ? WHERE id = ? RETURNING *');
+  const pairs = db.query<LabelPair, [string]>(pairsSql);
+  const labels = db.query<{ n: number }, [string]>("SELECT COUNT(*) AS n FROM score WHERE source = 'human' AND name = ? AND (label IS NULL OR label != 'defer')");
+  const judged = db.query<{ n: number }, [string]>("SELECT COUNT(*) AS n FROM score WHERE source = 'judge' AND judge_version_id = ?");
   const insertVersion = db.query<VersionRow, [string, string, number, string | null, JudgeScope, string, string, string | null, string | null, string, CreatedBy, string | null, string]>(
     `INSERT INTO judge_version (id, judge_name, number, parent_id, scope, prompt, model, params, examples, content_hash, created_by, note, created_at)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *`,
@@ -70,6 +82,18 @@ export const judgeRepo = (db: Database) => {
       const row = versionById.get(id);
       return row ? parse(row) : null;
     },
+    getVersionByNumber: (name: string, number: number): JudgeVersion | null => {
+      const row = versionByNumber.get(name, number);
+      return row ? parse(row) : null;
+    },
+    getVersionByHash: (name: string, hash: string): JudgeVersion | null => {
+      const row = versionByHash.get(name, hash);
+      return row ? parse(row) : null;
+    },
+    setNote: (id: string, note: string | null): JudgeVersion => parse(must(setNote.get(note, id), 'judge_version')),
+    pairs: (versionId: string): LabelPair[] => pairs.all(versionId),
+    labelCount: (name: string): number => labels.get(name)?.n ?? 0,
+    judgedCount: (versionId: string): number => judged.get(versionId)?.n ?? 0,
     createVersion: (v: NewJudgeVersion): JudgeVersion =>
       parse(
         must(

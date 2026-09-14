@@ -33,7 +33,7 @@ export const scoreRepo = (db: Database) => {
   const insert = db.query<Score, [string, string, string, number | null, number, string | null, string | null, ScoreSource, string | null, string]>(
     'INSERT INTO score (id, trace_id, name, turn, value, label, reason, source, judge_version_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
   );
-  const remove = db.query<Score, [string, string, ScoreSource, number | null]>('DELETE FROM score WHERE trace_id = ? AND name = ? AND source = ? AND turn IS ?');
+  const remove = db.query<Score, [string, string, ScoreSource, number | null, string | null]>('DELETE FROM score WHERE trace_id = ? AND name = ? AND source = ? AND turn IS ? AND judge_version_id IS ?');
   const removeAll = db.query<Score, [string, string, ScoreSource]>('DELETE FROM score WHERE trace_id = ? AND name = ? AND source = ?');
   const byTrace = db.query<Score, [string]>('SELECT * FROM score WHERE trace_id = ? ORDER BY name, turn, source');
   const byRun = db.query<RunScore, [string]>(
@@ -46,7 +46,7 @@ export const scoreRepo = (db: Database) => {
 
   const replace = db.transaction((traceId: string, list: NewScore[]): void => {
     for (const s of list) {
-      remove.run(traceId, s.name, s.source, s.turn ?? null);
+      remove.run(traceId, s.name, s.source, s.turn ?? null, s.judge_version_id ?? null);
       insertOne(traceId, s);
     }
   });

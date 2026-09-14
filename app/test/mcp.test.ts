@@ -132,8 +132,32 @@ describe('MCP /mcp', () => {
     expect(JSON.parse(result.content[0]?.text ?? '{}')).toMatchObject({ error: { code: 'invalid' } });
   });
 
+  test('judge.propose, judge.activate, read judge, list judges, list disagreements, and audit judges', async () => {
+    const v1 = await call('write', { op: 'judge.propose', data: { judge: 'exercise_match', prompt: 'Is {{output}} right given {{expected}}?', model: 'fake:contains', note: 'draft' } });
+    expect(v1).toMatchObject({ ok: true, existing: false, url: 'http://localhost:3000/judges/exercise_match/versions/1' });
+    const v2 = await call('write', { op: 'judge.propose', data: { judge: 'exercise_match', from_version: 1, prompt: 'Strict: is {{output}} right given {{expected}}?', note: 'stricter' } });
+    expect(v2.url).toBe('http://localhost:3000/judges/exercise_match/versions/2');
+    const judge = await call('read', { type: 'judge', id: 'exercise_match' });
+    expect(judge).toMatchObject({ active_version: 1, status: 'needs_labels', url: 'http://localhost:3000/judges/exercise_match', disagreements: [] });
+    expect((judge.versions as unknown[]).length).toBe(2);
+    const traces = (await call('list', { type: 'traces', run_id: runA })).items as { id: string }[];
+    const versionId = ((v1.version as { id: string }).id);
+    for (const [i, t] of traces.entries()) {
+      await call('write', { op: 'scores.put', data: { trace_id: t.id, scores: [{ name: 'exercise_match', value: 1, source: 'judge', judge_version_id: versionId }, { name: 'exercise_match', verdict: i === 0 ? 'pass' : 'fail', source: 'human' }] } });
+    }
+    const dis = await call('list', { type: 'disagreements', judge: 'exercise_match' });
+    expect(dis).toMatchObject({ version: 1, url: 'http://localhost:3000/judges/exercise_match/disagreements?version=1' });
+    expect(dis.items).toHaveLength(1);
+    const judges = await call('list', { type: 'judges' });
+    expect((judges.items as { name: string; disagreements: number; labels: number }[])[0]).toMatchObject({ name: 'exercise_match', disagreements: 1, labels: 2 });
+    const activated = await call('write', { op: 'judge.activate', data: { judge: 'exercise_match', version: 2 } });
+    expect(activated).toMatchObject({ ok: true, active_version: 2 });
+    const audit = await call('read', { type: 'audit' });
+    expect((audit.judges as unknown[])[0]).toMatchObject({ name: 'exercise_match', active_version: 2, status: 'needs_labels', labels: 2, labels_needed: 98, disagreements: 0 });
+  });
+
   test('placeholders name their phase', async () => {
-    expect(await call('list', { type: 'judges' })).toEqual({ items: [], note: 'available after phase 6' });
-    expect(await call('write', { op: 'judge.activate', data: {} })).toEqual({ ok: false, op: 'judge.activate', note: 'available after phase 6' });
+    expect(await call('list', { type: 'alerts' })).toEqual({ items: [], note: 'available after phase 9' });
+    expect(await call('write', { op: 'alert.test', data: {} })).toEqual({ ok: false, op: 'alert.test', note: 'available after phase 9' });
   });
 });

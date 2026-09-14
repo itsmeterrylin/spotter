@@ -14,7 +14,7 @@ Spotter is the human in the loop for agent-run evals. You run the eval and write
 3. Compare the new run to the baseline run. Read `improvements` and `regressions` per score.
 4. Send the person the compare url and the run url. Say which items changed and why you think so.
 5. The person labels traces (pass, fail, defer) and writes notes. Read them with `list notes`.
-6. Group notes into failure modes. Propose one judge per failure mode, then calibrate it against the human labels before its scores count. Judge tools arrive in phase 6.
+6. Group notes into failure modes. Propose one judge per failure mode with `write judge.propose`, run it with `spotter judge run`, calibrate it against the human labels, and activate it with `write judge.activate` once TPR and TNR pass 90 percent. Until then its scores do not count.
 
 ## Connect
 
@@ -38,7 +38,9 @@ Every successful result carries `url`. Every list row carries `url`. Errors come
 - `items` needs `dataset_id`. `runs` accepts `dataset_id`. `traces` and `notes` accept `run_id` and `filters`.
 - `notes` returns human scores that have a reason, each with its trace, so you can cluster failure modes.
 - `filters` fields: `id`, `run_id`, `dataset_item_id`, `start`, `end`, `metadata.<key>`, `tags`, `events`, `source`, `score` (with `key` = score name). Operators: `=`, `!=`, `<`, `<=`, `>`, `>=`, `contains`, `starts_with`, `in`, `is_empty`.
-- `judges`, `disagreements`, `alerts`, `deliveries` return `{items: [], note: 'available after phase N'}` until that phase ships.
+- `judges` returns every judge with `active_version`, `status` (`calibrated`, `needs_labels`, `pending`), `labels`, and `disagreements`.
+- `disagreements` needs `judge` and accepts `version` (default: the active version). It returns traces where the human verdict and that judge version differ in pass or fail.
+- `alerts`, `deliveries` return `{items: [], note: 'available after phase 9'}` until that phase ships.
 
 ### read
 
@@ -49,7 +51,8 @@ Every successful result carries `url`. Every list row carries `url`. Errors come
 - `run` returns the run with `aggregates` (trace count, per-score mean, p50 duration, tokens).
 - `trace` returns the trace with its `scores`.
 - `dataset` returns the dataset with `item_count` and its `runs`.
-- `audit` returns counts: `datasets`, `runs`, `traces`, `human_labels`, `runs_without_baseline`, `datasets_without_runs`. Call it first when you do not know the state of the server.
+- `judge` returns the judge with `versions` (newest first, each with `calibration`, `active`, `calibrated`, `url`) and the active version's `disagreements`.
+- `audit` returns counts: `datasets`, `runs`, `traces`, `human_labels`, `runs_without_baseline`, `datasets_without_runs`, and `judges` (per judge: `active_version`, `status`, `labels`, `labels_needed`, `disagreements`). Call it first when you do not know the state of the server.
 
 ### write
 
@@ -64,12 +67,14 @@ Every successful result carries `url`. Every list row carries `url`. Errors come
 | `run.create` | `{dataset_id, name, metadata?}` |
 | `traces.insert` | `{traces: [{id, project, run_id?, dataset_item_id?, input, output, expected?, start, end?, metrics?, scores?: [{name, value, source}]}]}` |
 | `trace.patch_metadata` | `{trace_id, metadata?, events?}` |
-| `scores.put` | `{trace_id, scores: [{name, value or verdict, reason?, source}]}` |
+| `scores.put` | `{trace_id, scores: [{name, value or verdict, reason?, source, judge_version_id?}]}` |
+| `judge.propose` | `{judge, from_version?, prompt?, model?, params?, examples?, scope?, note}`; returns the new version, or the existing one with `existing: true` when the definition hash matches; a first version needs `prompt` and `model` and becomes active |
+| `judge.activate` | `{judge, version}`; rollback is activation of an older version |
 
 - `dry_run: true` validates `data` and returns `{ok: true, dry_run: true}` without writing.
 - Set `metadata.baseline` on a run to the run id you compare against. `read audit` counts runs that lack it.
 - Trace ids are yours. Insert is idempotent by id: a repeat reports `skipped`.
-- `items.from_traces`, `judge.propose`, `judge.activate`, `alert.create`, `alert.test` return `{ok: false, note}` until their phase ships.
+- `items.from_traces`, `alert.create`, `alert.test` return `{ok: false, note}` until their phase ships.
 
 ### compare
 

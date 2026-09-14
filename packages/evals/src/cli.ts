@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 import { configFromEnv } from './client.ts';
 import { init } from './init.ts';
+import { formatJudgeRun, judgeRun } from './judge-run.ts';
 import { loadEval } from './load.ts';
 import { compareRuns, runEval } from './runner.ts';
 import { formatSummary } from './summary.ts';
@@ -10,6 +11,7 @@ export type Parsed = { positional: string[]; flags: Record<string, string | true
 const usage = `usage:
   spotter run <file> [--name <text>] [--baseline <run_id>] [--no-send] [--create]
   spotter compare <baseline_run_id> <run_id>
+  spotter judge run <name> [--version <n|active>] --run <run_id> | --dataset <id>
   spotter init`;
 
 export function parseArgs(argv: string[]): Parsed {
@@ -50,9 +52,24 @@ export async function compareCommand(baseline: string, current: string): Promise
   return formatSummary(summary, { run_url: null, compare_url: summary.url, compare_note: null });
 }
 
+export async function judgeCommand(sub: string, name: string, flags: Parsed['flags']): Promise<string> {
+  if (sub !== 'run') throw new Error(`unknown judge command ${sub}; use: judge run <name>`);
+  const report = await judgeRun({
+    name,
+    version: flagString(flags, 'version') ?? 'active',
+    target: { run: flagString(flags, 'run'), dataset: flagString(flags, 'dataset') },
+    client: configFromEnv(),
+  });
+  return formatJudgeRun(report);
+}
+
 export async function main(argv: string[]): Promise<number> {
   const { positional, flags } = parseArgs(argv);
   const [command, a, b] = positional;
+  if (command === 'judge' && a && b) {
+    console.log(await judgeCommand(a, b, flags));
+    return 0;
+  }
   if (command === 'run' && a) {
     console.log(await runCommand(a, flags));
     return 0;

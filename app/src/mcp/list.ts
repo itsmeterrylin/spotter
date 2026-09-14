@@ -2,6 +2,8 @@ import type { Repos } from '../db/repos/index.ts';
 import { invalid } from '../errors.ts';
 import type { Filter } from '../services/filters.ts';
 import { listItems } from '../services/datasets.ts';
+import { disagreements } from '../services/disagreements.ts';
+import { listJudges } from '../services/judges.ts';
 import { query } from '../services/query.ts';
 import { listRuns } from '../services/runs.ts';
 import { listTraces, type TraceView } from '../services/traces.ts';
@@ -64,9 +66,15 @@ export function list(repos: Repos, args: ListArgs): ToolResult {
       return traces(repos, args, args.filters ?? []);
     case 'notes':
       return notes(repos, args);
-    case 'judges':
-    case 'disagreements':
-      return { items: [], note: later(6) };
+    case 'judges': {
+      const list = listJudges(repos);
+      return { items: list.judges.slice(0, args.limit), url: list.url };
+    }
+    case 'disagreements': {
+      if (!args.judge) throw invalid('judge is required to list disagreements');
+      const list = disagreements(repos, args.judge, args.version ?? 'active');
+      return { items: list.traces.slice(0, args.limit), judge: list.judge, version: list.version, url: list.url };
+    }
     case 'alerts':
     case 'deliveries':
       return { items: [], note: later(9) };

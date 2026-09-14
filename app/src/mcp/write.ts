@@ -1,7 +1,8 @@
-import type { z } from 'zod';
-import { datasetCreate, itemsUpsert, metadataPatch, runCreate, scoresPut, toNewScore, tracesBatch } from '../api/schemas.ts';
+import { z } from 'zod';
+import { datasetCreate, itemsUpsert, judgeActivate, judgePropose, metadataPatch, runCreate, scoresPut, toNewScore, tracesBatch } from '../api/schemas.ts';
 import type { Repos } from '../db/repos/index.ts';
 import { createDataset, upsertItems } from '../services/datasets.ts';
+import { activate, propose } from '../services/judges.ts';
 import { createRun } from '../services/runs.ts';
 import { insertBatch, patchMetadata, putScores } from '../services/traces.ts';
 import { later, type ToolResult } from './result.ts';
@@ -42,8 +43,14 @@ const ops: Record<WriteOp, Handler | number> = {
     return { ids: [body.trace_id], scores: trace.scores, url: trace.url };
   }),
   'items.from_traces': 8,
-  'judge.propose': 6,
-  'judge.activate': 6,
+  'judge.propose': op(judgePropose.extend({ judge: z.string().min(1), created_by: judgePropose.shape.created_by.default('agent') }), (repos, { judge, ...body }) => {
+    const result = propose(repos, { ...body, name: judge });
+    return { ids: [result.version.id], existing: result.existing, version: result.version, url: result.version.url };
+  }),
+  'judge.activate': op(judgeActivate.extend({ judge: z.string().min(1) }), (repos, body) => {
+    const view = activate(repos, body.judge, body.version);
+    return { ids: [view.active_version_id ?? ''], active_version: view.active_version, url: view.url };
+  }),
   'alert.create': 9,
   'alert.test': 9,
 };
