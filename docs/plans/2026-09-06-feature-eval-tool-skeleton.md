@@ -269,7 +269,7 @@ JSON columns (`input`, `expected`, `metadata`, `tags`, `metrics`, `spans`) are s
 | GET | `/api/traces` | `filters`, `run_id`, `limit`, `cursor` | page of traces with `url` each |
 | POST | `/api/query` | `{sql}` | rows; SELECT only |
 | PATCH | `/api/traces/{id}/metadata` | `{metadata?, events?}` | deep-merged trace with `url` |
-| POST | `/api/otel/v1/traces` | OTLP JSON or protobuf | `{accepted}`; raw attributes kept, `attribute_map` applied |
+| POST | `/api/otel/v1/traces` | OTLP/HTTP JSON (protobuf answers 415) | `{accepted, traces: [{id, url}]}`; raw attributes kept, `attribute_map` applied, batches merge by trace id |
 | GET, PUT | `/api/projects/{id}/attribute-map` | `[{source, target, type}]` | the map |
 | POST | `/api/datasets/{id}/items/from-traces` | `{trace_ids, expected_from, tags?}` | `{created, skipped}` with `url` |
 | GET, POST | `/api/alerts` | rule body | rules with `url` |
