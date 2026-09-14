@@ -2,6 +2,7 @@ import type { Run } from '../db/repos/run.ts';
 import type { Score } from '../db/repos/score.ts';
 import type { Message, TraceEvent } from '../db/types.ts';
 import type { TraceView } from '../services/traces.ts';
+import { parseMaybeJson } from '../db/json.ts';
 import { urls } from '../urls.ts';
 import type { HumanVerdict } from './data.ts';
 import { Layout } from './Layout.tsx';
@@ -13,7 +14,7 @@ export const Turn = ({ message: m, scores, focus }: { message: Message; scores: 
   <div class="turn" id={`turn-${m.turn}`} data-focus={focus ? '1' : undefined}>
     <span class="who">{m.role} · {m.turn}</span>
     <span>
-      {summarize(m.content)}
+      {typeof parseMaybeJson(m.content) === 'string' ? m.content : <JsonView value={parseMaybeJson(m.content)} />}
       {scores.filter((s) => s.turn === m.turn).map((s) => (
         <>
           <br />

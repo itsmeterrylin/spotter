@@ -1,3 +1,4 @@
+import { parseMaybeJson } from '../db/json.ts';
 import type { Repos } from '../db/repos/index.ts';
 import type { NewScore, Score } from '../db/repos/score.ts';
 import type { NewTrace, Trace } from '../db/repos/trace.ts';
@@ -48,7 +49,7 @@ const transcriptDefaults = (t: TraceInput): TraceInput => {
   if (!t.messages?.length) return t;
   const first = t.messages.find((m) => m.role === 'user');
   const last = [...t.messages].reverse().find((m) => m.role === 'assistant');
-  return { ...t, input: t.input ?? first?.content ?? null, output: t.output ?? last?.content ?? null };
+  return { ...t, input: t.input ?? parseMaybeJson(first?.content ?? null), output: t.output ?? parseMaybeJson(last?.content ?? null) };
 };
 
 export function putScores(repos: Repos, traceId: string, scores: NewScore[]): TraceView {

@@ -62,7 +62,7 @@ export const joined = (v: Json | null | undefined): string => {
 
 export const summarize = (v: Json | null | undefined): string => {
   const s = joined(v);
-  return typeof v !== 'string' && s.length > 80 ? `${s.slice(0, 77)}...` : s;
+  return s.length > 80 ? `${s.slice(0, 77)}...` : s;
 };
 
 export const Values = ({ value }: { value: Json | null | undefined }) =>

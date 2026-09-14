@@ -171,4 +171,23 @@ describe('POST /api/otel/v1/traces', () => {
     expect(body.error.message).toContain('JSON');
     expect((await send(app, 'POST', '/api/otel/v1/traces', { resourceSpans: [{ scopeSpans: [{ spans: [{ spanId: 'x' }] }] }] })).status).toBe(400);
   });
+
+  test('message content that is a JSON string becomes an object', async () => {
+    const app = testApp();
+    const body = {
+      resourceSpans: [{ resource: { attributes: [{ key: 'spotter.project', value: { stringValue: 'p' } }] }, scopeSpans: [{ spans: [{
+        traceId: 'ab'.repeat(16), spanId: 'cd'.repeat(8), name: 'tagging', startTimeUnixNano: '1', endTimeUnixNano: '2',
+        attributes: [
+          { key: 'gen_ai.input.messages', value: { stringValue: JSON.stringify([{ role: 'user', content: 'bench 3x5' }]) } },
+          { key: 'gen_ai.output.messages', value: { stringValue: JSON.stringify([{ role: 'assistant', content: JSON.stringify({ exercises: [{ name: 'Bench Press' }] }) }]) } },
+        ],
+      }] }] }],
+    };
+    const res = await app.request('/api/otel/v1/traces', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+    expect(res.status).toBe(200);
+    const { traces } = (await res.json()) as { traces: { id: string }[] };
+    const trace = (await (await app.request(`/api/traces/${traces[0]?.id}`)).json()) as { output: unknown; messages: { content: unknown }[] };
+    expect(typeof trace.output).toBe('object');
+    expect(typeof trace.messages[1]?.content).toBe('string');
+  });
 });

@@ -1,3 +1,4 @@
+import { parseMaybeJson } from '../db/json.ts';
 import type { Json, JsonObject, Message, Metrics, TraceEvent } from '../db/types.ts';
 
 export type KeyValue = { key: string; value: unknown };
@@ -50,14 +51,6 @@ export const attributes = (list: KeyValue[] | undefined): JsonObject => Object.f
 
 export const nanoToIso = (ns: string | number): string => new Date(Number(BigInt(typeof ns === 'number' ? Math.trunc(ns) : ns) / 1000000n)).toISOString();
 
-const parseMaybeJson = (v: Json): Json => {
-  if (typeof v !== 'string' || !/^\s*[[{]/.test(v)) return v;
-  try {
-    return JSON.parse(v) as Json;
-  } catch {
-    return v;
-  }
-};
 
 const partText = (p: Json): string | null => {
   if (!isJsonObject(p)) return null;
