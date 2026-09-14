@@ -312,6 +312,21 @@ export default defineEval({
 
 ## Screens
 
+### Navigation (revised 2026-09-13)
+
+A conventional layout for verification work: a left sidebar with five sections and a top bar with a notifications bell. The inbox becomes the notifications center. The rules that stay: one primary action per screen, every filter and selection in the URL, no creation forms, no helper prose.
+
+| Nav | Route | Contents | Primary action |
+|---|---|---|---|
+| Runs | `/`, `/runs?dataset=` | Table: name, dataset, started, pass rate, delta vs baseline, status pill | Compare with baseline |
+| Datasets | `/datasets`, `/datasets/{id}` | Table: name, items, runs, last run; detail: items table (id, input, expected, source), runs on this dataset | Open compare of the two latest runs |
+| Traces | `/traces?run=&filter=&score=` | Table: item, run, output, one column per score name, verdict pill; filter grammar in the URL | Review unlabeled |
+| Judges | `/judges`, `/judges/{name}` | Phase 6 screens | Label disagreements |
+| Notifications | bell with unread badge; `/notifications` | Rows: regressions to verify, disagreements to label, judges short on labels, runs completed; each with one button and a deep link; a row clears when its condition no longer holds | The row's button |
+
+Layout: sidebar 240px on desktop, collapses to a top bar with a menu button under 900px. Active nav item uses `pill-brand` styling. Page header: title, breadcrumb above, primary action right. Tables use `.table` with 72px rows.
+
+
 Each screen follows the design system: four type sizes, one primary action, 72px rows, icons carry meaning, no helper prose.
 
 ### Runs (`/runs`, `/runs/{id}`)
