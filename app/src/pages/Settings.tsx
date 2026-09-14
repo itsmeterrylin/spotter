@@ -21,8 +21,8 @@ const restExample = `curl -X POST ${config.baseUrl}/api/traces/batch \\
        "start":"2026-09-14T00:00:00Z","scores":[{"name":"exercise_match","value":1,"source":"sdk"}]}]}'`;
 
 const providers: Array<[string, string]> = [
+  ['OpenRouter (default: one key, any model)', 'https://openrouter.ai/api/v1'],
   ['OpenAI', 'https://api.openai.com/v1'],
-  ['OpenRouter (one key, many models)', 'https://openrouter.ai/api/v1'],
   ['Ollama (local)', 'http://localhost:11434/v1'],
   ['LM Studio (local)', 'http://localhost:1234/v1'],
   ['Gemini (OpenAI-compatible)', 'https://generativelanguage.googleapis.com/v1beta/openai'],

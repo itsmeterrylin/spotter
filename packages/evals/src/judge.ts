@@ -5,7 +5,7 @@ export type Verdict = { pass: boolean; reason: string };
 export type JudgeModel = { name: string; complete: (prompt: string, ctx: JudgeContext) => Promise<string> };
 export type JudgeVersionDef = { id: string; number: number; scope?: 'turn' | 'transcript'; prompt: string; model: string; params: JsonObject | null; examples: Json | null };
 
-export const defaultBaseUrl = 'https://api.openai.com/v1';
+export const defaultBaseUrl = 'https://openrouter.ai/api/v1';
 
 const text = (value: Json | null): string => (typeof value === 'string' ? value : value === null ? '' : JSON.stringify(value, null, 2));
 
@@ -73,7 +73,7 @@ export function openAiModel(model: string, params: JsonObject | null, env: Recor
       const body = JSON.stringify({ ...params, model, messages: [{ role: 'user', content: prompt }] });
       let res: Response;
       try {
-        res = await fetch(`${base}/chat/completions`, { method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${key}` }, body });
+        res = await fetch(`${base}/chat/completions`, { method: 'POST', headers: { 'content-type': 'application/json', 'X-Title': 'Spotter', authorization: `Bearer ${key}` }, body });
       } catch (err) {
         throw new Error(`cannot reach ${base}: ${err instanceof Error ? err.message : String(err)}`);
       }
