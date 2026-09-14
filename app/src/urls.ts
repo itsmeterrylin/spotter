@@ -14,6 +14,7 @@ const abs = (path: string, query: Query = {}): string => {
 export const urls = {
   home: (): string => abs('/'),
   notifications: (): string => abs('/notifications'),
+  settings: (): string => abs('/settings'),
   runs: (datasetId?: string): string => abs('/runs', { dataset: datasetId }),
   run: (id: string, score?: string): string => abs(`/runs/${id}`, { score }),
   compare: (datasetId: string, runIds: string[], only?: 'changes', score?: string): string =>

@@ -16,6 +16,8 @@ import { judgeRoutes } from './judgeRoutes.tsx';
 import { listRoutes } from './listRoutes.tsx';
 import { ErrorPage } from './NotFound.tsx';
 import { ReviewEmpty, ReviewPage } from './Review.tsx';
+import { SettingsPage } from './Settings.tsx';
+import { getAttributeMap } from '../services/attributeMap.ts';
 import { RunPage, type TraceRow } from './Run.tsx';
 import { TracePage } from './Trace.tsx';
 
@@ -118,6 +120,11 @@ export function createPages(repos: Repos): Hono {
     );
   });
 
+  app.get('/settings', (c) => {
+    const projects = [...new Set(repos.datasets.list().map((d) => d.project_id))];
+    const maps = (projects.length ? projects : ['default']).map((ref) => getAttributeMap(repos, ref));
+    return c.html(<SettingsPage maps={maps} authSet={Boolean(process.env.SPOTTER_AUTH_TOKEN)} unread={unread()} />);
+  });
   app.route('/judges', judgeRoutes(repos, unread));
 
   return app;

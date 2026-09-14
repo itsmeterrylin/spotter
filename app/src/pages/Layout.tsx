@@ -6,9 +6,13 @@ import pkg from '../../package.json' with { type: 'json' };
 import { urls } from '../urls.ts';
 import { type Crumb, Crumbs, Icon, sprite } from './ui.tsx';
 
-export type Section = 'runs' | 'datasets' | 'traces' | 'judges' | 'notifications';
+export type Section = 'runs' | 'datasets' | 'traces' | 'judges' | 'notifications' | 'settings';
 
 type Props = { title: string; section: Section | null; unread: number; crumbs?: Crumb[]; action?: Child; script?: string; children: Child };
+
+// Runs before the stylesheet so a saved theme never flashes the other one.
+const themeBoot = `<script>try{var t=localStorage.getItem('spotter.theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>`;
+const themeToggle = `<script>(function(){var r=document.documentElement,b=document.querySelectorAll('[data-theme-choice]');function cur(){try{return localStorage.getItem('spotter.theme')||'system'}catch(e){return 'system'}}function paint(c){b.forEach(function(x){x.setAttribute('aria-pressed',String(x.dataset.themeChoice===c))})}function set(c){if(c==='system')r.removeAttribute('data-theme');else r.setAttribute('data-theme',c);try{if(c==='system')localStorage.removeItem('spotter.theme');else localStorage.setItem('spotter.theme',c)}catch(e){}paint(c)}b.forEach(function(x){x.addEventListener('click',function(){set(x.dataset.themeChoice)})});paint(cur())})()</script>`;
 
 const sections: Array<[Section, string, IconName, string]> = [
   ['runs', 'Runs', 'run', urls.runs()],
@@ -32,7 +36,18 @@ const Sidebar = ({ section }: { section: Section | null }) => (
           {label}
         </a>
       ))}
-      <span class="version t-caption">v{pkg.version}</span>
+      <a class={`nav-item nav-settings${section === 'settings' ? ' pill-brand' : ''}`} href={urls.settings()} aria-current={section === 'settings' ? 'page' : undefined}>
+        <Icon name="settings" />
+        Settings
+      </a>
+      <div class="foot">
+        <span class="version t-caption">v{pkg.version}</span>
+        <div class="cluster theme" style="--gap: 4px" role="group" aria-label="Theme">
+          <button type="button" class="btn btn-ghost btn-compact" data-theme-choice="system" aria-pressed="true">Auto</button>
+          <button type="button" class="btn btn-ghost btn-compact" data-theme-choice="light" aria-pressed="false">Light</button>
+          <button type="button" class="btn btn-ghost btn-compact" data-theme-choice="dark" aria-pressed="false">Dark</button>
+        </div>
+      </div>
     </nav>
   </aside>
 );
@@ -46,6 +61,7 @@ export const Layout = ({ title, section, unread, crumbs = [], action, script, ch
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>{`${title} · Spotter`}</title>
         <link rel="icon" href="/favicon.svg" />
+        {raw(themeBoot)}
         <link rel="stylesheet" href={font.googleFontsUrl} />
         <link rel="stylesheet" href="/spotter.css" />
         <link rel="stylesheet" href="/pages.css" />
@@ -53,6 +69,7 @@ export const Layout = ({ title, section, unread, crumbs = [], action, script, ch
       </head>
       <body>
         {sprite}
+        {raw(themeToggle)}
         <div class="shell">
           <Sidebar section={section} />
           <div class="content">
