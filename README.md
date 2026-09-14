@@ -53,7 +53,7 @@ claude mcp add --transport http spotter http://localhost:3000/mcp
 | Tool | Input | Returns |
 |---|---|---|
 | `list` | `{type: 'datasets' \| 'items' \| 'runs' \| 'traces' \| 'notes' \| 'judges' \| 'disagreements' \| 'alerts' \| 'deliveries', filters?, dataset_id?, run_id?, judge?, version?, limit?}` | `{items, url}`; every row carries `url` |
-| `read` | `{type: 'run' \| 'trace' \| 'dataset' \| 'judge' \| 'audit', id?}` | one object with `url`; `audit` returns counts |
+| `read` | `{type: 'run' \| 'trace' \| 'dataset' \| 'judge' \| 'audit' \| 'attribute_map', id?}` | one object with `url`; `audit` returns counts |
 | `write` | `{op: 'dataset.create' \| 'items.upsert' \| 'run.create' \| 'traces.insert' \| 'trace.patch_metadata' \| 'scores.put' \| ..., data, dry_run?}` | `{ok, ids, url}` |
 | `compare` | `{dataset_id, run_ids, only?: 'changes'}` | items with per-run cells, per-score summary, `url` |
 
@@ -69,6 +69,57 @@ curl -s http://localhost:3000/mcp -H 'content-type: application/json' -H 'accept
 ```
 
 The agent-facing guide, with the loop and the deep-link contract, is `skills/spotter.md`.
+
+## OpenTelemetry
+
+`POST /api/otel/v1/traces` accepts OTLP/HTTP JSON. A protobuf body (`application/x-protobuf`) answers 415; the app takes no protobuf decoder yet. Point an OTel exporter at the JSON protocol:
+
+```bash
+OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:3000/api/otel
+OTEL_EXPORTER_OTLP_PROTOCOL=http/json
+```
+
+One OTel trace becomes one Spotter trace. Spans that arrive in later batches merge into it by trace id (attributes, events, spans, tokens, end). The response is `{accepted, traces: [{id, url}], url}`.
+
+| OTLP | Spotter trace |
+|---|---|
+| resource or span attribute `spotter.project`, else `service.name`, else `default` | `project` |
+| attributes `spotter.run_id`, `spotter.dataset_item_id` | `run_id`, `dataset_item_id` |
+| `gen_ai.input.messages` then `gen_ai.output.messages` (JSON strings or arrays; `parts` text is joined) | `messages[] {turn, role, content}` |
+| `gen_ai.prompt`, `gen_ai.completion` (JSON strings are parsed) | `input`, `output`; absent, the first user and last assistant message |
+| `gen_ai.usage.input_tokens` or `prompt_tokens`, `gen_ai.usage.output_tokens` or `completion_tokens`, summed over spans | `metrics.prompt_tokens`, `metrics.completion_tokens` |
+| earliest span start, latest span end (nanoseconds) | `start`, `end` |
+| every resource and span attribute, raw | `metadata.attributes[name]`; the project's attribute map then promotes chosen ones to `metadata.<target>` |
+| span events | `events[] {at, name, data}` |
+| spans | `spans[] {span_id, parent_id, name, start, end, attributes}` |
+
+The `gen_ai.*` values are read from the root span when it has them, else from the latest span that does.
+
+Example body:
+
+```json
+{
+  "resourceSpans": [{
+    "resource": {"attributes": [{"key": "service.name", "value": {"stringValue": "voice"}}]},
+    "scopeSpans": [{"spans": [
+      {"traceId": "5b8efff798038103d269b633813fc60c", "spanId": "aaaa", "name": "session",
+       "startTimeUnixNano": "1789293600000000000", "endTimeUnixNano": "1789293605000000000",
+       "attributes": [{"key": "lk.transfer.destination", "value": {"stringValue": "+1555"}}],
+       "events": [{"timeUnixNano": "1789293604000000000", "name": "transfer_initiated"}]},
+      {"traceId": "5b8efff798038103d269b633813fc60c", "spanId": "bbbb", "parentSpanId": "aaaa", "name": "chat gpt-x",
+       "startTimeUnixNano": "1789293601000000000", "endTimeUnixNano": "1789293603000000000",
+       "attributes": [
+         {"key": "gen_ai.input.messages", "value": {"stringValue": "[{\"role\":\"user\",\"parts\":[{\"type\":\"text\",\"content\":\"Weather in Paris?\"}]}]"}},
+         {"key": "gen_ai.output.messages", "value": {"stringValue": "[{\"role\":\"assistant\",\"parts\":[{\"type\":\"text\",\"content\":\"Rainy.\"}]}]"}},
+         {"key": "gen_ai.usage.input_tokens", "value": {"intValue": "12"}},
+         {"key": "gen_ai.usage.output_tokens", "value": {"intValue": "5"}}
+       ]}
+    ]}]
+  }]
+}
+```
+
+Set the attribute map first so promoted keys exist on arrival: `PUT /api/projects/voice/attribute-map` with `[{"source": "lk.transfer.destination", "target": "transfer_to", "type": "string"}]`, or MCP `write attribute_map.set`.
 
 ## Run your first eval
 

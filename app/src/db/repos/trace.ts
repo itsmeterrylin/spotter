@@ -37,6 +37,8 @@ export type Trace = Omit<TraceRow, JsonColumns> & {
 
 export type NewTrace = Omit<Partial<Trace>, 'id' | 'project_id' | 'start' | 'created_at'> & { id: string; project_id: string; start: string };
 
+export type TracePatch = Partial<Pick<Trace, 'input' | 'output' | 'end' | 'metadata' | 'metrics' | 'messages' | 'events' | 'spans'>>;
+
 export type TraceQuery = { where: string; params: SQLQueryBindings[]; limit: number; cursor?: string | null };
 
 const parse = (r: TraceRow): Trace => ({
@@ -93,6 +95,12 @@ export const traceRepo = (db: Database) => {
     setMetadata: (id: string, metadata: JsonObject | null, events: TraceEvent[] | null): Trace | null => {
       const row = update.get(toJson(metadata), toJson(events), id);
       return row ? parse(row) : null;
+    },
+    merge: (id: string, patch: TracePatch): void => {
+      const keys = Object.keys(patch) as Array<keyof TracePatch>;
+      if (keys.length === 0) return;
+      const values: SQLQueryBindings[] = keys.map((k) => (k === 'end' ? (patch.end ?? null) : toJson(patch[k])));
+      db.query<TraceRow, SQLQueryBindings[]>(`UPDATE trace SET ${keys.map((k) => `"${k}" = ?`).join(', ')} WHERE id = ?`).run(...values, id);
     },
   };
 };
