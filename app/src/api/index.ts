@@ -5,6 +5,7 @@ import { ApiError } from '../errors.ts';
 import { query } from '../services/query.ts';
 import { datasetsApi } from './datasets.ts';
 import { judgesApi } from './judges.ts';
+import { projectsApi } from './projects.ts';
 import { runsApi } from './runs.ts';
 import { querySql } from './schemas.ts';
 import { tracesApi } from './traces.ts';
@@ -28,6 +29,7 @@ export const createApi = (repos: Repos) => {
   api.route('/runs', runsApi(repos));
   api.route('/traces', tracesApi(repos));
   api.route('/judges', judgesApi(repos));
+  api.route('/projects', projectsApi(repos));
   api.post('/query', async (c) => c.json(query(repos.db, querySql.parse(await c.req.json()).sql)));
 
   return api;

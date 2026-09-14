@@ -4,7 +4,7 @@ import { filter } from '../api/schemas.ts';
 export const id = z.string().min(1).max(128);
 
 export const listTypes = ['datasets', 'items', 'runs', 'traces', 'notes', 'judges', 'disagreements', 'alerts', 'deliveries'] as const;
-export const readTypes = ['run', 'trace', 'dataset', 'judge', 'audit'] as const;
+export const readTypes = ['run', 'trace', 'dataset', 'judge', 'audit', 'attribute_map'] as const;
 export const writeOps = [
   'dataset.create',
   'items.upsert',
@@ -16,6 +16,7 @@ export const writeOps = [
   'judge.propose',
   'judge.activate',
   'judge.calibrate',
+  'attribute_map.set',
   'alert.create',
   'alert.test',
 ] as const;

@@ -2,6 +2,7 @@ import { parseJson } from '../db/json.ts';
 import type { Repos } from '../db/repos/index.ts';
 import type { Json } from '../db/types.ts';
 import { invalid } from '../errors.ts';
+import { getAttributeMap } from '../services/attributeMap.ts';
 import { getDataset } from '../services/datasets.ts';
 import { disagreements } from '../services/disagreements.ts';
 import { getJudge, labelTarget, listJudges } from '../services/judges.ts';
@@ -66,5 +67,7 @@ export function read(repos: Repos, args: ReadArgs): ToolResult {
     }
     case 'audit':
       return audit(repos);
+    case 'attribute_map':
+      return getAttributeMap(repos, need(args.id));
   }
 }

@@ -1,6 +1,6 @@
 import type { Run } from '../db/repos/run.ts';
 import type { Score } from '../db/repos/score.ts';
-import type { Message } from '../db/types.ts';
+import type { Message, TraceEvent } from '../db/types.ts';
 import type { TraceView } from '../services/traces.ts';
 import { urls } from '../urls.ts';
 import type { HumanVerdict } from './data.ts';
@@ -51,6 +51,18 @@ const Scores = ({ scores, verdict }: { scores: Score[]; verdict: HumanVerdict | 
   </div>
 );
 
+const Events = ({ events }: { events: TraceEvent[] }) => (
+  <div class="card card-flush">
+    {events.map((e) => (
+      <div class="row">
+        <Icon name="time" />
+        <div class="grow">{e.name} <span class="muted num">· {e.at}</span></div>
+        {e.data === undefined ? null : <span class="mono t-caption">{summarize(e.data)}</span>}
+      </div>
+    ))}
+  </div>
+);
+
 type Props = { trace: TraceView; run: Run | null; verdict: HumanVerdict | null; turn?: number; unread: number };
 
 export const TracePage = ({ trace, run, verdict, turn, unread }: Props) => (
@@ -78,6 +90,12 @@ export const TracePage = ({ trace, run, verdict, turn, unread }: Props) => (
         <span class="block-label"><Icon name="judge" size="sm" />Scores</span>
         <Scores scores={trace.scores} verdict={verdict} />
       </div>
+      {trace.events?.length ? (
+        <div class="block">
+          <span class="block-label"><Icon name="time" size="sm" />Events</span>
+          <Events events={trace.events} />
+        </div>
+      ) : null}
     </div>
   </Layout>
 );

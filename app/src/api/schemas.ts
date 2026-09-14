@@ -140,3 +140,10 @@ export const disagreementsQuery = z.object({ version: z.coerce.number().int().po
 export const versionNumber = z.coerce.number().int().positive();
 
 export const judgeCalibrate = z.object({ dataset_id: id.nullish() });
+
+const metadataKey = z.string().regex(/^[A-Za-z0-9_][A-Za-z0-9_-]*$/, 'target must be a plain metadata key');
+
+export const attributeMapPut = z
+  .array(z.object({ source: z.string().min(1), target: metadataKey, type: z.enum(['string', 'number', 'boolean']) }))
+  .max(200)
+  .refine((xs) => new Set(xs.map((x) => x.source)).size === xs.length, { message: 'each source may appear once' });

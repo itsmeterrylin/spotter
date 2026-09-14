@@ -4,6 +4,7 @@ import type { NewTrace, Trace } from '../db/repos/trace.ts';
 import type { Json, JsonObject, ScoreSource, TraceEvent } from '../db/types.ts';
 import { notFound } from '../errors.ts';
 import { urls } from '../urls.ts';
+import { promote } from './attributeMap.ts';
 import { toWhere, type Filter } from './filters.ts';
 
 export type TraceView = Trace & { scores: Score[]; url: string };
@@ -26,10 +27,12 @@ export function insertBatch(repos: Repos, traces: TraceInput[]): BatchResult {
   for (const id of distinct(traces.map((t) => t.run_id))) if (!repos.runs.get(id)) throw notFound('run', id);
   for (const id of distinct(traces.map((t) => t.dataset_item_id))) if (!repos.datasets.getItem(id)) throw notFound('dataset item', id);
   const projects = new Map(distinct(traces.map((t) => t.project)).map((name) => [name, repos.projects.ensure(name).id]));
+  const maps = new Map([...projects].map(([name, id]) => [name, repos.attributeMaps.list(id)]));
   const result = repos.tx(() => {
     let inserted = 0;
     for (const { project, scores, ...rest } of traces.map(transcriptDefaults)) {
-      const row: NewTrace = { ...rest, project_id: projects.get(project) ?? '' };
+      const metadata = promote(maps.get(project) ?? [], rest.metadata ?? null, rest.events ?? null);
+      const row: NewTrace = { ...rest, metadata, project_id: projects.get(project) ?? '' };
       if (!repos.traces.insert(row)) continue;
       inserted += 1;
       if (scores?.length) repos.scores.insertMany(row.id, scores);
@@ -82,9 +85,9 @@ export function deepMerge(base: JsonObject, patch: JsonObject): JsonObject {
 export function patchMetadata(repos: Repos, traceId: string, patch: { metadata?: JsonObject; events?: TraceEvent[] }): TraceView {
   const trace = repos.traces.get(traceId);
   if (!trace) throw notFound('trace', traceId);
-  const metadata = patch.metadata ? deepMerge(trace.metadata ?? {}, patch.metadata) : trace.metadata;
+  const merged = patch.metadata ? deepMerge(trace.metadata ?? {}, patch.metadata) : trace.metadata;
   const events = patch.events ? [...(trace.events ?? []), ...patch.events] : trace.events;
-  repos.traces.setMetadata(traceId, metadata, events);
+  repos.traces.setMetadata(traceId, promote(repos.attributeMaps.list(trace.project_id), merged, events), events);
   return getTrace(repos, traceId);
 }
 

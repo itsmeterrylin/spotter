@@ -167,6 +167,13 @@ describe('MCP /mcp', () => {
     expect(v1?.calibration.length).toBe([dev.n, held.n].filter(Boolean).length);
   });
 
+  test('attribute_map.set replaces the map and read attribute_map returns it by name', async () => {
+    const set = await call('write', { op: 'attribute_map.set', data: { project: 'copper', map: [{ source: 'lk.transfer.destination', target: 'transfer_to', type: 'string' }] } });
+    expect(set).toMatchObject({ ok: true, project: 'copper', map: [{ source: 'lk.transfer.destination', target: 'transfer_to', type: 'string' }] });
+    const got = await call('read', { type: 'attribute_map', id: 'copper' });
+    expect(got).toMatchObject({ project_id: set.project_id, map: set.map, url: 'http://localhost:3000/traces' });
+  });
+
   test('placeholders name their phase', async () => {
     expect(await call('list', { type: 'alerts' })).toEqual({ items: [], note: 'available after phase 9' });
     expect(await call('write', { op: 'alert.test', data: {} })).toEqual({ ok: false, op: 'alert.test', note: 'available after phase 9' });

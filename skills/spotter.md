@@ -37,7 +37,7 @@ Every successful result carries `url`. Every list row carries `url`. Errors come
 
 - `items` needs `dataset_id`. `runs` accepts `dataset_id`. `traces` and `notes` accept `run_id` and `filters`.
 - `notes` returns human scores that have a reason, each with its trace, so you can cluster failure modes.
-- `filters` fields: `id`, `run_id`, `dataset_item_id`, `start`, `end`, `metadata.<key>`, `tags`, `events`, `source`, `score` (with `key` = score name). Operators: `=`, `!=`, `<`, `<=`, `>`, `>=`, `contains`, `starts_with`, `in`, `is_empty`.
+- `filters` fields: `id`, `run_id`, `dataset_item_id`, `start`, `end`, `metadata.<key>`, `tags`, `events.name`, `source`, `score` (with `key` = score name). Operators: `=`, `!=`, `<`, `<=`, `>`, `>=`, `contains`, `starts_with`, `in`, `is_empty`.
 - `judges` returns every judge with `active_version`, `status` (`calibrated`, `needs_labels`, `pending`), `labels`, and `disagreements`.
 - `disagreements` needs `judge` and accepts `version` (default: the active version). It returns traces where the human verdict and that judge version differ in pass or fail.
 - `alerts`, `deliveries` return `{items: [], note: 'available after phase 9'}` until that phase ships.
@@ -45,13 +45,14 @@ Every successful result carries `url`. Every list row carries `url`. Errors come
 ### read
 
 ```
-{type: 'run' | 'trace' | 'dataset' | 'judge' | 'audit', id?}
+{type: 'run' | 'trace' | 'dataset' | 'judge' | 'audit' | 'attribute_map', id?}
 ```
 
 - `run` returns the run with `aggregates` (trace count, per-score mean, p50 duration, tokens, and `pending`: score names whose judge version is not yet calibrated, so those judge scores are excluded).
 - `trace` returns the trace with its `scores`.
 - `dataset` returns the dataset with `item_count` and its `runs`.
 - `judge` returns the judge with `versions` (newest first, each with `calibration`, `active`, `calibrated`, `url`) and the active version's `disagreements`.
+- `attribute_map` takes a project id or name and returns its `map` (`[{source, target, type}]`).
 - `audit` returns counts: `datasets`, `runs`, `traces`, `human_labels`, `runs_without_baseline`, `datasets_without_runs`, and `judges` (per judge: `active_version`, `status`, `labels`, `labels_needed`, `disagreements`). Call it first when you do not know the state of the server.
 
 ### write
@@ -70,6 +71,7 @@ Every successful result carries `url`. Every list row carries `url`. Errors come
 | `scores.put` | `{trace_id, scores: [{name, value or verdict, reason?, source, judge_version_id?}]}` |
 | `judge.propose` | `{judge, from_version?, prompt?, model?, params?, examples?, scope?, note}`; returns the new version, or the existing one with `existing: true` when the definition hash matches; a first version needs `prompt` and `model` and becomes active |
 | `judge.activate` | `{judge, version}`; rollback is activation of an older version |
+| `attribute_map.set` | `{project, map: [{source, target, type}]}`; replaces the project's map. On every trace insert and metadata patch, `metadata.attributes[source]` or an event named `source` is copied to `metadata[target]` as `string`, `number`, or `boolean`, so it filters as `metadata.<target>` |
 | `judge.calibrate` | `{judge, version, dataset_id?}`; pairs human and judge scores by trace, splits them by trace id (15 percent examples pool, 45 dev, 40 test), stores TPR and TNR per split, and returns the bias-corrected pass rate with a 95 percent bootstrap interval. A version counts in aggregates once its test TPR and TNR are both at least 0.9 |
 
 - `dry_run: true` validates `data` and returns `{ok: true, dry_run: true}` without writing.
