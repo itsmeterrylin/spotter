@@ -4,6 +4,7 @@ import type { Repos } from '../db/repos/index.ts';
 import { ApiError } from '../errors.ts';
 import { query } from '../services/query.ts';
 import { datasetsApi } from './datasets.ts';
+import { issuesApi } from './issues.ts';
 import { judgesApi } from './judges.ts';
 import { otelApi } from './otel.ts';
 import { projectsApi } from './projects.ts';
@@ -30,6 +31,7 @@ export const createApi = (repos: Repos) => {
   api.route('/runs', runsApi(repos));
   api.route('/traces', tracesApi(repos));
   api.route('/judges', judgesApi(repos));
+  api.route('/issues', issuesApi(repos));
   api.route('/projects', projectsApi(repos));
   api.route('/otel', otelApi(repos));
   api.post('/query', async (c) => c.json(query(repos.db, querySql.parse(await c.req.json()).sql)));

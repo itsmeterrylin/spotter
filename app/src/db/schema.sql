@@ -10,7 +10,12 @@ CREATE TABLE IF NOT EXISTS judge_calibration (judge_version_id TEXT NOT NULL REF
 CREATE TABLE IF NOT EXISTS attribute_map (project_id TEXT NOT NULL REFERENCES project(id), source TEXT NOT NULL, target TEXT NOT NULL, type TEXT NOT NULL CHECK (type IN ('string','number','boolean')), PRIMARY KEY (project_id, source));
 CREATE TABLE IF NOT EXISTS alert_rule   (id TEXT PRIMARY KEY, project_id TEXT NOT NULL REFERENCES project(id), name TEXT NOT NULL, enabled INTEGER NOT NULL DEFAULT 1, trigger TEXT NOT NULL, condition TEXT NOT NULL, channel TEXT NOT NULL, cooldown_s INTEGER NOT NULL DEFAULT 3600, last_fired_at TEXT, created_at TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS alert_delivery (id TEXT PRIMARY KEY, rule_id TEXT NOT NULL REFERENCES alert_rule(id), payload TEXT NOT NULL, status TEXT NOT NULL, response TEXT, created_at TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS issue        (id TEXT PRIMARY KEY, project_id TEXT NOT NULL REFERENCES project(id), title TEXT NOT NULL, fingerprint TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open','confirmed','dismissed')), severity TEXT NOT NULL DEFAULT 'medium' CHECK (severity IN ('low','medium','high')), description TEXT, judge_name TEXT REFERENCES judge(name), seed_trace_id TEXT REFERENCES trace(id), dismissed_reason TEXT, created_by TEXT NOT NULL CHECK (created_by IN ('human','agent')), created_at TEXT NOT NULL, updated_at TEXT NOT NULL, UNIQUE (project_id, fingerprint));
+CREATE TABLE IF NOT EXISTS issue_trace  (issue_id TEXT NOT NULL REFERENCES issue(id), trace_id TEXT NOT NULL REFERENCES trace(id), turn INTEGER, evidence TEXT, created_by TEXT NOT NULL CHECK (created_by IN ('human','agent')), created_at TEXT NOT NULL);
 CREATE INDEX IF NOT EXISTS trace_run ON trace(run_id);
 CREATE INDEX IF NOT EXISTS trace_item ON trace(dataset_item_id);
 CREATE INDEX IF NOT EXISTS score_trace ON score(trace_id, name, turn);
 CREATE INDEX IF NOT EXISTS item_source ON dataset_item(source_trace_id);
+-- turn NULL means the whole trace; SQLite treats NULLs as distinct in UNIQUE, so the key folds NULL to -1.
+CREATE UNIQUE INDEX IF NOT EXISTS issue_trace_key ON issue_trace(issue_id, trace_id, COALESCE(turn, -1));
+CREATE INDEX IF NOT EXISTS issue_trace_trace ON issue_trace(trace_id);

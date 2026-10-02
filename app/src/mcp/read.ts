@@ -5,6 +5,7 @@ import { invalid } from '../errors.ts';
 import { getAttributeMap } from '../services/attributeMap.ts';
 import { getDataset } from '../services/datasets.ts';
 import { disagreements } from '../services/disagreements.ts';
+import { getIssue } from '../services/issues.ts';
 import { getJudge, labelTarget, listJudges } from '../services/judges.ts';
 import { notifications } from '../services/notifications.ts';
 import { query } from '../services/query.ts';
@@ -65,6 +66,8 @@ export function read(repos: Repos, args: ReadArgs): ToolResult {
       const view = getJudge(repos, need(args.id));
       return { ...view, disagreements: view.active_version === null ? [] : disagreements(repos, view.name, 'active').traces };
     }
+    case 'issue':
+      return getIssue(repos, need(args.id));
     case 'audit':
       return audit(repos);
     case 'attribute_map':

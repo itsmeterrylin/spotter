@@ -52,10 +52,12 @@ claude mcp add --transport http spotter http://localhost:3000/mcp
 
 | Tool | Input | Returns |
 |---|---|---|
-| `list` | `{type: 'datasets' \| 'items' \| 'runs' \| 'traces' \| 'notes' \| 'judges' \| 'disagreements' \| 'alerts' \| 'deliveries', filters?, dataset_id?, run_id?, judge?, version?, limit?}` | `{items, url}`; every row carries `url` |
-| `read` | `{type: 'run' \| 'trace' \| 'dataset' \| 'judge' \| 'audit' \| 'attribute_map', id?}` | one object with `url`; `audit` returns counts |
-| `write` | `{op: 'dataset.create' \| 'items.upsert' \| 'run.create' \| 'traces.insert' \| 'trace.patch_metadata' \| 'scores.put' \| ..., data, dry_run?}` | `{ok, ids, url}` |
+| `list` | `{type: 'datasets' \| 'items' \| 'runs' \| 'traces' \| 'notes' \| 'judges' \| 'disagreements' \| 'issues' \| 'alerts' \| 'deliveries', filters?, dataset_id?, run_id?, judge?, version?, status?, project?, limit?}` | `{items, url}`; every row carries `url`; `issues` adds `counts` and `dismissed_fingerprints` |
+| `read` | `{type: 'run' \| 'trace' \| 'dataset' \| 'judge' \| 'issue' \| 'audit' \| 'attribute_map', id?}` | one object with `url`; `audit` returns counts; `issue` adds occurrences and the backtest |
+| `write` | `{op: 'dataset.create' \| 'items.upsert' \| 'run.create' \| 'traces.insert' \| 'trace.patch_metadata' \| 'scores.put' \| 'issues.upsert' \| 'issue.transition' \| 'issue.attach' \| ..., data, dry_run?}` | `{ok, ids, url}`; `issues.upsert` adds `created`, `suppressed`, `added` |
 | `compare` | `{dataset_id, run_ids, only?: 'changes'}` | items with per-run cells, per-score summary, `url` |
+
+Issues dedupe on `(project, fingerprint)`. Without a `fingerprint`, the title is lowercased, stripped of punctuation and stopwords, and used as the key. Once an issue is dismissed, `issues.upsert` and `issue.attach` on it return `suppressed: true` and write nothing. Only a human can reopen it, through `PATCH /api/issues/:id`.
 
 Ops and types that belong to a later phase return `{ok: false, note: 'available after phase N'}` or `{items: [], note}`.
 

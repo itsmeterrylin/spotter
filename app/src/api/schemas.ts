@@ -147,3 +147,34 @@ export const attributeMapPut = z
   .array(z.object({ source: z.string().min(1), target: metadataKey, type: z.enum(['string', 'number', 'boolean']) }))
   .max(200)
   .refine((xs) => new Set(xs.map((x) => x.source)).size === xs.length, { message: 'each source may appear once' });
+
+const issueStatus = z.enum(['open', 'confirmed', 'dismissed']);
+const severity = z.enum(['low', 'medium', 'high']);
+const actor = z.enum(['human', 'agent']);
+
+export const occurrence = z.object({ trace_id: id, turn: z.number().int().nonnegative().nullish(), evidence: z.string().nullish() });
+
+export const issueUpsert = z.object({
+  project: z.string().min(1),
+  title: z.string().trim().min(1),
+  fingerprint: z.string().nullish(),
+  severity: severity.optional(),
+  description: z.string().nullish(),
+  judge_name: z.string().min(1).nullish(),
+  seed_trace_id: id.nullish(),
+  traces: z.array(occurrence).max(500).optional(),
+  created_by: actor,
+});
+
+export const issuePatch = z.object({
+  status: issueStatus.optional(),
+  dismissed_reason: z.string().nullish(),
+  severity: severity.optional(),
+  judge_name: z.string().min(1).nullable().optional(),
+  title: z.string().trim().min(1).optional(),
+  actor: actor.default('human'),
+});
+
+export const issueAttach = z.object({ traces: z.array(occurrence).min(1).max(500), created_by: actor.default('human') });
+
+export const issueListQuery = z.object({ status: issueStatus.optional(), project: z.string().min(1).optional() });

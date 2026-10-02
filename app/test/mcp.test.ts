@@ -27,6 +27,8 @@ async function rpc(method: string, params: Record<string, unknown>): Promise<{ r
   return { res, body };
 }
 
+const send = (method: string, path: string, body: unknown) => app.request(path, { method, headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+
 async function call(name: string, args: Record<string, unknown>): Promise<Record<string, unknown>> {
   const { body } = await rpc('tools/call', { name, arguments: args });
   expect(body.error).toBeUndefined();
@@ -172,6 +174,24 @@ describe('MCP /mcp', () => {
     expect(set).toMatchObject({ ok: true, project: 'copper', map: [{ source: 'lk.transfer.destination', target: 'transfer_to', type: 'string' }] });
     const got = await call('read', { type: 'attribute_map', id: 'copper' });
     expect(got).toMatchObject({ project_id: set.project_id, map: set.map, url: 'http://localhost:3000/traces' });
+  });
+
+  test('issues.upsert on a dismissed fingerprint returns suppressed and writes nothing', async () => {
+    const traces = (await call('list', { type: 'traces', run_id: runA })).items as { id: string }[];
+    const first = await call('write', { op: 'issues.upsert', data: { project: 'copper', title: 'Reply slips into Dutch', traces: [{ trace_id: traces[0]?.id ?? '', turn: 1 }] } });
+    expect(first).toMatchObject({ ok: true, status: 'open', created: true, suppressed: false, added: 1 });
+    const id = first.id as string;
+    expect(first.url).toBe(`http://localhost:3000/issues/${id}`);
+    await send('PATCH', `/api/issues/${id}`, { status: 'dismissed', dismissed_reason: 'Guest wrote in Dutch first' });
+    const again = await call('write', { op: 'issues.upsert', data: { project: 'copper', title: 'The reply slips into Dutch!', traces: [{ trace_id: traces[1]?.id ?? '' }] } });
+    expect(again).toEqual({ ok: true, op: 'issues.upsert', ids: [id], id, status: 'dismissed', created: false, suppressed: true, added: 0, url: `http://localhost:3000/issues/${id}` });
+    const issue = await call('read', { type: 'issue', id });
+    expect(issue).toMatchObject({ status: 'dismissed', occurrences: 1, traces: 1 });
+    const list = await call('list', { type: 'issues', status: 'dismissed', project: 'copper' });
+    expect(list.dismissed_fingerprints).toEqual(['reply slips into dutch']);
+    expect((list.items as { id: string }[]).map((i) => i.id)).toEqual([id]);
+    const { body } = await rpc('tools/call', { name: 'write', arguments: { op: 'issue.transition', data: { id, status: 'open' } } });
+    expect(JSON.parse((body.result as ToolResult).content[0]?.text ?? '{}')).toMatchObject({ error: { code: 'conflict' } });
   });
 
   test('placeholders name their phase', async () => {

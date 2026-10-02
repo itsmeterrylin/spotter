@@ -1,9 +1,10 @@
 import { z } from 'zod';
-import { attributeMapPut, datasetCreate, itemsUpsert, judgeActivate, judgeCalibrate, judgePropose, metadataPatch, runCreate, scoresPut, toNewScore, tracesBatch } from '../api/schemas.ts';
+import { attributeMapPut, datasetCreate, issueUpsert, occurrence, itemsUpsert, judgeActivate, judgeCalibrate, judgePropose, metadataPatch, runCreate, scoresPut, toNewScore, tracesBatch } from '../api/schemas.ts';
 import type { Repos } from '../db/repos/index.ts';
 import { putAttributeMap } from '../services/attributeMap.ts';
 import { calibrate } from '../services/calibration.ts';
 import { createDataset, upsertItems } from '../services/datasets.ts';
+import { attachOccurrences, transitionIssue, upsertIssue } from '../services/issues.ts';
 import { activate, propose } from '../services/judges.ts';
 import { createRun } from '../services/runs.ts';
 import { insertBatch, patchMetadata, putScores } from '../services/traces.ts';
@@ -60,6 +61,18 @@ const ops: Record<WriteOp, Handler | number> = {
   'attribute_map.set': op(z.object({ project: z.string().min(1), map: attributeMapPut }), (repos, body) => {
     const view = putAttributeMap(repos, body.project, body.map);
     return { ids: [view.project_id], ...view };
+  }),
+  'issues.upsert': op(issueUpsert.extend({ created_by: issueUpsert.shape.created_by.default('agent') }), (repos, body) => {
+    const result = upsertIssue(repos, body);
+    return { ids: [result.id], ...result };
+  }),
+  'issue.transition': op(z.object({ id, status: z.enum(['open', 'confirmed', 'dismissed']), reason: z.string().nullish() }), (repos, body) => {
+    const issue = transitionIssue(repos, body.id, body.status, 'agent', body.reason);
+    return { ids: [issue.id], status: issue.status, dismissed_reason: issue.dismissed_reason, url: issue.url };
+  }),
+  'issue.attach': op(z.object({ id, traces: z.array(occurrence).min(1).max(500) }), (repos, body) => {
+    const result = attachOccurrences(repos, body.id, body.traces, 'agent');
+    return { ids: [result.id], ...result };
   }),
   'alert.create': 9,
   'alert.test': 9,

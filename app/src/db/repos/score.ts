@@ -37,6 +37,7 @@ export const scoreRepo = (db: Database) => {
   const removeAll = db.query<Score, [string, string, ScoreSource]>('DELETE FROM score WHERE trace_id = ? AND name = ? AND source = ?');
   const removeTurn = db.query<Score, [string, string, ScoreSource, number | null]>('DELETE FROM score WHERE trace_id = ? AND name = ? AND source = ? AND turn IS ?');
   const byTrace = db.query<Score, [string]>('SELECT * FROM score WHERE trace_id = ? ORDER BY name, turn, source');
+  const byJudgeVersion = db.query<Score, [string]>("SELECT * FROM score WHERE source = 'judge' AND judge_version_id = ? ORDER BY trace_id, turn");
   const byRun = db.query<RunScore, [string]>(
     'SELECT s.*, t.dataset_item_id FROM score s JOIN trace t ON t.id = s.trace_id WHERE t.run_id = ? ORDER BY s.trace_id, s.name, s.turn',
   );
@@ -61,6 +62,7 @@ export const scoreRepo = (db: Database) => {
       turn === undefined ? removeAll.run(traceId, name, source).changes : removeTurn.run(traceId, name, source, turn).changes,
     listByTrace: (traceId: string): Score[] => byTrace.all(traceId),
     listByRun: (runId: string): RunScore[] => byRun.all(runId),
+    listByJudgeVersion: (versionId: string): Score[] => byJudgeVersion.all(versionId),
   };
 };
 

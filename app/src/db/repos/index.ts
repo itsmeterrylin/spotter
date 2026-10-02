@@ -1,6 +1,7 @@
 import type { Database } from 'bun:sqlite';
 import { attributeMapRepo } from './attributeMap.ts';
 import { datasetRepo } from './dataset.ts';
+import { issueRepo } from './issue.ts';
 import { judgeRepo } from './judge.ts';
 import { projectRepo } from './project.ts';
 import { runRepo } from './run.ts';
@@ -16,6 +17,7 @@ export const createRepos = (db: Database) => ({
   scores: scoreRepo(db),
   judges: judgeRepo(db),
   attributeMaps: attributeMapRepo(db),
+  issues: issueRepo(db),
   tx: <T>(fn: () => T): T => db.transaction(fn)(),
 });
 

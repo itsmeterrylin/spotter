@@ -3,8 +3,8 @@ import { filter } from '../api/schemas.ts';
 
 export const id = z.string().min(1).max(128);
 
-export const listTypes = ['datasets', 'items', 'runs', 'traces', 'notes', 'judges', 'disagreements', 'alerts', 'deliveries'] as const;
-export const readTypes = ['run', 'trace', 'dataset', 'judge', 'audit', 'attribute_map'] as const;
+export const listTypes = ['datasets', 'items', 'runs', 'traces', 'notes', 'judges', 'disagreements', 'issues', 'alerts', 'deliveries'] as const;
+export const readTypes = ['run', 'trace', 'dataset', 'judge', 'issue', 'audit', 'attribute_map'] as const;
 export const writeOps = [
   'dataset.create',
   'items.upsert',
@@ -17,6 +17,9 @@ export const writeOps = [
   'judge.activate',
   'judge.calibrate',
   'attribute_map.set',
+  'issues.upsert',
+  'issue.transition',
+  'issue.attach',
   'alert.create',
   'alert.test',
 ] as const;
@@ -30,6 +33,8 @@ export const listArgs = {
   run_id: id.optional(),
   judge: z.string().optional(),
   version: z.number().int().optional(),
+  status: z.enum(['open', 'confirmed', 'dismissed']).optional(),
+  project: z.string().optional(),
   limit: z.number().int().min(1).max(500).default(50),
 };
 

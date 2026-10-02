@@ -27,6 +27,8 @@ export const urls = {
   datasetItem: (datasetId: string, itemId: string): string => abs(`/datasets/${datasetId}/items/${itemId}`),
   review: (q: ReviewQuery = {}): string => abs('/review', q),
   reviewTrace: (traceId: string, q: ReviewQuery = {}): string => abs(`/review/${traceId}`, q),
+  issues: (query: { status?: string; project?: string } = {}): string => abs('/issues', query),
+  issue: (id: string, tab?: 'traces' | 'backtest'): string => abs(`/issues/${id}`, { tab }),
   judges: (): string => abs('/judges'),
   judge: (name: string): string => abs(`/judges/${name}`),
   judgeVersion: (name: string, n: number): string => abs(`/judges/${name}/versions/${n}`),

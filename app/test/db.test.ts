@@ -3,10 +3,10 @@ import { uuid7 } from '@spotter/evals/uuid7';
 import { openDatabase } from '../src/db/client.ts';
 import { createRepos } from '../src/db/repos/index.ts';
 
-const tables = ['project', 'dataset', 'dataset_item', 'run', 'trace', 'judge', 'judge_version', 'score', 'judge_calibration', 'attribute_map', 'alert_rule', 'alert_delivery'];
+const tables = ['project', 'dataset', 'dataset_item', 'run', 'trace', 'judge', 'judge_version', 'score', 'judge_calibration', 'attribute_map', 'alert_rule', 'alert_delivery', 'issue', 'issue_trace'];
 
 describe('schema', () => {
-  test('creates all twelve tables on an in-memory database and is idempotent', () => {
+  test('creates all fourteen tables on an in-memory database and is idempotent', () => {
     const db = openDatabase(':memory:');
     const names = db.query<{ name: string }, []>("SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name").all().map((r) => r.name);
     expect(names.sort()).toEqual([...tables].sort());
