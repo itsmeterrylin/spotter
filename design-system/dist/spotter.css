@@ -34,6 +34,11 @@
   --row: 72px;
   --container: 1200px;
   --container-narrow: 720px;
+  --rail: 64px;
+  --sidebar: 272px;
+  --aside: 320px;
+  --statusbar: 40px;
+  --row-list: 56px;
   --tint: 14%;
   color-scheme: light;
 }
@@ -158,6 +163,60 @@ textarea.input { min-height: 120px; resize: vertical; }
 
 /* 7. Key */
 .kbd { display: inline-flex; align-items: center; justify-content: center; min-width: 40px; height: 40px; padding-inline: var(--space-8); border-radius: 8px; border: 2px solid var(--border); border-bottom-width: 4px; background: var(--surface); color: var(--ink); font-family: var(--font-mono); font-size: var(--text-caption); font-weight: 600; }
+
+/* Shell. Neutral surfaces, hairline borders, quiet chrome. */
+
+/* 8. Rail */
+.rail { display: flex; flex-direction: column; align-items: center; gap: var(--space-8); width: var(--rail); padding-block: var(--space-16); background: var(--surface); border-right: 1px solid var(--border); }
+.rail-btn { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; border: 0; border-radius: 12px; background: transparent; color: var(--ink-muted); text-decoration: none; cursor: pointer; transition: background var(--duration), color var(--duration); }
+.rail-btn:hover { color: var(--ink); background: color-mix(in srgb, var(--ink) 6%, transparent); }
+.rail-btn[aria-current="page"] { color: var(--brand); background: color-mix(in srgb, var(--brand) var(--tint), var(--surface)); }
+.avatar { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; flex: none; border-radius: var(--radius-pill); background: color-mix(in srgb, var(--brand) var(--tint), var(--surface)); color: var(--brand); font-size: var(--text-caption); font-weight: 600; text-decoration: none; text-transform: uppercase; }
+
+/* 9. Two-line nav item */
+.nav2 { display: flex; align-items: center; gap: var(--space-16); min-height: 64px; padding: var(--space-8) var(--space-16); border-radius: 12px; color: var(--ink); text-decoration: none; }
+.nav2:hover { background: color-mix(in srgb, var(--ink) 4%, transparent); }
+.nav2 > .ic, .nav2 > .dot { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; flex: none; border-radius: var(--radius-pill); background: color-mix(in srgb, var(--ink) 6%, var(--surface)); color: var(--ink-muted); }
+.nav2 > .dot > .ic { width: var(--icon-sm); height: var(--icon-sm); }
+.nav2 .label { display: block; font-size: var(--text-caption); font-weight: 600; line-height: var(--lh-caption); }
+.nav2 .meta { display: block; font-size: var(--text-caption); line-height: var(--lh-caption); color: var(--ink-muted); font-variant-numeric: tabular-nums; }
+.nav2[aria-current="page"] { background: color-mix(in srgb, var(--brand) var(--tint), var(--surface)); }
+.nav2[aria-current="page"] > .dot { background: var(--surface); color: var(--brand); }
+
+/* 10. Tabs */
+.tabs { display: flex; gap: var(--space-8); border-bottom: 1px solid var(--border); overflow-x: auto; scrollbar-width: none; }
+.tab { display: inline-flex; align-items: center; gap: var(--space-8); min-height: var(--control-compact); padding-inline: var(--space-16); margin-bottom: -1px; border-bottom: 2px solid transparent; color: var(--ink-muted); font-size: var(--text-caption); font-weight: 600; text-decoration: none; white-space: nowrap; }
+.tab:hover { color: var(--ink); }
+.tab[aria-current="page"] { color: var(--ink); border-bottom-color: var(--brand); }
+.tab .count { color: var(--ink-muted); font-weight: 400; font-variant-numeric: tabular-nums; }
+
+/* 11. Aside */
+.aside { display: flex; flex-direction: column; gap: var(--space-32); width: var(--aside); flex: none; padding: var(--space-16); background: var(--surface); border-left: 1px solid var(--border); }
+.aside-wide { width: calc(var(--aside) * 1.5); }
+.aside h2 { font-size: var(--text-caption); font-weight: 600; line-height: var(--lh-caption); color: var(--ink-muted); }
+
+/* 12. Property row */
+.prop { display: grid; grid-template-columns: 104px minmax(0, 1fr); align-items: center; gap: var(--space-16); min-height: var(--control-compact); font-size: var(--text-caption); }
+.prop > dt, .prop > .key { color: var(--ink-muted); }
+.prop > dd, .prop > .value { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+
+/* 13. Status bar */
+.statusbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-8) var(--space-16); min-height: var(--statusbar); padding-inline: var(--space-16); border-top: 1px solid var(--border); background: var(--surface); color: var(--ink-muted); font-size: var(--text-caption); line-height: var(--lh-caption); }
+.statusbar > * { display: inline-flex; flex-wrap: wrap; align-items: center; gap: var(--space-16); }
+
+/* 14. State circle: open hollow, confirmed filled brand, dismissed slashed */
+.state { position: relative; display: inline-block; width: var(--icon-sm); height: var(--icon-sm); flex: none; border: 2px solid var(--ink-muted); border-radius: var(--radius-pill); }
+.state-confirmed { background: var(--brand); border-color: var(--brand); }
+.state-dismissed { border-color: color-mix(in srgb, var(--ink-muted) 60%, transparent); }
+.state-dismissed::after { content: ""; position: absolute; top: 50%; left: -2px; right: -2px; height: 2px; background: color-mix(in srgb, var(--ink-muted) 60%, transparent); transform: translateY(-50%) rotate(-45deg); }
+
+/* 15. List row */
+.list-row { display: flex; align-items: center; gap: var(--space-16); min-height: var(--row-list); padding-inline: var(--space-16); border-bottom: 1px solid var(--border); color: inherit; text-decoration: none; }
+.list-row:last-child { border-bottom: 0; }
+.list-row:hover, .list-row[data-focus] { background: color-mix(in srgb, var(--ink) 4%, var(--surface)); }
+.list-row[data-focus] { box-shadow: inset 2px 0 0 var(--brand); }
+.list-row > .grow { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.list-row > .meta { display: inline-flex; align-items: center; gap: 4px; color: var(--ink-muted); font-size: var(--text-caption); white-space: nowrap; }
 
 /* Bar (goes inside a card or row) */
 .bar { position: relative; height: 12px; border-radius: var(--radius-pill); background: color-mix(in srgb, var(--ink) 8%, var(--surface)); overflow: hidden; }

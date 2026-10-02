@@ -71,7 +71,7 @@
 </div></section>
 
 <section class="section"><div class="container">
-  <h2 class="t-title heavy"><svg class="ic ic-lg"><use href="#i-settings"/></svg>Seven components</h2>
+  <h2 class="t-title heavy"><svg class="ic ic-lg"><use href="#i-settings"/></svg>Components</h2>
   <div class="demo">
     <div class="cluster">
       <button class="btn btn-primary" type="button"><svg class="ic"><use href="#i-run"/></svg>New run</button>
@@ -120,6 +120,29 @@
       <div class="field"><label for="note">Note</label><textarea class="input" id="note">Picked cable row. Default should be barbell.</textarea></div>
       <div class="cluster" style="--gap: var(--space-8)"><span class="kbd">1</span><span class="kbd">2</span><span class="kbd">D</span><span class="kbd">A</span><span class="kbd">U</span><span class="kbd">⌘↵</span></div>
     </div>
+    <div class="card card-flush" style="display:flex; overflow:hidden">
+      <nav class="rail" aria-label="Rail">
+        <a class="rail-btn" href="#" aria-current="page" aria-label="Issues" title="Issues"><svg class="ic"><use href="#i-inbox"/></svg></a>
+        <a class="rail-btn" href="#" aria-label="Search" title="Search"><svg class="ic"><use href="#i-search"/></svg></a>
+        <a class="rail-btn" href="#" aria-label="Notifications" title="Notifications"><svg class="ic"><use href="#i-bell"/></svg></a>
+        <span class="avatar" style="margin-top:auto">CO</span>
+      </nav>
+      <div style="width:var(--sidebar); padding:var(--space-8); border-right:1px solid var(--border)">
+        <a class="nav2" href="#" aria-current="page"><span class="dot"><svg class="ic"><use href="#i-issue"/></svg></span><span><span class="label">Issues</span><span class="meta">4 open</span></span></a>
+        <a class="nav2" href="#"><span class="dot"><svg class="ic"><use href="#i-trace"/></svg></span><span><span class="label">Traces</span><span class="meta">1,204</span></span></a>
+      </div>
+      <div style="flex:1; min-width:0">
+        <nav class="tabs"><a class="tab" href="#" aria-current="page">Open <span class="count">4</span></a><a class="tab" href="#">Confirmed <span class="count">1</span></a><a class="tab" href="#">Dismissed <span class="count">2</span></a></nav>
+        <a class="list-row" href="#" data-focus="1"><span class="state"></span><span class="grow">Reply slips into Dutch</span><span class="pill pill-fail">high</span><span class="meta">2h</span></a>
+        <a class="list-row" href="#"><span class="state state-confirmed"></span><span class="grow">Refund promised without a booking</span><span class="pill">medium</span><span class="meta">1d</span></a>
+        <a class="list-row" href="#"><span class="state state-dismissed"></span><span class="grow">Greeting too formal</span><span class="pill">low</span><span class="meta">3d</span></a>
+      </div>
+      <aside class="aside" style="border-top:0">
+        <h2>Properties</h2>
+        <dl><div class="prop"><dt>Status</dt><dd>Open</dd></div><div class="prop"><dt>Judge</dt><dd>language-leak</dd></div></dl>
+      </aside>
+    </div>
+    <div class="statusbar card card-flush"><span>copper · v0.1.0</span><span>MCP /mcp · 4 open</span></div>
   </div>
 </div></section>
 

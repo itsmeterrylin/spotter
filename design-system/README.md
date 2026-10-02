@@ -1,6 +1,6 @@
 # Spotter design system
 
-One tokens file, one generated CSS file, seven components. The class names are the contract.
+One tokens file, one generated CSS file, seven components, eight shell components. The class names are the contract.
 
 ```bash
 npm run build       # dist/spotter.css, dist/tokens.json, preview/index.html, preview/prototype.html
@@ -18,7 +18,8 @@ npm run check:deps  # 60-day release-age gate
 | Color | 10 roles: canvas, surface, border, ink, ink-muted, brand, pass, fail, defer, focus. Tints via `color-mix`. Light and dark. |
 | Space | 8, 16, 32, 64 |
 | Radius | 16, and pill. No shadows. |
-| Controls | 56px, 48px compact, 72px rows. One primary action per screen. |
+| Controls | 56px, 48px compact, 72px rows, 56px list rows. One primary action per screen. |
+| Shell | Rail 64, sidebar 272, aside 320 (wide 480), status bar 40. Hairline borders, no shadows. |
 
 ## Components
 
@@ -32,6 +33,19 @@ npm run check:deps  # 60-day release-age gate
 | `.input`, `.field` | textarea |
 | `.kbd` | |
 
+Shell components:
+
+| Class | Holds |
+|---|---|
+| `.rail`, `.rail-btn`, `.avatar` | Icon-only left rail; `aria-current="page"` marks the active button |
+| `.nav2` | Two-line sidebar item: `.dot` icon circle, `.label`, `.meta` |
+| `.tabs`, `.tab` | Section tabs; child `.count`; `aria-current="page"` |
+| `.aside` | Right sidebar; `-wide`; `h2` section labels |
+| `.prop` | Property row: `dt`/`.key`, `dd`/`.value` |
+| `.statusbar` | Bottom bar with left and right groups |
+| `.state` | Issue status circle: `-confirmed` `-dismissed`; plain is open |
+| `.list-row` | Dense list row; child `.grow` `.meta`; `data-focus` |
+
 Utilities: `.t-caption` `.t-body` `.t-title` `.t-stat`, `.strong` `.heavy` `.muted` `.mono` `.num` `.link` `.pos` `.neg`, `.stack` `.cluster` `.container` `.narrow` `.scroll-x`, `.ic` `.ic-sm` `.ic-lg`, `.bar`.
 
 ## Files
@@ -40,7 +54,7 @@ Utilities: `.t-caption` `.t-body` `.t-title` `.t-stat`, `.strong` `.heavy` `.mut
 |---|---|
 | `src/tokens.ts` | Every token |
 | `src/css.ts` | The generator |
-| `src/icons.ts` | 26 icons named by meaning |
+| `src/icons.ts` | 36 icons named by meaning |
 | `src/build.ts` | Builds CSS and the two preview pages |
 | `src/build-docs.ts` | Renders markdown docs with the system |
 | `preview/template.html` | System preview |

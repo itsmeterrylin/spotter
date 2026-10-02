@@ -74,4 +74,11 @@ export const size = {
   row: 72,
   container: 1200,
   containerNarrow: 720,
+  /** Shell regions: left rail, section sidebar, right aside, bottom status bar. */
+  rail: 64,
+  sidebar: 272,
+  aside: 320,
+  statusbar: 40,
+  /** List rows are denser than table rows; text stays at 16 or above. */
+  rowList: 56,
 } as const;
