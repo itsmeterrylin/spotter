@@ -1,6 +1,6 @@
 import type { Dataset } from '../db/repos/dataset.ts';
 import { urls } from '../urls.ts';
-import type { RunCard } from './data.ts';
+import type { RunCard, Shell } from './data.ts';
 import { Layout } from './Layout.tsx';
 import { type Crumb, Delta, Empty, Icon, pct } from './ui.tsx';
 
@@ -55,12 +55,12 @@ export const compareAction = (cards: RunCard[]) => {
   );
 };
 
-type Props = { cards: RunCard[]; dataset: Dataset | null; unread: number };
+type Props = { cards: RunCard[]; dataset: Dataset | null; shell: Shell };
 
-export const RunsPage = ({ cards, dataset, unread }: Props) => {
+export const RunsPage = ({ cards, dataset, shell }: Props) => {
   const crumbs: Crumb[] = dataset ? [[urls.datasets(), 'Datasets'], [urls.dataset(dataset.id), dataset.name]] : [];
   return (
-    <Layout title="Runs" section="runs" unread={unread} crumbs={crumbs} action={compareAction(cards)} script="rows">
+    <Layout title="Runs" section="runs" shell={shell} crumbs={crumbs} action={compareAction(cards)} script="rows">
       {cards.length ? <RunsTable cards={cards} /> : <Empty icon="run" title="No runs yet" />}
     </Layout>
   );

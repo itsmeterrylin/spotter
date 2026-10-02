@@ -1,10 +1,11 @@
 import type { Cell, Comparison } from '../services/compare.ts';
 import type { DatasetView } from '../services/datasets.ts';
 import { urls } from '../urls.ts';
+import type { Shell } from './data.ts';
 import { Layout } from './Layout.tsx';
 import { Empty, Icon, short, summarize } from './ui.tsx';
 
-type Props = { comparison: Comparison; dataset: DatasetView; only: boolean; score?: string; unread: number };
+type Props = { comparison: Comparison; dataset: DatasetView; only: boolean; score?: string; shell: Shell };
 
 const raw = (v: number): string => (Number.isInteger(v) ? String(v) : v.toFixed(2));
 
@@ -28,14 +29,14 @@ const rowClass = (a: Cell | null, b: Cell | null, names: string[]): string => {
   return worse ? 'changed' : better ? 'improved' : '';
 };
 
-export const ComparePage = ({ comparison, dataset, only, score, unread }: Props) => {
+export const ComparePage = ({ comparison, dataset, only, score, shell }: Props) => {
   const runs = comparison.runs;
   const first = runs[0];
   const last = runs[runs.length - 1];
   const names = Object.keys(comparison.summary);
   const columns = 1 + runs.length + names.length;
   return (
-    <Layout title="Compare" section="runs" unread={unread} crumbs={last ? [[urls.runs(dataset.id), 'Runs'], [urls.run(last.id), last.name]] : [[urls.runs(dataset.id), 'Runs']]} script="compare">
+    <Layout title="Compare" section="runs" shell={shell} crumbs={last ? [[urls.runs(dataset.id), 'Runs'], [urls.run(last.id), last.name]] : [[urls.runs(dataset.id), 'Runs']]} script="compare">
       <div class="page-head">
         <div class="chips">
           {runs.map((r, i) => (

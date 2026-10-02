@@ -20,7 +20,11 @@ describe('trace', () => {
     expect(html).toContain('bench');
     expect(html).toContain(`/review/${s.a[0]}?run=${s.runA}`);
     expect(html).toContain(`<a href="${base}/runs/${s.runA}">rules-v1</a>`);
-    expect(html).toContain('class="nav-item pill-brand" href="http://localhost:3000/traces"');
+    expect(html).toContain('class="nav2" href="http://localhost:3000/traces" aria-current="page"');
+    expect(html).toContain('<button class="btn btn-primary" type="button" data-new-issue-open="true">');
+    expect(html).toMatch(new RegExp(`<form class="card new-issue stack" data-new-issue="true" data-project="[0-9a-f-]{36}" data-trace="${s.a[0]}" hidden="">`));
+    expect(html).toContain('<aside class="aside" aria-label="Trace">');
+    expect(html).toContain('/client/trace.js');
   });
 
   test('a labeled trace shows the human verdict; ?turn= and unknown ids behave', async () => {

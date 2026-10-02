@@ -1,21 +1,21 @@
 import type { Trace } from '../db/repos/trace.ts';
 import { urls } from '../urls.ts';
-import type { HumanVerdict, RunCard } from './data.ts';
+import type { HumanVerdict, RunCard, Shell } from './data.ts';
 import { Layout } from './Layout.tsx';
 import { Delta, Empty, Icon, pct, short, summarize, VerdictPill } from './ui.tsx';
 
 export type TraceRow = { trace: Trace; verdict: HumanVerdict | null; value: number | null };
 
-type Props = { card: RunCard; rows: TraceRow[]; unread: number };
+type Props = { card: RunCard; rows: TraceRow[]; shell: Shell };
 
 const rowIcon = (value: number | null): 'pass' | 'fail' | 'trace' => (value === 1 ? 'pass' : value === 0 ? 'fail' : 'trace');
 
-export const RunPage = ({ card, rows, unread }: Props) => {
+export const RunPage = ({ card, rows, shell }: Props) => {
   const { run, baseline, scores, primary, unlabeled, regressed } = card;
   const compareUrl = baseline ? urls.compare(run.dataset_id, [baseline.id, run.id], 'changes') : null;
   const action = baseline && compareUrl ? <a class="btn btn-primary" href={compareUrl}><Icon name="compare" />Compare with {baseline.name}</a> : undefined;
   return (
-    <Layout title={run.name} section="runs" unread={unread} crumbs={[[urls.runs(run.dataset_id), 'Runs']]} action={action}>
+    <Layout title={run.name} section="runs" shell={shell} crumbs={[[urls.runs(run.dataset_id), 'Runs']]} action={action}>
       <div class="stats">
         {Object.entries(scores).map(([name, s]) => (
           <a class="card stat" href={urls.run(run.id, name)} data-selected={name === primary ? '1' : undefined}>

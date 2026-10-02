@@ -47,6 +47,7 @@ export const issueRepo = (db: Database) => {
   const attach = db.query<Occurrence, [string, string, number | null, string | null, CreatedBy, string]>(
     'INSERT INTO issue_trace (issue_id, trace_id, turn, evidence, created_by, created_at) VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT DO NOTHING',
   );
+  const byTrace = db.query<IssueRow, [string]>(`${counted} WHERE i.id IN (SELECT issue_id FROM issue_trace WHERE trace_id = ?) ORDER BY i.updated_at DESC`);
   const occurrences = db.query<Occurrence, [string]>('SELECT * FROM issue_trace WHERE issue_id = ? ORDER BY created_at DESC, trace_id, turn');
   const statusCounts = db.query<{ status: IssueStatus; n: number }, [string | null]>('SELECT status, COUNT(*) AS n FROM issue WHERE project_id = ?1 OR ?1 IS NULL GROUP BY status');
   const dismissed = db.query<{ fingerprint: string }, [string]>("SELECT fingerprint FROM issue WHERE project_id = ? AND status = 'dismissed' ORDER BY fingerprint");
@@ -69,6 +70,7 @@ export const issueRepo = (db: Database) => {
       return list.reduce((added, o) => added + attach.run(issueId, o.trace_id, o.turn ?? null, o.evidence ?? null, createdBy, now).changes, 0);
     },
     occurrences: (issueId: string): Occurrence[] => occurrences.all(issueId),
+    listByTrace: (traceId: string): IssueRow[] => byTrace.all(traceId),
     countByStatus: (projectId?: string): Record<IssueStatus, number> => {
       const out: Record<IssueStatus, number> = { open: 0, confirmed: 0, dismissed: 0 };
       for (const r of statusCounts.all(projectId ?? null)) out[r.status] = r.n;

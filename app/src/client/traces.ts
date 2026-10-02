@@ -1,6 +1,8 @@
+import { wireNewIssue } from './newIssue.ts';
+
 const rows = [...document.querySelectorAll<HTMLElement>('tr.linkrow[data-trace]')];
 const pane = document.getElementById('pane') as HTMLElement | null;
-const split = pane?.parentElement as HTMLElement | null;
+wireNewIssue();
 
 const withTrace = (id: string | null): string => {
   const url = new URL(location.href);
@@ -17,21 +19,19 @@ const mark = (id: string | null): void => {
 };
 
 const closePane = (push = true): void => {
-  if (!pane || !split) return;
+  if (!pane) return;
   pane.hidden = true;
   pane.innerHTML = '';
-  split.removeAttribute('data-pane');
   mark(null);
   if (push) history.pushState(null, '', withTrace(null));
 };
 
 const openPane = async (id: string, push = true): Promise<void> => {
-  if (!pane || !split) return;
+  if (!pane) return;
   const res = await fetch(`/traces/${id}/pane?close=${encodeURIComponent(withTrace(null))}`, { headers: { accept: 'text/html' } });
   if (!res.ok) return;
   pane.innerHTML = await res.text();
   pane.hidden = false;
-  split.setAttribute('data-pane', '1');
   mark(id);
   if (push) history.pushState(null, '', withTrace(id));
   pane.scrollTop = 0;
@@ -56,7 +56,7 @@ pane?.addEventListener('click', (e) => {
 });
 
 document.addEventListener('keydown', (e) => {
-  if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+  if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement) return;
   const i = selectedIndex();
   if (e.key === 'Escape' && i >= 0) closePane();
   else if (e.key === 'ArrowDown' && rows.length) { e.preventDefault(); void openPane(rows[Math.min(i + 1, rows.length - 1)]?.dataset.trace ?? ''); }
@@ -70,4 +70,3 @@ window.addEventListener('popstate', () => {
   else closePane(false);
 });
 
-export {};

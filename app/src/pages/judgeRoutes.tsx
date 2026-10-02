@@ -4,19 +4,20 @@ import type { Repos } from '../db/repos/index.ts';
 import { notFound } from '../errors.ts';
 import { activate, disagreementCount, getJudge, type JudgeView, listJudges, requireVersion } from '../services/judges.ts';
 import { urls } from '../urls.ts';
+import type { Shell } from './data.ts';
 import { JudgePage, JudgesPage } from './Judges.tsx';
 import { JudgeVersionPage } from './JudgeVersion.tsx';
 
 const activeDisagreements = (repos: Repos, judge: JudgeView): number | null => (judge.active_version_id ? disagreementCount(repos, judge.active_version_id) : null);
 
-export function judgeRoutes(repos: Repos, unread: () => number): Hono {
+export function judgeRoutes(repos: Repos, shell: () => Shell): Hono {
   const app = new Hono();
 
-  app.get('/', (c) => c.html(<JudgesPage judges={listJudges(repos).judges} unread={unread()} />));
+  app.get('/', (c) => c.html(<JudgesPage judges={listJudges(repos).judges} shell={shell()} />));
 
   app.get('/:name', (c) => {
     const judge = getJudge(repos, c.req.param('name'));
-    return c.html(<JudgePage judge={judge} disagreements={activeDisagreements(repos, judge)} unread={unread()} />);
+    return c.html(<JudgePage judge={judge} disagreements={activeDisagreements(repos, judge)} shell={shell()} />);
   });
 
   app.post('/:name/activate', async (c) => {
@@ -31,7 +32,7 @@ export function judgeRoutes(repos: Repos, unread: () => number): Hono {
     const version = judge.versions.find((v) => v.number === number);
     if (!version) throw notFound(`judge ${judge.name} version`, String(number));
     const disagreements = version.active ? activeDisagreements(repos, judge) : null;
-    return c.html(<JudgeVersionPage judge={judge} version={version} disagreements={disagreements} unread={unread()} />);
+    return c.html(<JudgeVersionPage judge={judge} version={version} disagreements={disagreements} shell={shell()} />);
   });
 
   app.get('/:name/disagreements', (c) => {

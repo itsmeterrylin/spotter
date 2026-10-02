@@ -63,6 +63,11 @@ function one(f: Filter): Where {
     const c = clause(`json_extract(value, ?)`, f);
     return exists('json_each(trace.events)', { where: c.where, params: [`$.${key ?? 'name'}`, ...c.params] });
   }
+  if (field === 'text') {
+    if (f.operator !== 'contains') throw invalid('text filters take the contains operator');
+    const like = `%${scalar(f.value, f)}%`;
+    return { where: '(trace.input LIKE ? OR trace.output LIKE ? OR trace.messages LIKE ?)', params: [like, like, like] };
+  }
   if (field === 'source') {
     const c = exists('score s', { where: 's.trace_id = trace.id AND s.source = ?', params: [scalar(f.value, f)] });
     return f.operator === '!=' ? { where: `NOT ${c.where}`, params: c.params } : c;

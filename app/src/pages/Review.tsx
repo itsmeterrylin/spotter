@@ -3,7 +3,7 @@ import type { Score } from '../db/repos/score.ts';
 import type { Message } from '../db/types.ts';
 import type { TraceView } from '../services/traces.ts';
 import { urls } from '../urls.ts';
-import type { HumanVerdict, JudgeSaid, Queue } from './data.ts';
+import type { HumanVerdict, JudgeSaid, Queue, Shell } from './data.ts';
 import { Layout } from './Layout.tsx';
 import { Turn } from './Trace.tsx';
 import { type Crumb, Empty, Icon, JsonView, type Verdict } from './ui.tsx';
@@ -18,7 +18,7 @@ type Props = {
   prev: string | null;
   datasets: Dataset[];
   turn?: number;
-  unread: number;
+  shell: Shell;
 };
 
 const verdicts: Array<[Verdict, string, string]> = [
@@ -69,8 +69,8 @@ const crumbsOf = (queue: Queue): Crumb[] => {
   return queue.run ? [[urls.runs(queue.run.dataset_id), 'Runs'], [urls.run(queue.run.id), queue.run.name]] : [[urls.traces(), 'Traces']];
 };
 
-export const ReviewPage = ({ trace, verdict, judgeSaid, score, queue, next, prev, datasets, turn, unread }: Props) => (
-  <Layout title="Review" section={queue.judge ? 'judges' : 'traces'} unread={unread} crumbs={crumbsOf(queue)} script="review">
+export const ReviewPage = ({ trace, verdict, judgeSaid, score, queue, next, prev, datasets, turn, shell }: Props) => (
+  <Layout title="Review" section={queue.judge ? 'judges' : 'traces'} shell={shell} crumbs={crumbsOf(queue)} script="review">
     <div
       class="review"
       id="review"
@@ -132,8 +132,8 @@ export const ReviewPage = ({ trace, verdict, judgeSaid, score, queue, next, prev
   </Layout>
 );
 
-export const ReviewEmpty = ({ unread }: { unread: number }) => (
-  <Layout title="Review" section="traces" unread={unread}>
+export const ReviewEmpty = ({ shell }: { shell: Shell }) => (
+  <Layout title="Review" section="traces" shell={shell}>
     <Empty icon="pass" title="Nothing to label" action={<a class="btn btn-primary" href={urls.notifications()}>Notifications</a>} />
   </Layout>
 );

@@ -1,7 +1,7 @@
 import { raw } from 'hono/html';
 import type { Child } from 'hono/jsx';
 import { type IconName, iconNames, iconPaths } from '../../../design-system/src/icons.ts';
-import type { Json } from '../db/types.ts';
+import type { IssueStatus, Json, Severity } from '../db/types.ts';
 
 export const sprite = raw(
   `<svg hidden xmlns="http://www.w3.org/2000/svg">${iconNames.map((n) => `<symbol id="i-${n}" viewBox="0 0 24 24">${iconPaths[n]}</symbol>`).join('')}</svg>`,
@@ -96,3 +96,23 @@ export const VerdictPill = ({ verdict }: { verdict: Verdict | null }) =>
   );
 
 export const short = (id: string): string => (id.length > 16 ? id.slice(-12) : id);
+
+const minute = 60_000;
+
+export const ago = (iso: string, now: number = Date.now()): string => {
+  const m = Math.max(0, Math.floor((now - Date.parse(iso)) / minute));
+  if (m < 1) return 'now';
+  if (m < 60) return `${m}m`;
+  if (m < 60 * 24) return `${Math.floor(m / 60)}h`;
+  if (m < 60 * 24 * 30) return `${Math.floor(m / (60 * 24))}d`;
+  return iso.slice(0, 10);
+};
+
+export const statusLabel: Record<IssueStatus, string> = { open: 'Open', confirmed: 'Confirmed', dismissed: 'Dismissed' };
+export const severityPill: Record<Severity, string> = { low: 'pill', medium: 'pill pill-defer', high: 'pill pill-fail' };
+
+export const State = ({ status }: { status: IssueStatus }) => (
+  <span class={`state${status === 'open' ? '' : ` state-${status}`}`} role="img" aria-label={statusLabel[status]}></span>
+);
+
+export const SeverityPill = ({ severity }: { severity: Severity }) => <span class={severityPill[severity]}>{severity}</span>;

@@ -23,7 +23,7 @@ describe('compare', () => {
     expect(html).toContain('class="linkrow changed"');
     expect(html).toContain('class="linkrow improved"');
     expect(html).toContain('/client/compare.js');
-    expect(html).toContain('class="nav-item pill-brand" href="http://localhost:3000/runs"');
+    expect(html).toContain('class="nav2" href="http://localhost:3000/runs" aria-current="page"');
   });
 
   test('?only=changes drops unchanged rows and marks the toggle pressed', async () => {

@@ -61,6 +61,7 @@ export const traceRepo = (db: Database) => {
   const byRun = db.query<TraceRow, [string]>('SELECT * FROM trace WHERE run_id = ? ORDER BY id');
   const countAll = db.query<{ n: number }, []>('SELECT COUNT(*) AS n FROM trace');
   const countProject = db.query<{ n: number }, [string]>('SELECT COUNT(*) AS n FROM trace WHERE project_id = ?');
+  const countUnlabeled = db.query<{ n: number }, []>("SELECT COUNT(*) AS n FROM trace t WHERE NOT EXISTS (SELECT 1 FROM score s WHERE s.trace_id = t.id AND s.source = 'human')");
   const insert = db.prepare<TraceRow, SQLQueryBindings[]>(`INSERT OR IGNORE INTO trace (${columns}) VALUES (${columns.split(', ').map(() => '?').join(', ')})`);
   const update = db.query<TraceRow, [string | null, string | null, string]>('UPDATE trace SET metadata = ?, events = ? WHERE id = ? RETURNING *');
 
@@ -90,6 +91,7 @@ export const traceRepo = (db: Database) => {
     },
     listByRun: (runId: string): Trace[] => byRun.all(runId).map(parse),
     count: (projectId?: string): number => (projectId ? countProject.get(projectId) : countAll.get())?.n ?? 0,
+    countUnlabeled: (): number => countUnlabeled.get()?.n ?? 0,
     list: (q: TraceQuery): Trace[] => {
       const cursor = q.cursor ? ' AND id < ?' : '';
       const params: SQLQueryBindings[] = q.cursor ? [...q.params, q.cursor, q.limit] : [...q.params, q.limit];

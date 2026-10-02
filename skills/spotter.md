@@ -37,7 +37,7 @@ Every successful result carries `url`. Every list row carries `url`. Errors come
 
 - `items` needs `dataset_id`. `runs` accepts `dataset_id`. `traces` and `notes` accept `run_id` and `filters`.
 - `notes` returns human scores that have a reason, each with its trace, so you can cluster failure modes.
-- `filters` fields: `id`, `run_id`, `dataset_item_id`, `start`, `end`, `metadata.<key>`, `tags`, `events.name`, `source`, `score` (with `key` = score name). Operators: `=`, `!=`, `<`, `<=`, `>`, `>=`, `contains`, `starts_with`, `in`, `is_empty`.
+- `filters` fields: `id`, `run_id`, `dataset_item_id`, `start`, `end`, `metadata.<key>`, `tags`, `events.name`, `source`, `score` (with `key` = score name), `text` (`contains` over input, output, and messages). Operators: `=`, `!=`, `<`, `<=`, `>`, `>=`, `contains`, `starts_with`, `in`, `is_empty`.
 - `judges` returns every judge with `active_version`, `status` (`calibrated`, `needs_labels`, `pending`), `labels`, and `disagreements`.
 - `disagreements` needs `judge` and accepts `version` (default: the active version). It returns traces where the human verdict and that judge version differ in pass or fail.
 - `issues` accepts `status` (`open`, `confirmed`, `dismissed`) and `project`. It returns rows with `occurrences` and `traces`, plus `counts` per status and `dismissed_fingerprints`. Put the dismissed fingerprints in your prompt as exclusions before you look for new failures.
@@ -106,6 +106,9 @@ Send these to the person. A link opened in a fresh tab shows the same state it s
 | Review queue | `/review?run={run_id}&filter=unlabeled` |
 | Review one trace | `/review/{trace_id}?run={run_id}` |
 | Judge | `/judges/{name}`, `/judges/{name}/versions/{n}`, `/judges/{name}/disagreements?version={n}` |
+| Issues | `/` (open), `/issues?status={status}&project={name}` |
+| Issue | `/issues/{id}?tab=traces` or `?tab=backtest` |
+| Trace search | `/traces?q={text}&tab=unlabeled` |
 
 Use the `url` field from a result instead of building a link by hand. The origin comes from `SPOTTER_BASE_URL`.
 

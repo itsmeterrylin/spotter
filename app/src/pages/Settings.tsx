@@ -1,11 +1,12 @@
 import { config } from '../config.ts';
 import type { AttributeMapView } from '../services/attributeMap.ts';
 import { urls } from '../urls.ts';
+import type { Shell } from './data.ts';
 import { Layout } from './Layout.tsx';
 import { Icon } from './ui.tsx';
 import pkg from '../../package.json' with { type: 'json' };
 
-type Props = { maps: AttributeMapView[]; authSet: boolean; judge: { baseUrl: string; keySet: boolean }; unread: number };
+type Props = { maps: AttributeMapView[]; authSet: boolean; judge: { baseUrl: string; keySet: boolean }; shell: Shell };
 
 const Code = ({ text }: { text: string }) => <pre class="code">{text}</pre>;
 
@@ -43,8 +44,8 @@ const Section = ({ icon, title, children }: { icon: Parameters<typeof Icon>[0]['
   </section>
 );
 
-export const SettingsPage = ({ maps, authSet, judge, unread }: Props) => (
-  <Layout title="Settings" section="settings" unread={unread}>
+export const SettingsPage = ({ maps, authSet, judge, shell }: Props) => (
+  <Layout title="Settings" section="settings" shell={shell}>
     <div class="stack settings">
       <Section icon="human" title="Appearance">
         <div class="cluster" style="--gap: var(--space-8)" role="group" aria-label="Theme">

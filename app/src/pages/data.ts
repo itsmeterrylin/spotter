@@ -8,6 +8,9 @@ import { requireVersion } from '../services/judges.ts';
 import { baselineOf } from '../services/runs.ts';
 import { regressed, summary, type ScoreSummary } from '../services/summary.ts';
 import { unlabeledIds } from '../services/traces.ts';
+import { config } from '../config.ts';
+import { unreadCount } from '../services/notifications.ts';
+import pkg from '../../package.json' with { type: 'json' };
 import type { Verdict } from './ui.tsx';
 
 export type HumanVerdict = { name: string; verdict: Verdict; note: string | null };
@@ -78,4 +81,32 @@ export function neighbors(ids: string[], current: string): { next: string | null
   const next = after[0] ?? before[0] ?? null;
   const prev = before[before.length - 1] ?? after[after.length - 1] ?? null;
   return { next: next === current ? null : next, prev: prev === current ? null : prev };
+}
+
+export type ShellCounts = { open: number; traces: number; activeJudges: number; runs: number; datasets: number; unlabeled: number };
+export type Shell = { project: string | null; projects: string[]; unread: number; counts: ShellCounts; version: string; db: string; mcp: string };
+
+export const initials = (name: string): string => {
+  const words = name.split(/[\s_-]+/).filter(Boolean);
+  return words.length > 1 ? words.slice(0, 2).map((w) => w[0] ?? '').join('') : name.slice(0, 2);
+};
+
+export function shellData(repos: Repos): Shell {
+  const projects = repos.projects.list().map((p) => p.name);
+  return {
+    project: projects.length === 1 ? (projects[0] ?? null) : null,
+    projects,
+    unread: unreadCount(repos),
+    counts: {
+      open: repos.issues.countByStatus().open,
+      traces: repos.traces.count(),
+      activeJudges: repos.judges.list().filter((j) => j.active_version_id).length,
+      runs: repos.runs.list().length,
+      datasets: repos.datasets.list().length,
+      unlabeled: repos.traces.countUnlabeled(),
+    },
+    version: pkg.version,
+    db: config.db,
+    mcp: `${config.baseUrl}/mcp`,
+  };
 }

@@ -12,8 +12,8 @@ beforeAll(async () => {
 });
 
 describe('runs', () => {
-  test('GET / and GET /runs render the runs table with dataset, pass rate, delta, and status', async () => {
-    const [status, html] = await page(app, '/');
+  test('GET /runs renders the runs table with dataset, pass rate, delta, and status', async () => {
+    const [status, html] = await page(app, '/runs');
     expect(status).toBe(200);
     expect(html).toContain('<th>Name</th><th>Dataset</th><th>Started</th><th class="num">Pass rate</th><th class="num">Delta</th><th>Status</th>');
     expect(html).toContain(`<tr class="linkrow" data-href="${base}/runs/${s.runB}">`);
@@ -26,7 +26,6 @@ describe('runs', () => {
     expect(html).toContain('Running');
     expect(html).toContain('/client/rows.js');
     expect(html.indexOf('rules-v2')).toBeLessThan(html.indexOf('rules-v1'));
-    expect((await page(app, '/runs'))[1]).toContain('rules-v2');
   });
 
   test('the primary action compares the newest run with its baseline', async () => {

@@ -8,10 +8,11 @@ describe('trace pane', () => {
     const id = seed.b[0];
     const [status, html] = await page(app, `/traces?run=${seed.runB}&trace=${id}`);
     expect(status).toBe(200);
-    expect(html).toContain('class="split" data-pane="1"');
+    expect(html).toContain('<aside class="aside aside-wide pane" id="pane" aria-label="Trace">');
     expect(html).toContain(`data-trace="${id}" data-selected="1"`);
     expect(html).toContain(`<div class="pane-inner" data-trace="${id}">`);
     expect(html).toContain('data-pane-close');
+    expect(html).toContain('<button class="btn btn-primary btn-compact" type="button" data-new-issue-open="true">');
     expect(html).toContain('/client/traces.js');
   });
 
@@ -20,7 +21,7 @@ describe('trace pane', () => {
     const seed = await seedPages(app);
     const [, html] = await page(app, `/traces?run=${seed.runB}`);
     expect(html).toContain('id="pane" aria-label="Trace" hidden');
-    expect(html).not.toContain('data-pane="1"');
+    expect(html).not.toContain('class="pane-inner"');
   });
 
   test('the pane fragment has no document skeleton and unknown ids 404', async () => {

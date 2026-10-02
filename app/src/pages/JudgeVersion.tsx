@@ -2,19 +2,20 @@ import type { Json } from '../db/types.ts';
 import type { JudgeView, VersionView } from '../services/judges.ts';
 import { urls } from '../urls.ts';
 import { ActivateForm, DisagreementsLink, Rates, StatusPill, versionStatus } from './Judges.tsx';
+import type { Shell } from './data.ts';
 import { Layout } from './Layout.tsx';
 import { when } from './Runs.tsx';
 import { Empty, Icon, short } from './ui.tsx';
 
-type Props = { judge: JudgeView; version: VersionView; disagreements: number | null; unread: number };
+type Props = { judge: JudgeView; version: VersionView; disagreements: number | null; shell: Shell };
 
 const Pre = ({ value }: { value: Json | string | null }) =>
   value === null ? <p class="muted">none</p> : <div class="transcript"><pre class="mono">{typeof value === 'string' ? value : JSON.stringify(value, null, 2)}</pre></div>;
 
-export const JudgeVersionPage = ({ judge, version: v, disagreements, unread }: Props) => {
+export const JudgeVersionPage = ({ judge, version: v, disagreements, shell }: Props) => {
   const parent = v.parent_id ? judge.versions.find((x) => x.id === v.parent_id) : undefined;
   return (
-    <Layout title={`${judge.name} v${v.number}`} section="judges" unread={unread} crumbs={[[urls.judges(), 'Judges'], [judge.url, judge.name]]}>
+    <Layout title={`${judge.name} v${v.number}`} section="judges" shell={shell} crumbs={[[urls.judges(), 'Judges'], [judge.url, judge.name]]}>
       <div class="review definition">
         <div class="page-head">
           <div class="chips">

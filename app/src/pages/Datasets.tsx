@@ -1,17 +1,17 @@
 import type { Dataset, DatasetItem } from '../db/repos/dataset.ts';
 import type { Run } from '../db/repos/run.ts';
 import { urls } from '../urls.ts';
-import type { RunCard } from './data.ts';
+import type { RunCard, Shell } from './data.ts';
 import { Layout } from './Layout.tsx';
 import { RunsTable, when } from './Runs.tsx';
 import { Empty, Icon, short, summarize } from './ui.tsx';
 
 export type DatasetRow = { dataset: Dataset; items: number; runs: number; last: Run | null };
 
-type ListProps = { rows: DatasetRow[]; unread: number };
+type ListProps = { rows: DatasetRow[]; shell: Shell };
 
-export const DatasetsPage = ({ rows, unread }: ListProps) => (
-  <Layout title="Datasets" section="datasets" unread={unread} script="rows">
+export const DatasetsPage = ({ rows, shell }: ListProps) => (
+  <Layout title="Datasets" section="datasets" shell={shell} script="rows">
     {rows.length ? (
       <div class="card card-flush scroll-x">
         <table class="table">
@@ -74,7 +74,7 @@ const ItemsTable = ({ items }: { items: DatasetItem[] }) => (
   </div>
 );
 
-type DetailProps = { dataset: Dataset; items: DatasetItem[]; cards: RunCard[]; unread: number };
+type DetailProps = { dataset: Dataset; items: DatasetItem[]; cards: RunCard[]; shell: Shell };
 
 const latestCompare = (dataset: Dataset, cards: RunCard[]) => {
   const [newest, previous] = cards;
@@ -84,8 +84,8 @@ const latestCompare = (dataset: Dataset, cards: RunCard[]) => {
   );
 };
 
-export const DatasetPage = ({ dataset, items, cards, unread }: DetailProps) => (
-  <Layout title={dataset.name} section="datasets" unread={unread} crumbs={[[urls.datasets(), 'Datasets']]} action={latestCompare(dataset, cards)} script="rows">
+export const DatasetPage = ({ dataset, items, cards, shell }: DetailProps) => (
+  <Layout title={dataset.name} section="datasets" shell={shell} crumbs={[[urls.datasets(), 'Datasets']]} action={latestCompare(dataset, cards)} script="rows">
     <section class="group">
       <h2 class="t-caption muted">Items</h2>
       {items.length ? <ItemsTable items={items} /> : <Empty icon="dataset" title="No items yet" />}

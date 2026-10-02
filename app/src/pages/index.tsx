@@ -6,12 +6,12 @@ import { ApiError, notFound } from '../errors.ts';
 import { compare } from '../services/compare.ts';
 import { getDataset } from '../services/datasets.ts';
 import { counts, rollup } from '../services/rollup.ts';
-import { unreadCount } from '../services/notifications.ts';
 import { getTrace } from '../services/traces.ts';
 import { urls } from '../urls.ts';
 import { clientBundle, favicon, pagesCss } from './assets.ts';
 import { ComparePage } from './Compare.tsx';
-import { humanVerdict, judgeSaid, neighbors, primaryScore, queue, runCard, type Queue } from './data.ts';
+import { humanVerdict, judgeSaid, neighbors, primaryScore, queue, runCard, shellData, type Queue, type Shell } from './data.ts';
+import { issueRoutes } from './issueRoutes.tsx';
 import { judgeRoutes } from './judgeRoutes.tsx';
 import { listRoutes } from './listRoutes.tsx';
 import { ErrorPage } from './NotFound.tsx';
@@ -32,7 +32,7 @@ const turnOf = (raw: string | undefined): number | undefined => (raw === undefin
 
 export function createPages(repos: Repos): Hono {
   const app = new Hono();
-  const unread = (): number => unreadCount(repos);
+  const shell = (): Shell => shellData(repos);
   const runOrThrow = (id: string) => {
     const run = repos.runs.get(id);
     if (!run) throw notFound('run', id);
@@ -40,8 +40,8 @@ export function createPages(repos: Repos): Hono {
   };
 
   app.onError((err, c) => {
-    if (err instanceof ApiError) return c.html(<ErrorPage status={err.status} unread={unread()} />, err.status);
-    if (err instanceof ZodError) return c.html(<ErrorPage status={400} unread={unread()} />, 400);
+    if (err instanceof ApiError) return c.html(<ErrorPage status={err.status} shell={shell()} />, err.status);
+    if (err instanceof ZodError) return c.html(<ErrorPage status={400} shell={shell()} />, 400);
     throw err;
   });
 
@@ -56,7 +56,8 @@ export function createPages(repos: Repos): Hono {
     return c.body(js, 200, { 'content-type': 'text/javascript; charset=utf-8' });
   });
 
-  app.route('/', listRoutes(repos, unread));
+  app.route('/', issueRoutes(repos, shell));
+  app.route('/', listRoutes(repos, shell));
 
   app.get('/runs/:id', (c) => {
     const run = runOrThrow(c.req.param('id'));
@@ -66,7 +67,7 @@ export function createPages(repos: Repos): Hono {
       const values = rollup(counts(repos, scores));
       return { trace, verdict: humanVerdict(scores), value: card.primary ? (values.get(card.primary) ?? null) : null };
     });
-    return c.html(<RunPage card={card} rows={rows} unread={unread()} />);
+    return c.html(<RunPage card={card} rows={rows} shell={shell()} />);
   });
 
   app.get('/datasets/:id/compare', (c) => {
@@ -74,7 +75,7 @@ export function createPages(repos: Repos): Hono {
     const runs = (c.req.query('runs') ?? '').split(',').filter(Boolean);
     const only = c.req.query('only') === 'changes';
     const comparison = compare(repos, id, runs, only ? 'changes' : undefined);
-    return c.html(<ComparePage comparison={comparison} dataset={getDataset(repos, id)} only={only} score={c.req.query('score')} unread={unread()} />);
+    return c.html(<ComparePage comparison={comparison} dataset={getDataset(repos, id)} only={only} score={c.req.query('score')} shell={shell()} />);
   });
 
   app.get('/traces/:id/pane', (c) => {
@@ -87,7 +88,7 @@ export function createPages(repos: Repos): Hono {
   app.get('/traces/:id', (c) => {
     const trace = getTrace(repos, c.req.param('id'));
     const run = trace.run_id ? repos.runs.get(trace.run_id) : null;
-    return c.html(<TracePage trace={trace} run={run} verdict={humanVerdict(trace.scores)} turn={turnOf(c.req.query('turn'))} unread={unread()} />);
+    return c.html(<TracePage trace={trace} run={run} verdict={humanVerdict(trace.scores)} turn={turnOf(c.req.query('turn'))} issues={repos.issues.listByTrace(trace.id)} shell={shell()} />);
   });
 
   app.get('/review', (c) => {
@@ -96,7 +97,7 @@ export function createPages(repos: Repos): Hono {
     if (runId) runOrThrow(runId);
     const q = queue(repos, { run: runId, filter, judge: c.req.query('judge'), version: versionOf(c.req.query('version')) });
     const first = q.ids[0];
-    if (!first || (!q.run && !q.judge)) return c.html(<ReviewEmpty unread={unread()} />);
+    if (!first || (!q.run && !q.judge)) return c.html(<ReviewEmpty shell={shell()} />);
     return c.redirect(reviewUrl(first, q));
   });
 
@@ -122,7 +123,7 @@ export function createPages(repos: Repos): Hono {
         prev={to(prev)}
         datasets={repos.datasets.list()}
         turn={turnOf(c.req.query('turn'))}
-        unread={unread()}
+        shell={shell()}
       />,
     );
   });
@@ -131,9 +132,9 @@ export function createPages(repos: Repos): Hono {
     const projects = [...new Set(repos.datasets.list().map((d) => d.project_id))];
     const maps = projects.map((ref) => getAttributeMap(repos, ref));
     const judge = { baseUrl: process.env.SPOTTER_JUDGE_BASE_URL ?? 'https://openrouter.ai/api/v1', keySet: Boolean(process.env.SPOTTER_JUDGE_API_KEY) };
-    return c.html(<SettingsPage maps={maps} authSet={Boolean(process.env.SPOTTER_AUTH_TOKEN)} judge={judge} unread={unread()} />);
+    return c.html(<SettingsPage maps={maps} authSet={Boolean(process.env.SPOTTER_AUTH_TOKEN)} judge={judge} shell={shell()} />);
   });
-  app.route('/judges', judgeRoutes(repos, unread));
+  app.route('/judges', judgeRoutes(repos, shell));
 
   return app;
 }
