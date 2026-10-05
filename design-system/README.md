@@ -13,13 +13,13 @@ npm run check:deps  # 60-day release-age gate
 
 | Rule | Value |
 |---|---|
-| Type | Open Sans. caption 16, body 18, title 28, stat 64. Weights 400, 600, 800. |
+| Type | Open Sans. caption 13, body 15, title 22, stat 44. Weights 400, 600, 800. |
 | Mono | System monospace. Raw JSON and ids only. |
 | Color | 10 roles: canvas, surface, border, ink, ink-muted, brand, pass, fail, defer, focus. Tints via `color-mix`. Light and dark. |
-| Space | 8, 16, 32, 64 |
-| Radius | 16, and pill. No shadows. |
-| Controls | 56px, 48px compact, 72px rows, 56px list rows. One primary action per screen. |
-| Shell | Rail 64, sidebar 272, aside 320 (wide 480), status bar 40. Hairline borders, no shadows. |
+| Space | 4, 8, 12, 16, 24, 32, 48, 64 |
+| Radius | 10, and pill. No shadows. |
+| Controls | 40px, 32px compact, 44px rows, 40px list rows. One primary action per screen. |
+| Shell | Rail 56, sidebar 248, aside 300 (wide 440), status bar 32. Hairline borders, no shadows. |
 
 ## Components
 

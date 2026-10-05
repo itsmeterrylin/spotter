@@ -62,7 +62,7 @@ const Table = ({ rows, names, score, selected }: Pick<Props, 'rows' | 'names' | 
                 {trace.dataset_item_id ? <span class="t-caption muted mono">{short(trace.dataset_item_id)}</span> : null}
               </div>
             </td>
-            <td>{run ? <a class="link" href={urls.traces({ run: run.id })}>{run.name}</a> : <Dash />}</td>
+            <td class="run">{run ? <a class="link" href={urls.traces({ run: run.id })}>{run.name}</a> : <Dash />}</td>
             <td class="wrap">{summarize(trace.output)}</td>
             {names.map((n) => {
               const v = values.get(n);

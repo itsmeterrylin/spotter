@@ -3,7 +3,7 @@
  *
  * Colors: 10 roles. Tints are derived in CSS with color-mix, never stored.
  * Type: 4 sizes, 3 weights, one family. Mono only for raw JSON and ids.
- * Space: 4 steps. Radius: one, plus pill. No shadows.
+ * Space: 8 steps. Radius: one, plus pill. No shadows.
  */
 
 export type Colors = {
@@ -52,33 +52,33 @@ export const font = {
   mono: `ui-monospace, SFMono-Regular, Menlo, Consolas, monospace`,
   googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;800&display=swap',
   /** caption: labels and meta. body: everything else. title: headings. stat: big numbers. */
-  size: { caption: 16, body: 18, title: 28, stat: 64 },
-  lineHeight: { caption: 1.5, body: 1.6, title: 1.3, stat: 1 },
+  size: { caption: 13, body: 15, title: 22, stat: 44 },
+  lineHeight: { caption: 1.45, body: 1.5, title: 1.25, stat: 1 },
   weight: { regular: 400, semibold: 600, heavy: 800 },
 } as const;
 
 export type SizeToken = keyof typeof font.size;
 
-export const space = [8, 16, 32, 64] as const;
+export const space = [4, 8, 12, 16, 24, 32, 48, 64] as const;
 
-export const radius = { default: 16, pill: 999 } as const;
+export const radius = { default: 10, pill: 999 } as const;
 
 export const duration = '150ms';
 
-export const iconSize = { sm: 20, md: 24, lg: 32 } as const;
+export const iconSize = { sm: 16, md: 20, lg: 28 } as const;
 
-/** Density. These make the system airy; components must not go below them. */
+/** Density. Slightly dense: sized for data-heavy trace pages. Components must not go below these. */
 export const size = {
-  control: 56,
-  controlCompact: 48,
-  row: 72,
+  control: 40,
+  controlCompact: 32,
+  row: 44,
   container: 1200,
-  containerNarrow: 720,
+  containerNarrow: 440,
   /** Shell regions: left rail, section sidebar, right aside, bottom status bar. */
-  rail: 64,
-  sidebar: 272,
-  aside: 320,
-  statusbar: 40,
-  /** List rows are denser than table rows; text stays at 16 or above. */
-  rowList: 56,
+  rail: 56,
+  sidebar: 248,
+  aside: 300,
+  statusbar: 32,
+  /** List rows are denser than table rows; text stays at the caption size (13) or above. */
+  rowList: 40,
 } as const;
