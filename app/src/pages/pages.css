@@ -127,7 +127,8 @@ tr[data-selected] td { background: var(--fill-strong); }
 .status-option:hover:not(:disabled) { background: var(--fill); }
 .status-option[aria-checked="true"] { background: var(--fill); color: var(--ink); cursor: default; }
 .status-option:disabled { opacity: 0.45; cursor: not-allowed; }
-.prop select.input { width: auto; max-width: 100%; padding: 0 var(--space-10) 0 var(--space-8); border-radius: var(--radius-pill); border-color: transparent; box-shadow: var(--shadow-panel); font-weight: 500; color: var(--ink-secondary); }
+.prop select.input { width: auto; max-width: 100%; min-height: var(--control); padding: 0 var(--space-10) 0 var(--space-6); border-radius: var(--radius-control); border-color: transparent; background: transparent; box-shadow: none; font-weight: 500; color: var(--ink-secondary); }
+.prop select.input:hover { background: var(--fill); }
 .avatar-sm { width: var(--chip); height: var(--chip); }
 .occ-list .list-row { padding-inline: var(--space-8); }
 .action-card { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-12); padding: var(--space-12) var(--space-16); }

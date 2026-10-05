@@ -187,12 +187,13 @@ textarea.input { height: auto; min-height: 96px; padding: var(--space-8) var(--s
 .aside-wide { width: var(--aside-wide); }
 .aside h2 { padding-inline: var(--space-8); font-size: var(--text-ui); font-weight: ${w.medium}; line-height: 20px; color: var(--ink-muted); }
 
-/* 12. Property: a group label over a 28px pill value */
-.aside dl { display: flex; flex-direction: column; gap: var(--space-10); }
-.prop { display: flex; flex-direction: column; min-width: 0; }
-.prop > dt, .prop > .key { padding-inline: var(--space-8); font-size: var(--text-ui); font-weight: ${w.medium}; line-height: 20px; color: var(--ink-muted); }
+/* 12. Property: label and value on one 28px row */
+.aside dl { display: flex; flex-direction: column; gap: 2px; }
+.prop { display: grid; grid-template-columns: 96px minmax(0, 1fr); align-items: center; gap: var(--space-8); min-height: var(--control); min-width: 0; }
+.prop > dt, .prop > .key { padding-inline: var(--space-8); font-size: var(--text-ui); font-weight: ${w.medium}; line-height: 20px; color: var(--ink-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .prop > dd, .prop > .value { margin: 0; min-width: 0; }
-.propbtn { display: inline-flex; align-items: center; gap: var(--space-6); max-width: 100%; height: var(--control); padding: 0 var(--space-10) 0 var(--space-6); border-radius: var(--radius-pill); background: var(--raised); box-shadow: var(--shadow-panel); color: var(--ink-secondary); font-size: var(--text-ui); font-weight: ${w.medium}; text-decoration: none; overflow-wrap: anywhere; }
+.propbtn { display: inline-flex; align-items: center; gap: var(--space-6); max-width: 100%; height: var(--control); padding: 0 var(--space-10) 0 var(--space-6); border-radius: var(--radius-control); background: transparent; color: var(--ink-secondary); font-size: var(--text-ui); font-weight: ${w.medium}; text-decoration: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: background var(--duration); }
+.propbtn:hover { background: var(--fill); }
 .propbtn > .ic { color: var(--ink-muted); }
 .propbtn .link { color: inherit; text-decoration: none; }
 
