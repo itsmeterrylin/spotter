@@ -1,4 +1,5 @@
 import { patchIssue } from './api.ts';
+import './statusMenu.ts';
 
 const aside = document.querySelector<HTMLElement>('aside[data-issue]');
 const id = aside?.dataset.issue ?? '';
@@ -11,18 +12,11 @@ const apply = async (body: Record<string, unknown>, slot: HTMLElement | null = e
   else if (slot) slot.textContent = error;
 };
 
-for (const b of document.querySelectorAll<HTMLButtonElement>('button[data-status]')) {
-  b.addEventListener('click', () => {
-    const status = b.dataset.status;
-    if (!status || b.getAttribute('aria-checked') === 'true') return;
-    if (status === 'dismissed' && dismissForm) {
-      dismissForm.hidden = false;
-      dismissForm.querySelector('input')?.focus();
-      return;
-    }
-    void apply({ status });
-  });
-}
+document.addEventListener('statusmenu:pick', () => {
+  if (!dismissForm) return;
+  dismissForm.hidden = false;
+  dismissForm.querySelector('input')?.focus();
+});
 
 dismissForm?.addEventListener('submit', (e) => {
   e.preventDefault();

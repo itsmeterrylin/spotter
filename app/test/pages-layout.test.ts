@@ -136,7 +136,11 @@ describe('layout', () => {
     expect(await review.text()).toContain('keydown');
     expect((await app.request('/client/compare.js')).status).toBe(200);
     expect(await (await app.request('/client/issues.js')).text()).toContain('row-dismiss');
-    expect(await (await app.request('/client/issue.js')).text()).toContain('data-status');
+    expect(await (await app.request('/client/issue.js')).text()).toContain('data-dismiss-form');
+    for (const name of ['issues', 'issue']) {
+      const bundle = await (await app.request(`/client/${name}.js`)).text();
+      for (const hook of ['data-status-trigger', 'statusmenu:pick', '/api/judges/']) expect(bundle).toContain(hook);
+    }
     expect(await (await app.request('/client/trace.js')).text()).toContain('/api/issues');
     expect(await (await app.request('/client/rows.js')).text()).toContain('linkrow');
     expect((await app.request('/client/nope.js')).status).toBe(404);

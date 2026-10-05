@@ -265,6 +265,30 @@ textarea.input { height: auto; min-height: 96px; padding: var(--space-8) var(--s
 .menu-panel { padding: var(--space-4); background: var(--raised); border: 1px solid var(--border); border-radius: var(--radius-menu); box-shadow: var(--shadow-popover); }
 .menu-panel .nav2 { height: var(--menu-item); padding: 0 18px 0 14px; color: var(--ink); font-weight: 400; }
 
+/* 17. Status menu: round 28px trigger, 208px popover, search row then 32px items */
+.status-menu { position: relative; display: inline-flex; flex: none; z-index: 1; }
+.status-menu[data-open] { z-index: 40; }
+.status-trigger { display: inline-flex; align-items: center; justify-content: center; width: var(--control); height: var(--control); padding: 0; border: 0; border-radius: var(--radius-pill); background: transparent; color: var(--ink-muted); cursor: pointer; transition: background var(--duration); }
+.status-trigger:hover, .status-trigger[aria-expanded="true"] { background: var(--fill); }
+.status-menu .propbtn { border: 0; cursor: pointer; }
+.status-popover { position: absolute; top: calc(100% + var(--space-4)); left: 0; z-index: 30; width: 208px; text-align: left; font-weight: 400; }
+.status-menu[data-up] .status-popover { top: auto; bottom: calc(100% + var(--space-4)); }
+.status-search { display: flex; align-items: center; gap: var(--space-8); height: 36px; padding: 0 var(--space-6) 0 var(--space-10); border-bottom: 1px solid var(--border-subtle); }
+.status-search input { flex: 1; min-width: 0; height: 100%; padding: 0; border: 0; background: transparent; font-size: var(--text-ui); outline: none; }
+.status-search input::placeholder { color: var(--ink-faint); }
+.status-items { display: flex; flex-direction: column; padding-top: var(--space-4); }
+.status-item { display: flex; align-items: center; gap: var(--space-8); width: 100%; height: var(--menu-item); padding: 0 var(--space-12) 0 var(--space-10); border: 0; border-radius: var(--radius-control); background: transparent; color: var(--ink); font-size: var(--text-ui); line-height: 19.5px; font-weight: 400; text-align: left; cursor: pointer; }
+.status-item:hover:not([aria-disabled="true"]), .status-item[data-active], .status-item[aria-checked="true"] { background: var(--fill); }
+.status-item[aria-disabled="true"] { opacity: 0.45; cursor: not-allowed; }
+.status-item .status-ico { display: inline-flex; align-items: center; width: var(--icon-md); flex: none; }
+.status-item .status-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.status-item .status-key { width: var(--icon-sm); text-align: right; color: var(--ink-faint); font-size: var(--text-meta); font-variant-numeric: tabular-nums; }
+.status-error { padding: var(--space-4) var(--space-10); font-size: var(--text-meta); }
+.stico { display: inline-flex; align-items: center; }
+.st-draft { color: var(--ink-faint); }
+.st-live { color: var(--pass); }
+.st-paused { color: var(--ink-muted); }
+
 /* Bar (goes inside a card or row) */
 .bar { position: relative; height: 8px; border-radius: var(--radius-pill); background: var(--fill); overflow: hidden; }
 .bar > i { position: absolute; inset: 0 auto 0 0; border-radius: inherit; background: var(--brand); }

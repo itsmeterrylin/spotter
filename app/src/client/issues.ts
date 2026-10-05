@@ -1,6 +1,8 @@
 import { patchIssue } from './api.ts';
+import './statusMenu.ts';
 
-const rows = [...document.querySelectorAll<HTMLAnchorElement>('a.list-row[data-issue]')];
+const rows = [...document.querySelectorAll<HTMLElement>('.list-row[data-row]')];
+const hrefOf = (row: HTMLElement | undefined): string | undefined => row?.querySelector<HTMLAnchorElement>('a.row-link')?.href;
 const list = document.querySelector<HTMLElement>('.issue-list');
 const form = document.getElementById('row-dismiss') as HTMLFormElement | null;
 let index = -1;
@@ -28,7 +30,7 @@ const showForm = (): void => {
 
 form?.addEventListener('submit', async (e) => {
   e.preventDefault();
-  const id = rows[index]?.dataset.issue;
+  const id = rows[index]?.dataset.id;
   if (!id) return;
   const reason = String(new FormData(form).get('reason') ?? '');
   const error = await patchIssue(id, { status: 'dismissed', dismissed_reason: reason });
@@ -37,6 +39,13 @@ form?.addEventListener('submit', async (e) => {
     const slot = form.querySelector('[data-error]');
     if (slot) slot.textContent = error;
   }
+});
+
+document.addEventListener('statusmenu:pick', (e) => {
+  const row = (e.target as Element).closest<HTMLElement>('.list-row[data-row]');
+  if (!row) return;
+  focus(rows.indexOf(row));
+  showForm();
 });
 
 document.addEventListener('keydown', (e) => {
@@ -49,7 +58,7 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'j') focus(index + 1);
   else if (e.key === 'k') focus(index - 1);
   else if (e.key === 'Enter' && index >= 0) {
-    const href = rows[index]?.href;
+    const href = hrefOf(rows[index]);
     if (href) location.href = href;
   } else if (e.key === 'd' && index >= 0) {
     e.preventDefault();

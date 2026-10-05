@@ -122,11 +122,8 @@ tr[data-selected] td { background: var(--fill-strong); }
 @media (max-width: 640px) { .version { grid-template-columns: 1fr; } .verdict-row { grid-template-columns: 1fr; } .verdict-row-turn { margin-left: 0; } .turn { grid-template-columns: 1fr; } }
 
 /* Issues */
-.status-options { display: flex; flex-direction: column; gap: 2px; }
-.status-option { display: flex; align-items: center; gap: var(--space-8); height: var(--control); padding-inline: var(--space-8); border: 0; border-radius: var(--radius-control); background: transparent; font-size: var(--text-ui); font-weight: 500; color: var(--ink-secondary); text-align: left; cursor: pointer; }
-.status-option:hover:not(:disabled) { background: var(--fill); }
-.status-option[aria-checked="true"] { background: var(--fill); color: var(--ink); cursor: default; }
-.status-option:disabled { opacity: 0.45; cursor: not-allowed; }
+.list-row { position: relative; }
+.row-link::after { content: ""; position: absolute; inset: 0; }
 .prop select.input { width: auto; max-width: 100%; min-height: var(--control); padding: 0 var(--space-10) 0 var(--space-6); border-radius: var(--radius-control); border-color: transparent; background: transparent; box-shadow: none; font-weight: 500; color: var(--ink-secondary); }
 .prop select.input:hover { background: var(--fill); }
 .avatar-sm { width: var(--chip); height: var(--chip); }

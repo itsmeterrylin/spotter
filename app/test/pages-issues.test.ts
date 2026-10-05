@@ -37,8 +37,14 @@ describe('issue pages', () => {
     expect(html).toContain(`<a class="tab" href="${base}/issues?status=confirmed">Confirmed<span class="count">0</span></a>`);
     expect(html).toContain(`<a class="tab" href="${base}/issues?status=dismissed">Dismissed<span class="count">1</span></a>`);
     expect(html).toContain('<p class="meta muted">2 open</p>');
-    expect(html.match(/<a class="list-row" href=/g)?.length).toBe(2);
-    expect(html).toContain(`<a class="list-row" href="${base}/issues/${ids.open}" data-issue="${ids.open}"><span class="state" role="img" aria-label="Open"></span><span class="grow strong">Reply slips into Dutch</span>`);
+    expect(html.match(/<div class="list-row" data-row="true"/g)?.length).toBe(2);
+    expect(html).toContain(`<div class="list-row" data-row="true" data-id="${ids.open}">`);
+    expect(html).toContain(`<span class="status-menu" data-status-menu="true" data-kind="issue" data-id="${ids.open}" data-current="open" data-variant="icon">`);
+    expect(html).toContain('<button class="status-trigger" type="button" aria-haspopup="menu" aria-expanded="false" data-status-trigger="true" aria-label="Status: Open" title="Change status (S)"><span class="state" role="img" aria-label="Open"></span></button>');
+    expect(html).toContain(`<a class="grow strong row-link" href="${base}/issues/${ids.open}">Reply slips into Dutch</a>`);
+    expect(html).toContain('placeholder="Change status..."');
+    expect(html).toContain('<kbd class="kbd">S</kbd>');
+    expect(html).toContain('data-value="dismissed" data-label="Dismissed" data-needs-reason="1"');
     expect(html).toContain('<span class="pill pill-fail">high</span><span class="meta judge-name">language-leak</span>');
     expect(html).toContain('<form class="row-dismiss" id="row-dismiss" hidden="">');
     expect(html).toContain('/client/issues.js');
@@ -48,7 +54,8 @@ describe('issue pages', () => {
   test('the Dismissed tab lists the dismissed issue with a slashed state', async () => {
     const [, html] = await page(app, '/issues?status=dismissed');
     expect(html).toContain(`<a class="tab" href="${base}/issues?status=dismissed" aria-current="page">Dismissed<span class="count">1</span></a>`);
-    expect(html).toContain('<span class="state state-dismissed" role="img" aria-label="Dismissed"></span><span class="grow strong">Greets guest in Dutch</span>');
+    expect(html).toContain('<button class="status-trigger" type="button" aria-haspopup="menu" aria-expanded="false" data-status-trigger="true" aria-label="Status: Dismissed" title="Change status (S)"><span class="state state-dismissed" role="img" aria-label="Dismissed"></span></button>');
+    expect(html).toContain('>Greets guest in Dutch</a>');
     expect(html).toContain('data-status="dismissed"');
     expect(html).not.toContain('Reply slips into Dutch');
   });
@@ -64,15 +71,16 @@ describe('issue pages', () => {
     expect(html).toContain('<div class="turn" id="turn-3" data-focus="1">');
     expect(html).toContain('Natuurlijk, tot 13:00.');
     expect(html).toContain(`href="${base}/issues/${ids.open}?tab=backtest"><svg class="ic" aria-hidden="true"><use href="#i-backtest"/></svg>Backtest with language-leak</a>`);
-    expect(html).toContain('<button class="status-option" type="button" role="radio" aria-checked="true" data-status="open">');
+    expect(html).toContain('<button class="propbtn" type="button" aria-haspopup="menu" aria-expanded="false" data-status-trigger="true" aria-label="Status: Open">');
+    expect(html).toContain('role="menuitemradio" aria-checked="true" data-value="open" data-label="Open">');
     expect(html).toContain('<form class="dismiss-form stack" data-dismiss-form="true" hidden="" style="--gap: var(--space-8)">');
     expect(html).not.toContain('data-new-issue-open data-turn');
   });
 
   test('a dismissed issue disables the illegal move to confirmed', async () => {
     const [, html] = await page(app, `/issues/${ids.dismissed}`);
-    expect(html).toContain('<button class="status-option" type="button" role="radio" aria-checked="false" data-status="confirmed" disabled="">');
-    expect(html).toContain('<button class="status-option" type="button" role="radio" aria-checked="false" data-status="open">');
+    expect(html).toContain('role="menuitemradio" aria-checked="false" aria-disabled="true" title="Cannot move from Dismissed to Confirmed" data-value="confirmed" data-label="Confirmed">');
+    expect(html).toContain('role="menuitemradio" aria-checked="false" data-value="open" data-label="Open">');
     expect(html).toContain('<p class="dismissed-note"><span class="pill"><svg class="ic ic-sm" aria-hidden="true"><use href="#i-dismiss"/></svg>Dismissed</span> Guest wrote Dutch</p>');
   });
 

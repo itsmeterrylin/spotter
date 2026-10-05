@@ -1,13 +1,13 @@
 import type { Child } from 'hono/jsx';
 import type { Judge } from '../db/repos/judge.ts';
 import type { IssueStatus } from '../db/types.ts';
-import { type IssueListRow, type IssueView, issueStatuses, type OccurrenceView, transitions } from '../services/issues.ts';
+import { type IssueListRow, type IssueView, issueStatuses, type OccurrenceView } from '../services/issues.ts';
 import type { TraceView } from '../services/traces.ts';
 import { urls } from '../urls.ts';
 import { initials, type Shell } from './data.ts';
 import { Layout, type Tab } from './Layout.tsx';
 import { Turns } from './Trace.tsx';
-import { ago, Empty, Icon, pct, PropValue, SeverityPill, severityPill, short, State, statusLabel, Values } from './ui.tsx';
+import { ago, Empty, Icon, issueOptions, pct, PropValue, SeverityPill, severityPill, short, State, StatusMenu, statusLabel, Values } from './ui.tsx';
 
 export type IssueTab = 'overview' | 'traces' | 'backtest';
 
@@ -24,14 +24,14 @@ export const IssuesPage = ({ issues, status, counts, project, shell }: ListProps
       <div class="card card-flush issue-list" data-status={status}>
         <div class="group-head"><State status={status} />{statusLabel[status]}<span class="count">{issues.length}</span></div>
         {issues.map((i) => (
-          <a class="list-row" href={i.url} data-issue={i.id}>
-            <State status={i.status} />
-            <span class="grow strong">{i.title}</span>
+          <div class="list-row" data-row data-id={i.id}>
+            <StatusMenu kind="issue" id={i.id} current={i.status} options={issueOptions(i.status)} />
+            <a class="grow strong row-link" href={i.url}>{i.title}</a>
             <span class="meta num" title="Occurrences"><Icon name="trace" size="sm" />{i.occurrences}</span>
             <SeverityPill severity={i.severity} />
             <span class="meta judge-name">{i.judge_name ?? ''}</span>
             <span class="meta num updated" title={i.updated_at}>{ago(i.updated_at)}</span>
-          </a>
+          </div>
         ))}
         <form class="row-dismiss" id="row-dismiss" hidden>
           <input class="input" name="reason" placeholder="Reason" aria-label="Reason" required />
@@ -175,20 +175,11 @@ const BacktestTab = ({ issue, judges }: { issue: IssueView; judges: Judge[] }) =
   );
 };
 
-const allowed = (from: IssueStatus, to: IssueStatus): boolean => from === to || Boolean(transitions[from][to]?.includes('human'));
-
 const Properties = ({ issue }: { issue: IssueView }) => (
   <aside class="aside" aria-label="Issue" data-issue={issue.id}>
     <section class="stack" style="--gap: var(--space-8)">
       <h2>Status</h2>
-      <div class="status-options" role="radiogroup" aria-label="Status">
-        {issueStatuses.map((s) => (
-          <button class="status-option" type="button" role="radio" aria-checked={String(s === issue.status)} data-status={s} disabled={!allowed(issue.status, s)}>
-            <State status={s} />
-            {statusLabel[s]}
-          </button>
-        ))}
-      </div>
+      <StatusMenu kind="issue" id={issue.id} current={issue.status} options={issueOptions(issue.status)} variant="field" reload />
       <form class="dismiss-form stack" data-dismiss-form hidden={issue.status !== 'dismissed' || undefined} style="--gap: var(--space-8)">
         <input class="input" name="reason" placeholder="Reason" aria-label="Reason" value={issue.dismissed_reason ?? ''} required />
         <button class="btn btn-fail" type="submit"><Icon name="dismiss" size="sm" />{issue.status === 'dismissed' ? 'Save reason' : 'Dismiss'}</button>

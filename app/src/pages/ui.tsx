@@ -1,7 +1,9 @@
 import { raw } from 'hono/html';
 import type { Child } from 'hono/jsx';
 import { type IconName, iconNames, iconPaths } from '../../../design-system/src/icons.ts';
-import type { IssueStatus, Json, Severity } from '../db/types.ts';
+import type { IssueStatus, Json, JudgeState, Severity } from '../db/types.ts';
+import { issueStatuses, transitions } from '../services/issues.ts';
+import { judgeStates, judgeTransitions } from '../services/judges.ts';
 
 export const sprite = raw(
   `<svg hidden xmlns="http://www.w3.org/2000/svg">${iconNames.map((n) => `<symbol id="i-${n}" viewBox="0 0 24 24">${iconPaths[n]}</symbol>`).join('')}</svg>`,
@@ -123,3 +125,88 @@ export const State = ({ status }: { status: IssueStatus }) => (
 );
 
 export const SeverityPill = ({ severity }: { severity: Severity }) => <span class={severityPill[severity]}>{severity}</span>;
+
+export const judgeStateLabel: Record<JudgeState, string> = { draft: 'Draft', live: 'Live', paused: 'Paused' };
+const judgeStateIcon: Record<JudgeState, IconName> = { draft: 'stateDraft', live: 'stateLive', paused: 'statePaused' };
+
+export const JudgeStateIcon = ({ state }: { state: JudgeState }) => (
+  <span class={`stico st-${state}`} role="img" aria-label={judgeStateLabel[state]}>
+    <Icon name={judgeStateIcon[state]} size="sm" />
+  </span>
+);
+
+export type StatusOption = { value: string; label: string; icon: Child; needsReason?: boolean; disabledReason?: string };
+
+const humanMay = <S extends string>(table: Record<S, Partial<Record<S, readonly string[]>>>, from: S, to: S): boolean => table[from][to]?.includes('human') ?? false;
+
+/** Options for an issue's status menu. `from` null means a bulk menu, where every move is offered. */
+export const issueOptions = (from: IssueStatus | null): StatusOption[] =>
+  issueStatuses.map((s) => ({
+    value: s,
+    label: statusLabel[s],
+    icon: <State status={s} />,
+    needsReason: s === 'dismissed',
+    disabledReason: from === null || s === from || humanMay(transitions, from, s) ? undefined : `Cannot move from ${statusLabel[from]} to ${statusLabel[s]}`,
+  }));
+
+const judgeBlock = (from: JudgeState, to: JudgeState, liveBlocker: string | null): string | undefined => {
+  if (from === to) return undefined;
+  if (!judgeTransitions[from][to]) return `Cannot move from ${judgeStateLabel[from]} to ${judgeStateLabel[to]}`;
+  if (!humanMay(judgeTransitions, from, to)) return `Only an agent can move from ${judgeStateLabel[from]} to ${judgeStateLabel[to]}`;
+  return to === 'live' && liveBlocker ? `Cannot go live: ${liveBlocker}` : undefined;
+};
+
+/** Options for a judge's state menu. `from` null means a bulk menu, where every move is offered. */
+export const judgeOptions = (from: JudgeState | null, liveBlocker: string | null = null): StatusOption[] =>
+  judgeStates.map((s) => ({ value: s, label: judgeStateLabel[s], icon: <JudgeStateIcon state={s} />, disabledReason: from === null ? undefined : judgeBlock(from, s, liveBlocker) }));
+
+type StatusMenuProps = {
+  kind: 'issue' | 'judge';
+  id: string;
+  current: string | null;
+  options: StatusOption[];
+  variant?: 'icon' | 'field' | 'bulk';
+  reload?: boolean;
+};
+
+const Trigger = ({ variant, current }: { variant: 'icon' | 'field' | 'bulk'; current: StatusOption | undefined }) => {
+  const common = { type: 'button', 'aria-haspopup': 'menu', 'aria-expanded': 'false', 'data-status-trigger': true } as const;
+  if (variant === 'bulk') return <button class="btn btn-secondary" {...common}>Status</button>;
+  const label = `Status: ${current?.label ?? 'none'}`;
+  if (variant === 'field') return <button class="propbtn" {...common} aria-label={label}>{current?.icon}{current?.label}</button>;
+  return <button class="status-trigger" {...common} aria-label={label} title="Change status (S)">{current?.icon}</button>;
+};
+
+/** Trigger plus a hidden popover. client/statusMenu.ts wires it through the data attributes. */
+export const StatusMenu = ({ kind, id, current, options, variant = 'icon', reload }: StatusMenuProps) => (
+  <span class="status-menu" data-status-menu data-kind={kind} data-id={id} data-current={current ?? undefined} data-variant={variant} data-reload={reload ? '1' : undefined} data-up={variant === 'bulk' ? '1' : undefined}>
+    <Trigger variant={variant} current={options.find((o) => o.value === current)} />
+    <div class="status-popover menu-panel" role="menu" aria-label="Change status" data-status-popover hidden>
+      <div class="status-search">
+        <input type="text" placeholder="Change status..." aria-label="Change status" autocomplete="off" data-status-search />
+        <kbd class="kbd">S</kbd>
+      </div>
+      <div class="status-items">
+        {options.map((o, i) => (
+          <button
+            class="status-item"
+            type="button"
+            role="menuitemradio"
+            aria-checked={String(o.value === current)}
+            aria-disabled={o.disabledReason ? 'true' : undefined}
+            title={o.disabledReason}
+            data-value={o.value}
+            data-label={o.label}
+            data-needs-reason={o.needsReason ? '1' : undefined}
+          >
+            <span class="status-ico">{o.icon}</span>
+            <span class="status-label">{o.label}</span>
+            {o.value === current ? <Icon name="pass" size="sm" /> : null}
+            <span class="status-key">{i + 1}</span>
+          </button>
+        ))}
+      </div>
+      <p class="error status-error" data-error></p>
+    </div>
+  </span>
+);
