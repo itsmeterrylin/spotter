@@ -181,7 +181,7 @@ export const Layout = ({ title, heading = false, meta, section, shell, tabs, cru
             <div class="work-body">
               <main class="main">
                 {tabs?.length ? <Tabs tabs={tabs} /> : null}
-                <div class={heading ? 'container' : 'container no-title'}>
+                <div class={heading ? 'container detail' : 'container no-title'}>
                   {heading ? (
                     <div class="page-title">
                       <div class="head">

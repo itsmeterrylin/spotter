@@ -48,6 +48,7 @@ ${spaces}
   --row: ${size.row}px;
   --container: ${size.container}px;
   --container-narrow: ${size.containerNarrow}px;
+  --detail: ${size.detail}px;
   --rail: ${size.rail}px;
   --sidebar: ${size.sidebar}px;
   --aside: ${size.aside}px;

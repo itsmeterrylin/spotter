@@ -152,3 +152,13 @@ describe('detail panels', () => {
     expect(html).toContain('1 source trace');
   });
 });
+
+describe('detail layout', () => {
+  test('every detail page uses the one left-aligned detail container and lists do not', async () => {
+    const detail = ['/judges/language-leak', '/judges/language-leak/versions/1', `/runs/${ids.run}`, `/datasets/${ids.dataset}`, `/traces/${ids.trace}`, `/issues/${ids.issue}`];
+    for (const path of detail) expect((await page(app, path))[1]).toContain('<div class="container detail">');
+    const review = (await page(app, `/review/${ids.trace}`))[1];
+    expect(review).toContain('<div class="container detail">');
+    for (const path of ['/', '/judges', '/traces', '/runs', '/datasets']) expect((await page(app, path))[1]).toContain('<div class="container no-title">');
+  });
+});
