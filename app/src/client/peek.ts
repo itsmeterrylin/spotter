@@ -1,4 +1,5 @@
-import { focusedRow, focusRow, isTyping, onFocusRow } from './list.ts';
+import { focusedRow, focusRow, onFocusRow, stampFrom } from './list.ts';
+import { on } from './keys.ts';
 
 const pane = document.getElementById('pane');
 
@@ -43,6 +44,7 @@ const open = async (row: HTMLElement, push = true): Promise<void> => {
   const res = await fetch(`${path}?close=${encodeURIComponent(withPeek(null))}`, { headers: { accept: 'text/html' } });
   if (!res.ok || ticket !== latest) return;
   pane.innerHTML = await res.text();
+  stampFrom(pane);
   pane.hidden = false;
   mark(row);
   focusRow(row);
@@ -73,16 +75,14 @@ onFocusRow((row) => {
   if (pane && !pane.hidden && row.hasAttribute('data-peek') && row !== peeked()) void open(row);
 });
 
-document.addEventListener('keydown', (e) => {
-  if (e.metaKey || e.ctrlKey || e.altKey || e.defaultPrevented || isTyping(e.target) || !pane) return;
-  if (e.key === 'Escape' && !pane.hidden) {
-    close();
-    return;
-  }
-  const onControl = e.target instanceof HTMLButtonElement || e.target instanceof HTMLAnchorElement;
+on('close', () => {
+  if (!pane || pane.hidden) return false;
+  close();
+});
+
+on('peek', () => {
   const row = focusedRow();
-  if (e.key !== ' ' || onControl || !row?.hasAttribute('data-peek')) return;
-  e.preventDefault();
+  if (!pane || !row?.hasAttribute('data-peek')) return false;
   if (!pane.hidden && row === peeked()) close();
   else void open(row);
 });

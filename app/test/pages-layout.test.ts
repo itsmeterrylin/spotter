@@ -247,4 +247,21 @@ describe('layout', () => {
     expect(await api.text()).toBe('404 Not Found');
   });
 
+
+  test('every page names its keymap view, and detail pages carry their default list', async () => {
+    const cases: Array<[string, string, string | undefined]> = [
+      ['/', 'list', undefined],
+      ['/traces', 'list', undefined],
+      [`/runs/${s.runA}`, 'detail', `${base}/runs?dataset=${s.datasetId}`],
+      [`/datasets/${s.datasetId}`, 'detail', `${base}/datasets`],
+      ['/settings', 'list', undefined],
+    ];
+    for (const [path, view, back] of cases) {
+      const [status, html] = await page(app, path);
+      expect(status).toBe(200);
+      expect(html).toContain(`<body data-view="${view}"`);
+      if (back) expect(html).toContain(`data-back="${back}"`);
+      expect(html).toContain(`<script type="module" src="/client/`);
+    }
+  });
 });

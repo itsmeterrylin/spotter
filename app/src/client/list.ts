@@ -1,3 +1,8 @@
+import './shell.ts';
+import { isTyping, on } from './keys.ts';
+
+export { isTyping };
+
 const rowsNow = (): HTMLElement[] => [...document.querySelectorAll<HTMLElement>('.list-row[data-row]')];
 
 let active: HTMLElement | null = null;
@@ -30,17 +35,36 @@ const step = (by: number): void => {
   focusRow(rows[Math.max(0, Math.min(at + by, rows.length - 1))]);
 };
 
-export const isTyping = (t: EventTarget | null): boolean => t instanceof HTMLInputElement || t instanceof HTMLTextAreaElement || t instanceof HTMLSelectElement;
+/** The page's own URL minus peek state: what a detail page returns to and steps through. */
+const here = (): string => {
+  const url = new URL(location.href);
+  for (const key of ['peek', 'trace', 'from']) url.searchParams.delete(key);
+  return url.pathname + (url.searchParams.size ? `?${url.searchParams}` : '');
+};
 
-document.addEventListener('keydown', (e) => {
-  if (e.metaKey || e.ctrlKey || e.altKey || e.defaultPrevented || isTyping(e.target)) return;
-  if (e.target instanceof HTMLButtonElement || e.target instanceof HTMLAnchorElement) {
-    if (e.key !== 'j' && e.key !== 'k') return;
+/** Make every link to a full page remember the list it was opened from (`?from=`). */
+export function stampFrom(root: ParentNode): void {
+  const from = here();
+  for (const a of root.querySelectorAll<HTMLAnchorElement>('a.row-link, a[data-open]')) {
+    const url = new URL(a.href);
+    if (url.origin !== location.origin) continue;
+    url.searchParams.set('from', from);
+    a.href = url.pathname + url.search;
   }
-  if (e.key === 'j') step(1);
-  else if (e.key === 'k') step(-1);
-  else if (e.key === 'Enter') {
-    const href = hrefOf(focusedRow());
-    if (href) location.href = href;
-  }
+}
+
+stampFrom(document);
+
+on('list.next', () => {
+  if (!rowsNow().length) return false;
+  step(1);
+});
+on('list.prev', () => {
+  if (!rowsNow().length) return false;
+  step(-1);
+});
+on('list.open', () => {
+  const href = hrefOf(focusedRow());
+  if (!href) return false;
+  location.href = href;
 });

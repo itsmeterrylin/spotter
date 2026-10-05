@@ -24,6 +24,8 @@ type Props = {
   current?: string;
   /** Icon buttons for the right end of the header. */
   actions?: Child;
+  /** Which keymap view the page uses. Defaults to `detail` when `heading` is set, else `list`. */
+  view?: 'list' | 'detail' | 'review';
   script?: string;
   aside?: Child;
   children: Child;
@@ -32,9 +34,6 @@ type Props = {
 // Runs before the stylesheet so a saved theme never flashes the other one.
 const themeBoot = `<script>try{var t=localStorage.getItem('spotter.theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>`;
 const themeToggle = `<script>(function(){var r=document.documentElement,b=document.querySelectorAll('[data-theme-choice]');function cur(){try{return localStorage.getItem('spotter.theme')||'system'}catch(e){return 'system'}}function paint(c){b.forEach(function(x){x.setAttribute('aria-pressed',String(x.dataset.themeChoice===c))})}function set(c){if(c==='system')r.removeAttribute('data-theme');else r.setAttribute('data-theme',c);try{if(c==='system')localStorage.removeItem('spotter.theme');else localStorage.setItem('spotter.theme',c)}catch(e){}paint(c)}b.forEach(function(x){x.addEventListener('click',function(){set(x.dataset.themeChoice)})});paint(cur())})()</script>`;
-// The rail search button and "/" open the sidebar (on narrow screens) and focus its search box; without JS the link opens /traces.
-const searchBoot = `<script>(function(){var i=document.getElementById('sidebar-search'),t=document.getElementById('nav-toggle');function go(e){if(!i)return;e.preventDefault();if(t)t.checked=true;i.focus()}var b=document.querySelector('[data-search]');if(b)b.addEventListener('click',go);document.addEventListener('keydown',function(e){var x=e.target;if(e.key!=='/'||e.metaKey||e.ctrlKey||x instanceof HTMLInputElement||x instanceof HTMLTextAreaElement||x instanceof HTMLSelectElement)return;go(e)})})()</script>`;
-
 const count = (n: number): string => n.toLocaleString('en-US');
 
 type NavItem = [Section, string, IconName, string, (s: Shell) => string, string];
@@ -155,52 +154,55 @@ const StatusBar = ({ shell }: { shell: Shell }) => (
   </footer>
 );
 
-export const Layout = ({ title, heading = false, meta, section, shell, tabs, crumbs = [], current, actions, script, aside, children }: Props) => (
-  <>
-    {raw('<!doctype html>')}
-    <html lang="en">
-      <head>
-        <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>{`${title} · Spotter`}</title>
-        <link rel="icon" href="/favicon.svg" />
-        {raw(themeBoot)}
-        <link rel="stylesheet" href={font.googleFontsUrl} />
-        <link rel="stylesheet" href="/spotter.css" />
-        <link rel="stylesheet" href="/pages.css" />
-        {script ? <script type="module" src={`/client/${script}.js`}></script> : null}
-      </head>
-      <body>
-        {sprite}
-        <div class="shell">
-          <input class="nav-toggle" type="checkbox" id="nav-toggle" />
-          <Rail section={section} shell={shell} />
-          <Sidebar section={section} shell={shell} />
-          <div class="work">
-            <Header project={shell.project} crumbs={crumbs} current={current ?? title} named={heading} actions={actions} />
-            <div class="work-body">
-              <main class="main">
-                {tabs?.length ? <Tabs tabs={tabs} /> : null}
-                <div class={heading ? 'container detail' : 'container no-title'}>
-                  {heading ? (
-                    <div class="page-title">
-                      <div class="head">
-                        <h1 class="t-title">{title}</h1>
-                        {meta ? <p class="meta muted">{meta}</p> : null}
+export const Layout = ({ title, heading = false, meta, section, shell, tabs, crumbs = [], current, actions, view, script, aside, children }: Props) => {
+  const keyView = view ?? (heading ? 'detail' : 'list');
+  const back = crumbs.at(-1)?.[0];
+  return (
+    <>
+      {raw('<!doctype html>')}
+      <html lang="en">
+        <head>
+          <meta charset="utf-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1" />
+          <title>{`${title} · Spotter`}</title>
+          <link rel="icon" href="/favicon.svg" />
+          {raw(themeBoot)}
+          <link rel="stylesheet" href={font.googleFontsUrl} />
+          <link rel="stylesheet" href="/spotter.css" />
+          <link rel="stylesheet" href="/pages.css" />
+          <script type="module" src={`/client/${script ?? (keyView === 'detail' ? 'detail' : 'shell')}.js`}></script>
+        </head>
+        <body data-view={keyView} data-back={keyView === 'list' ? undefined : back}>
+          {sprite}
+          <div class="shell">
+            <input class="nav-toggle" type="checkbox" id="nav-toggle" />
+            <Rail section={section} shell={shell} />
+            <Sidebar section={section} shell={shell} />
+            <div class="work">
+              <Header project={shell.project} crumbs={crumbs} current={current ?? title} named={heading} actions={actions} />
+              <div class="work-body">
+                <main class="main">
+                  {tabs?.length ? <Tabs tabs={tabs} /> : null}
+                  <div class={heading ? 'container detail' : 'container no-title'}>
+                    {heading ? (
+                      <div class="page-title">
+                        <div class="head">
+                          <h1 class="t-title">{title}</h1>
+                          {meta ? <p class="meta muted">{meta}</p> : null}
+                        </div>
                       </div>
-                    </div>
-                  ) : null}
-                  {children}
-                </div>
-              </main>
-              {aside}
+                    ) : null}
+                    {children}
+                  </div>
+                </main>
+                {aside}
+              </div>
             </div>
+            <StatusBar shell={shell} />
           </div>
-          <StatusBar shell={shell} />
-        </div>
-        {raw(searchBoot)}
-        {section === 'settings' ? raw(themeToggle) : null}
-      </body>
-    </html>
-  </>
-);
+          {section === 'settings' ? raw(themeToggle) : null}
+        </body>
+      </html>
+    </>
+  );
+};

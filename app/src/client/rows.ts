@@ -1,4 +1,5 @@
 import './list.ts';
+import './detail.ts';
 import './peek.ts';
 
 for (const tr of document.querySelectorAll<HTMLElement>('tr.linkrow[data-href]')) {

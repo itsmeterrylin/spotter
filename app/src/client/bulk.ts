@@ -1,4 +1,4 @@
-import { isTyping } from './list.ts';
+import { on } from './keys.ts';
 import { type Kind, patchStatus, refreshMenus } from './statusMenu.ts';
 
 const list = document.querySelector<HTMLElement>('[data-list]');
@@ -68,12 +68,14 @@ reasonForm?.addEventListener('submit', (e) => {
 
 bar?.querySelector('[data-bulk-clear]')?.addEventListener('click', clear);
 
-document.addEventListener('keydown', (e) => {
-  if (e.metaKey || e.ctrlKey || e.altKey || e.defaultPrevented) return;
-  if (e.key === 'x' && !isTyping(e.target)) {
-    const check = document.querySelector<HTMLInputElement>('.list-row[data-focus] .row-check');
-    if (!check) return;
-    check.checked = !check.checked;
-    sync();
-  } else if (e.key === 'Escape' && selected().length && !isTyping(e.target)) clear();
+on('select', () => {
+  const check = document.querySelector<HTMLInputElement>('.list-row[data-focus] .row-check');
+  if (!check) return false;
+  check.checked = !check.checked;
+  sync();
+});
+
+on('close', () => {
+  if (!selected().length) return false;
+  clear();
 });

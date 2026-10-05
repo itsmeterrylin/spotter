@@ -1,3 +1,5 @@
+import { on } from './keys.ts';
+
 type Upsert = { id: string; status: string; suppressed: boolean; url: string };
 type ApiError = { error?: { message?: string } };
 
@@ -51,6 +53,11 @@ async function submit(form: HTMLFormElement): Promise<void> {
 }
 
 export function wireNewIssue(): void {
+  on('close', () => {
+    const form = document.querySelector<HTMLFormElement>('form[data-new-issue]:not([hidden])');
+    if (!form) return false;
+    form.hidden = true;
+  });
   document.addEventListener('click', (e) => {
     if (!(e.target instanceof Element)) return;
     const opener = e.target.closest<HTMLElement>('[data-new-issue-open]');

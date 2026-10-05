@@ -160,7 +160,7 @@ export const PeekPane = ({ data, closeHref }: Props) => {
           {data.kind === 'trace' ? (
             <button class="btn btn-ghost btn-icon" type="button" data-new-issue-open title="New issue" aria-label="New issue"><Icon name="issue" size="sm" /></button>
           ) : null}
-          <a class="btn btn-secondary" href={open} title="Open the full page"><Icon name="open" size="sm" />Open</a>
+          <a class="btn btn-secondary" href={open} data-open title="Open the full page"><Icon name="open" size="sm" />Open</a>
           <a class="btn btn-ghost btn-icon" href={closeHref} data-pane-close title="Close" aria-label="Close"><Icon name="fail" size="sm" /></a>
         </div>
       </div>

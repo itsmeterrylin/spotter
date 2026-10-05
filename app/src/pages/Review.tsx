@@ -54,6 +54,7 @@ export const ReviewPage = ({ panel, judgeSaid, score, queue, next, prev, dataset
     section={queue.judge ? 'judges' : 'traces'}
     shell={shell}
     crumbs={crumbsOf(queue)}
+    view="review"
     script="review"
     aside={<aside class="aside" aria-label="Review"><Panel data={panel} /></aside>}
   >

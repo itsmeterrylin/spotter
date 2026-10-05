@@ -1,3 +1,4 @@
+import { on } from './keys.ts';
 import { focusRow } from './list.ts';
 import { patchIssue, patchJudge } from './api.ts';
 
@@ -118,8 +119,6 @@ async function pick(m: HTMLElement, item: HTMLElement): Promise<void> {
   else await refreshMenus([m]);
 }
 
-const typing = (t: EventTarget | null): boolean => t instanceof HTMLInputElement || t instanceof HTMLTextAreaElement || t instanceof HTMLSelectElement;
-
 const shown = (el: HTMLElement): boolean => el.offsetParent !== null;
 
 const hotkeyTarget = (): HTMLElement | null =>
@@ -131,6 +130,7 @@ function onKey(e: KeyboardEvent): void {
   if (e.metaKey || e.ctrlKey || e.altKey) return;
   const m = current;
   if (m) {
+    e.stopImmediatePropagation();
     const active = items(m).find((i) => i.hasAttribute('data-active'));
     if (e.key === 'ArrowDown' || e.key === 'ArrowUp') move(m, e.key === 'ArrowDown' ? 1 : -1);
     else if (e.key === 'Enter' && active) void pick(m, active);
@@ -141,14 +141,14 @@ function onKey(e: KeyboardEvent): void {
       void pick(m, item);
     } else return;
     e.preventDefault();
-    return;
   }
-  if (e.key !== 's' || typing(e.target)) return;
-  const target = hotkeyTarget();
-  if (!target) return;
-  e.preventDefault();
-  show(target);
 }
+
+on('status', () => {
+  const target = hotkeyTarget();
+  if (!target) return false;
+  show(target);
+});
 
 document.addEventListener('keydown', onKey, true);
 

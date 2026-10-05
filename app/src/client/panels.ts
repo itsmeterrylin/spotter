@@ -1,4 +1,5 @@
 import { activateVersion, patchIssue, patchJudge } from './api.ts';
+import { on } from './keys.ts';
 import './statusMenu.ts';
 
 const around = (el: EventTarget | null, selector: string): HTMLElement | null => (el instanceof Element ? el.closest<HTMLElement>(selector) : null);
@@ -33,4 +34,10 @@ document.addEventListener('change', (e) => {
   const name = panel.dataset.judge ?? '';
   if (e.target instanceof HTMLSelectElement && e.target.matches('[data-activate]')) void activateVersion(name, Number(e.target.value)).then((error) => settle(panel, error));
   else if (e.target instanceof HTMLInputElement && e.target.matches('[data-description]')) void patchJudge(name, { description: e.target.value }).then((error) => settle(panel, error));
+});
+
+on('close', () => {
+  const form = document.querySelector<HTMLFormElement>('form[data-dismiss-form]:not([hidden])');
+  if (!form) return false;
+  form.hidden = true;
 });

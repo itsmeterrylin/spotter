@@ -54,7 +54,7 @@ describe('peek fragments', () => {
 
   test('Open links to the full page and the close link defaults to the kind list', async () => {
     const html = await pane(`/runs/${ids.run}/pane`);
-    expect(html).toContain(`<a class="btn btn-secondary" href="${base}/runs/${ids.run}" title="Open the full page">`);
+    expect(html).toContain(`<a class="btn btn-secondary" href="${base}/runs/${ids.run}" data-open="true" title="Open the full page">`);
     expect(html).toContain(`<a class="btn btn-ghost btn-icon" href="${base}/runs" data-pane-close="true"`);
     const custom = await pane(`/runs/${ids.run}/pane?close=${encodeURIComponent('/runs?dataset=x')}`);
     expect(custom).toContain('href="/runs?dataset=x" data-pane-close="true"');
