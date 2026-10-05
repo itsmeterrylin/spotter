@@ -10,7 +10,7 @@ import { Layout, type Tab } from './Layout.tsx';
 const pills: Record<JudgeStatus, [string, IconName, string]> = {
   calibrated: ['pill-pass', 'pass', 'Calibrated'],
   needs_labels: ['pill-defer', 'time', 'Needs labels'],
-  pending: ['pill-brand', 'time', 'Pending'],
+  pending: ['', 'time', 'Pending'],
 };
 
 export const versionStatus = (v: VersionView): JudgeStatus => (v.calibrated ? 'calibrated' : v.calibration.length ? 'pending' : 'needs_labels');

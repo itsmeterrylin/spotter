@@ -12,7 +12,7 @@ export const RunStatus = ({ ended }: { ended: string | null }) =>
   ended ? (
     <span class="pill pill-pass"><Icon name="pass" size="sm" />Done</span>
   ) : (
-    <span class="pill pill-brand"><Icon name="time" size="sm" />Running</span>
+    <span class="pill"><Icon name="time" size="sm" />Running</span>
   );
 
 export const RunsTable = ({ cards }: { cards: RunCard[] }) => (
@@ -33,7 +33,7 @@ export const RunsTable = ({ cards }: { cards: RunCard[] }) => (
           const s = primary ? scores[primary] : undefined;
           return (
             <tr class="linkrow" data-href={urls.run(run.id)}>
-              <td class="nowrap"><a class="link strong" href={urls.run(run.id)}>{run.name}</a></td>
+              <td class="nowrap"><a class="link link-title" href={urls.run(run.id)}>{run.name}</a></td>
               <td>{dataset ? <a class="link" href={urls.dataset(dataset.id)}>{dataset.name}</a> : <Dash />}</td>
               <td class="muted num nowrap">{when(run.started_at)}</td>
               <td class="num strong">{s ? pct(s.mean) : <Dash />}</td>

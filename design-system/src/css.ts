@@ -92,7 +92,9 @@ ${text}
 .faint { color: var(--ink-faint); }
 .mono { font-family: var(--font-mono); }
 .num { font-variant-numeric: tabular-nums lining-nums; }
-.link { color: var(--brand); text-decoration: underline; text-underline-offset: 3px; }
+.link { color: var(--ink-muted); font-weight: ${w.book}; text-decoration: none; text-underline-offset: 3px; }
+.link:hover { color: var(--ink); text-decoration: underline; }
+.link-title { color: var(--ink); font-weight: ${w.medium}; }
 .pos { color: var(--pass); }
 .neg { color: var(--fail); }
 

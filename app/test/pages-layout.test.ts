@@ -67,7 +67,7 @@ describe('layout', () => {
     expect(all).toContain('<a class="tab" href="http://localhost:3000/traces" aria-current="page">All</a>');
     const [, found] = await page(app, '/traces?q=squat');
     expect(found.match(/<tr class="linkrow"/g)?.length).toBe(1);
-    expect(found).toContain('<span class="pill pill-brand"><svg class="ic ic-sm" aria-hidden="true"><use href="#i-search"/></svg>squat</span>');
+    expect(found).toContain('<span class="pill"><svg class="ic ic-sm" aria-hidden="true"><use href="#i-search"/></svg>squat</span>');
     const [, none] = await page(app, '/traces?q=nothing-matches');
     expect(none).toContain('No matches');
     const [, unlabeled] = await page(app, '/traces?tab=unlabeled');
@@ -119,6 +119,18 @@ describe('layout', () => {
     const ico = await app.request('/favicon.ico');
     expect(ico.status).toBe(302);
     expect(ico.headers.get('location')).toBe('/favicon.svg');
+  });
+
+  test('links are muted with no underline at rest, titles are primary, and underline appears on hover only', async () => {
+    const css = await (await app.request('/spotter.css')).text();
+    expect(css).toContain('.link { color: var(--ink-muted); font-weight: 450; text-decoration: none;');
+    expect(css).toContain('.link:hover { color: var(--ink); text-decoration: underline; }');
+    expect(css).toContain('.link-title { color: var(--ink); font-weight: 500; }');
+    const pages = await (await app.request('/pages.css')).text();
+    expect(pages).toContain('a.row-link { color: var(--ink); text-decoration: none; }');
+    expect(pages).toContain('a.row-link:hover { text-decoration: underline;');
+    const [, runs] = await page(app, '/runs');
+    expect(runs).not.toContain('pill-brand');
   });
 
   test('serves pages.css and the built client modules', async () => {

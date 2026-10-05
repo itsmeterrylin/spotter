@@ -96,8 +96,8 @@ export const TracesPage = ({ rows, names, run, score, filters, tab, q, query, li
     >
       {filters || q ? (
         <div class="chips" style="margin-bottom: var(--space-16)">
-          {filters ? <span class="pill pill-brand"><Icon name="filter" size="sm" />{filters} {filters === 1 ? 'filter' : 'filters'}</span> : null}
-          {q ? <span class="pill pill-brand"><Icon name="search" size="sm" />{q}</span> : null}
+          {filters ? <span class="pill"><Icon name="filter" size="sm" />{filters} {filters === 1 ? 'filter' : 'filters'}</span> : null}
+          {q ? <span class="pill"><Icon name="search" size="sm" />{q}</span> : null}
         </div>
       ) : null}
       {rows.length ? <Table rows={rows} names={names} score={score} selected={selected} /> : <Empty icon="trace" title={q ? 'No matches' : 'No traces yet'} />}

@@ -26,7 +26,7 @@ export const DatasetsPage = ({ rows, shell }: ListProps) => (
           <tbody>
             {rows.map(({ dataset, items, runs, last }) => (
               <tr class="linkrow" data-href={urls.dataset(dataset.id)}>
-                <td class="nowrap"><a class="link strong" href={urls.dataset(dataset.id)}>{dataset.name}</a></td>
+                <td class="nowrap"><a class="link link-title" href={urls.dataset(dataset.id)}>{dataset.name}</a></td>
                 <td class="num">{items}</td>
                 <td class="num">{runs}</td>
                 <td>

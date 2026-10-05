@@ -2,7 +2,7 @@
 .shell { display: grid; grid-template-columns: var(--rail) var(--sidebar) minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) var(--statusbar); height: 100vh; height: 100dvh; }
 .nav-toggle { position: absolute; opacity: 0; pointer-events: none; }
 .rail { grid-column: 1; grid-row: 1; overflow-y: auto; }
-.rail-brand { display: inline-flex; align-items: center; justify-content: center; width: var(--control); height: var(--control); margin-bottom: var(--space-8); color: var(--brand); }
+.rail-brand { text-decoration: none; display: inline-flex; align-items: center; justify-content: center; width: var(--control); height: var(--control); margin-bottom: var(--space-8); color: var(--brand); }
 .rail .menu { display: none; }
 .rail-foot { margin-top: auto; }
 .rail-btn .badge { position: absolute; top: -2px; right: -4px; }
@@ -82,6 +82,7 @@ tr[data-selected] td { background: var(--fill-strong); }
 .group h2 { margin-bottom: var(--space-16); }
 .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-16); margin-bottom: var(--space-32); }
 .stat { display: flex; flex-direction: column; gap: var(--space-8); }
+.stat, .stat:hover { text-decoration: none; color: inherit; }
 .stat .label { display: inline-flex; align-items: center; gap: var(--space-6); font-size: var(--text-ui); font-weight: 500; color: var(--ink-muted); text-decoration: none; }
 .stat[data-selected] { border-color: var(--brand); }
 .delta { display: inline-flex; align-items: center; gap: 4px; font-weight: 500; }
@@ -135,6 +136,8 @@ tr[data-selected] td { background: var(--fill-strong); }
 
 /* Issues */
 .list-row { position: relative; }
+a.row-link { color: var(--ink); text-decoration: none; }
+a.row-link:hover { text-decoration: underline; text-underline-offset: 3px; }
 .row-link::after { content: ""; position: absolute; inset: 0; }
 .propfield select.input, .propfield input.input { width: auto; min-width: 0; height: 100%; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; font-weight: 500; color: inherit; cursor: pointer; }
 .propfield input.input { cursor: text; min-width: 12rem; }
@@ -155,7 +158,7 @@ tr[data-selected] td { background: var(--fill-strong); }
 .new-issue { padding: var(--space-16); }
 .new-issue-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: var(--space-16); }
 .turn-flag { display: inline-flex; align-items: center; justify-content: center; width: var(--control); height: var(--control); flex: none; opacity: 0; border: 0; border-radius: var(--radius-pill); background: transparent; color: var(--ink-muted); cursor: pointer; }
-.turn-flag:hover { color: var(--brand); background: var(--fill); }
+.turn-flag:hover { color: var(--ink); background: var(--fill); }
 .turn:hover .turn-flag, .turn[data-focus] .turn-flag, .turn-flag:focus-visible { opacity: 1; }
 @media (hover: none) { .turn-flag { opacity: 1; } }
 
