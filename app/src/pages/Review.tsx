@@ -80,7 +80,7 @@ export const ReviewPage = ({ panel, judgeSaid, score, queue, next, prev, dataset
       </div>
       {judgeSaid ? (
         <p class="judge-said">
-          <Icon name="judge" size="sm" />Judge v{judgeSaid.version} said {judgeSaid.verdict}
+          <Icon name="judge" size="sm" />Judge v{judgeSaid.version} said {judgeSaid.result.verdict}{judgeSaid.result.failingTurns ? ` · ${judgeSaid.result.failingTurns} ${judgeSaid.result.failingTurns === 1 ? 'turn' : 'turns'}` : ''}
           {judgeSaid.reason ? <span class="muted"> · {judgeSaid.reason}</span> : null}
         </p>
       ) : null}

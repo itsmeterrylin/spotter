@@ -12,6 +12,7 @@ import { DatasetsPage, DatasetPage, type DatasetRow } from './Datasets.tsx';
 import { NotificationsPage } from './Notifications.tsx';
 import { RunsPage } from './Runs.tsx';
 import { type TraceListRow, TracesPage, type TracesTab } from './Traces.tsx';
+import { judgeResults } from './judgeResult.ts';
 import { loadPanel, type PanelData } from './panelData.ts';
 import { peekFromQuery } from './peekRoutes.tsx';
 
@@ -59,12 +60,17 @@ export function listRoutes(repos: Repos, shell: () => Shell): Hono {
     const q = c.req.query('q')?.trim() || undefined;
     const scoped: Filter[] = [...filters, ...(tab === 'unlabeled' ? [unlabeledFilter] : []), ...(q ? [{ field: 'text', operator: 'contains' as const, value: q }] : [])];
     const page = listTraces(repos, { filters: scoped, run_id: runId, limit: traceLimit });
-    const rows: TraceListRow[] = page.traces.map((trace) => ({
-      trace,
-      run: trace.run_id ? repos.runs.get(trace.run_id) : null,
-      values: rollup(counts(repos, trace.scores)),
-      verdict: humanVerdict(trace.scores)?.verdict ?? null,
-    }));
+    const rows: TraceListRow[] = page.traces.map((trace) => {
+      const judges = judgeResults(trace.scores);
+      const judged = new Set(judges.map((j) => j.name));
+      return {
+        trace,
+        run: trace.run_id ? repos.runs.get(trace.run_id) : null,
+        values: new Map([...rollup(counts(repos, trace.scores))].filter(([name]) => !judged.has(name))),
+        judges,
+        verdict: humanVerdict(trace.scores)?.verdict ?? null,
+      };
+    });
     const { selected, pane } = peekFromQuery(repos, c, (id) => ({ kind: 'trace', id }), 'trace');
     const query = new URL(c.req.url).searchParams;
     query.delete('trace');

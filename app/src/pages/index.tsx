@@ -20,6 +20,7 @@ import { SettingsPage } from './Settings.tsx';
 import { getAttributeMap } from '../services/attributeMap.ts';
 import { RunPage, type TraceRow } from './Run.tsx';
 import { TracePage } from './Trace.tsx';
+import { judgeResults } from './judgeResult.ts';
 import { loadPanel, type PanelData } from './panelData.ts';
 import { peekFromQuery, peekRoutes } from './peekRoutes.tsx';
 
@@ -74,8 +75,9 @@ export function createPages(repos: Repos): Hono {
     const card = data.card;
     const rows: TraceRow[] = repos.traces.listByRun(run.id).map((trace) => {
       const scores = repos.scores.listByTrace(trace.id);
+      const judges = judgeResults(scores);
       const values = rollup(counts(repos, scores));
-      return { trace, verdict: humanVerdict(scores), value: card.primary ? (values.get(card.primary) ?? null) : null };
+      return { trace, verdict: humanVerdict(scores), judges, value: card.primary && !judges.some((j) => j.name === card.primary) ? (values.get(card.primary) ?? null) : null };
     });
     const { selected, pane } = peekFromQuery(repos, c, (id) => ({ kind: 'trace', id }), 'trace');
     return c.html(<RunPage data={data} rows={rows} shell={shell()} selected={selected} pane={pane} />);

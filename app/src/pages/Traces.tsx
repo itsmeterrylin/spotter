@@ -4,11 +4,12 @@ import type { Child } from 'hono/jsx';
 import { urls } from '../urls.ts';
 import type { Shell } from './data.ts';
 import { Layout, type Tab } from './Layout.tsx';
+import type { JudgeResult } from './judgeResult.ts';
 import { PeekRegion } from './Peek.tsx';
 import { TraceList } from './TraceList.tsx';
 import { type Crumb, Empty, Icon, IconButton, type Verdict } from './ui.tsx';
 
-export type TraceListRow = { trace: Trace; run: Run | null; values: Map<string, number>; verdict: Verdict | null };
+export type TraceListRow = { trace: Trace; run: Run | null; values: Map<string, number>; judges: JudgeResult[]; verdict: Verdict | null };
 
 export type TracesTab = 'all' | 'unlabeled';
 
@@ -56,7 +57,7 @@ export const TracesPage = ({ rows, run, filters, tab, q, query, shell, selected,
           {q ? <span class="pill"><Icon name="search" size="sm" />{q}</span> : null}
         </div>
       ) : null}
-      {rows.length ? <TraceList items={rows.map(({ trace, run: r, values, verdict }) => ({ trace, verdict, run: r, scores: [...values.entries()].sort(([a], [b]) => a.localeCompare(b)) }))} selected={selected} /> : <Empty icon="trace" title={q ? 'No matches' : 'No traces yet'} />}
+      {rows.length ? <TraceList items={rows.map(({ trace, run: r, values, judges, verdict }) => ({ trace, verdict, run: r, judges, scores: [...values.entries()].sort(([a], [b]) => a.localeCompare(b)) }))} selected={selected} /> : <Empty icon="trace" title={q ? 'No matches' : 'No traces yet'} />}
     </Layout>
   );
 };
