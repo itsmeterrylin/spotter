@@ -4,6 +4,7 @@ import type { Filter } from '../services/filters.ts';
 import { listItems } from '../services/datasets.ts';
 import { disagreements } from '../services/disagreements.ts';
 import { listIssues } from '../services/issues.ts';
+import { notifications } from '../services/notifications.ts';
 import { listJudges } from '../services/judges.ts';
 import { query } from '../services/query.ts';
 import { listRuns } from '../services/runs.ts';
@@ -80,6 +81,8 @@ export function list(repos: Repos, args: ListArgs): ToolResult {
       const list = listIssues(repos, { status: args.status, project: args.project });
       return { items: list.issues.slice(0, args.limit), counts: list.counts, dismissed_fingerprints: list.dismissed_fingerprints, url: list.url };
     }
+    case 'inbox':
+      return { items: notifications(repos).slice(0, args.limit), url: urls.notifications() };
     case 'alerts':
     case 'deliveries':
       return { items: [], note: later(9) };

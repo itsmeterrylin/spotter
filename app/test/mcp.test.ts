@@ -169,6 +169,20 @@ describe('MCP /mcp', () => {
     expect(v1?.calibration.length).toBe([dev.n, held.n].filter(Boolean).length);
   });
 
+  test('read judge_version returns one version with calibration and url, and list inbox rows carry kind and url', async () => {
+    const v1 = await call('read', { type: 'judge_version', id: 'exercise_match', version: 1 });
+    expect(v1).toMatchObject({ number: 1, judge_name: 'exercise_match', model: 'fake:contains', url: 'http://localhost:3000/judges/exercise_match/versions/1' });
+    expect((v1.calibration as unknown[]).length).toBeGreaterThan(0);
+    const { body } = await rpc('tools/call', { name: 'read', arguments: { type: 'judge_version', id: 'exercise_match', version: 99 } });
+    expect((body.result as ToolResult).isError).toBe(true);
+
+    const inbox = await call('list', { type: 'inbox' });
+    const rows = inbox.items as { kind: string; count: number; url: string }[];
+    expect(rows.map((r) => r.kind)).toContain('unlabeled');
+    for (const r of rows) expect(r.url).toStartWith('http://localhost:3000/');
+    expect(inbox.url).toBe('http://localhost:3000/notifications');
+  });
+
   test('attribute_map.set replaces the map and read attribute_map returns it by name', async () => {
     const set = await call('write', { op: 'attribute_map.set', data: { project: 'copper', map: [{ source: 'lk.transfer.destination', target: 'transfer_to', type: 'string' }] } });
     expect(set).toMatchObject({ ok: true, project: 'copper', map: [{ source: 'lk.transfer.destination', target: 'transfer_to', type: 'string' }] });

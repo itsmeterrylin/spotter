@@ -3,8 +3,8 @@ import { filter } from '../api/schemas.ts';
 
 export const id = z.string().min(1).max(128);
 
-export const listTypes = ['datasets', 'items', 'runs', 'traces', 'notes', 'judges', 'disagreements', 'issues', 'alerts', 'deliveries'] as const;
-export const readTypes = ['run', 'trace', 'dataset', 'judge', 'issue', 'audit', 'attribute_map'] as const;
+export const listTypes = ['datasets', 'items', 'runs', 'traces', 'notes', 'judges', 'disagreements', 'issues', 'inbox', 'alerts', 'deliveries'] as const;
+export const readTypes = ['run', 'trace', 'dataset', 'judge', 'issue', 'judge_version', 'audit', 'attribute_map'] as const;
 export const writeOps = [
   'dataset.create',
   'items.upsert',
@@ -38,7 +38,7 @@ export const listArgs = {
   limit: z.number().int().min(1).max(500).default(50),
 };
 
-export const readArgs = { type: z.enum(readTypes), id: id.optional() };
+export const readArgs = { type: z.enum(readTypes), id: id.optional(), version: z.number().int().positive().optional() };
 
 export const writeArgs = { op: z.enum(writeOps), data: z.record(z.string(), z.json()).default({}), dry_run: z.boolean().default(false) };
 

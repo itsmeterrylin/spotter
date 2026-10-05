@@ -1,7 +1,7 @@
 import { parseJson } from '../db/json.ts';
 import type { Repos } from '../db/repos/index.ts';
 import type { Json } from '../db/types.ts';
-import { invalid } from '../errors.ts';
+import { invalid, notFound } from '../errors.ts';
 import { getAttributeMap } from '../services/attributeMap.ts';
 import { getDataset } from '../services/datasets.ts';
 import { disagreements } from '../services/disagreements.ts';
@@ -65,6 +65,12 @@ export function read(repos: Repos, args: ReadArgs): ToolResult {
     case 'judge': {
       const view = getJudge(repos, need(args.id));
       return { ...view, disagreements: view.active_version === null ? [] : disagreements(repos, view.name, 'active').traces };
+    }
+    case 'judge_version': {
+      if (args.version === undefined) throw invalid('version is required to read a judge_version');
+      const version = getJudge(repos, need(args.id)).versions.find((v) => v.number === args.version);
+      if (!version) throw notFound(`judge ${args.id} version`, String(args.version));
+      return version;
     }
     case 'issue':
       return getIssue(repos, need(args.id));
