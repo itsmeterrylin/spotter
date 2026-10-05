@@ -4,6 +4,7 @@ import { init } from './init.ts';
 import { formatCalibration, judgeCalibrate } from './judge-calibrate.ts';
 import { formatJudgeRun, judgeRun } from './judge-run.ts';
 import { loadEval } from './load.ts';
+import { callTool, compareArgs, formatOutcome, isMcpCompare, listArgs, readArgs, writeArgs } from './mcp.ts';
 import { compareRuns, runEval } from './runner.ts';
 import { formatSummary } from './summary.ts';
 
@@ -12,9 +13,16 @@ export type Parsed = { positional: string[]; flags: Record<string, string | true
 const usage = `usage:
   spotter run <file> [--name <text>] [--baseline <run_id>] [--no-send] [--create]
   spotter compare <baseline_run_id> <run_id>
+  spotter list <type> [--status s] [--project p] [--judge n] [--version v] [--run id] [--dataset id] [--limit n] [--filters '<json>']
+  spotter read <type> [id] [--version n]
+  spotter write <op> --data '<json>' | @file.json | - [--dry-run]
+  spotter compare <dataset_id> <run_id,run_id,...> [--only changes]
+  (list, read, write, compare forward to the MCP tools; add --json for compact output; a comma in the second compare argument or a third id selects the dataset form)
   spotter judge run <name> [--version <n|active>] --run <run_id> | --dataset <id>
   spotter judge calibrate <name> --version <n> [--dataset <id>]
   spotter init`;
+
+const booleanFlags = new Set(['json', 'dry-run', 'no-send', 'create']);
 
 export function parseArgs(argv: string[]): Parsed {
   const positional: string[] = [];
@@ -26,7 +34,8 @@ export function parseArgs(argv: string[]): Parsed {
       continue;
     }
     const next = argv[i + 1];
-    if (next !== undefined && !next.startsWith('--')) {
+    if (booleanFlags.has(arg.slice(2))) flags[arg.slice(2)] = true;
+    else if (next !== undefined && !next.startsWith('--')) {
       flags[arg.slice(2)] = next;
       i += 1;
     } else flags[arg.slice(2)] = true;
@@ -62,6 +71,14 @@ export async function judgeCommand(sub: string, name: string, flags: Parsed['fla
   throw new Error(`unknown judge command ${sub}; use: judge run <name> or judge calibrate <name>`);
 }
 
+export async function mcpCommand(tool: string, args: Record<string, unknown>, flags: Parsed['flags']): Promise<number> {
+  const outcome = await callTool(configFromEnv(), tool, args);
+  const text = formatOutcome(outcome, flags);
+  if (outcome.isError) console.error(text);
+  else console.log(text);
+  return outcome.isError ? 1 : 0;
+}
+
 export async function main(argv: string[]): Promise<number> {
   const { positional, flags } = parseArgs(argv);
   const [command, a, b] = positional;
@@ -73,6 +90,10 @@ export async function main(argv: string[]): Promise<number> {
     console.log(await runCommand(a, flags));
     return 0;
   }
+  if (command === 'list' && a) return mcpCommand('list', listArgs(a, flags), flags);
+  if (command === 'read' && a) return mcpCommand('read', readArgs(a, b, flags), flags);
+  if (command === 'write' && a) return mcpCommand('write', await writeArgs(a, flags), flags);
+  if (command === 'compare' && a && b && isMcpCompare(positional)) return mcpCommand('compare', compareArgs(a, positional.slice(2).join(','), flags), flags);
   if (command === 'compare' && a && b) {
     console.log(await compareCommand(a, b));
     return 0;
