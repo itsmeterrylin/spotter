@@ -1,5 +1,7 @@
 import { patchIssue } from './api.ts';
 import './bulk.ts';
+import './panels.ts';
+import './peek.ts';
 import { focusedRow, focusRow, isTyping } from './list.ts';
 import './statusMenu.ts';
 

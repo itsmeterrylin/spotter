@@ -4,6 +4,7 @@ import type { Child } from 'hono/jsx';
 import { urls } from '../urls.ts';
 import type { Shell } from './data.ts';
 import { Layout, type Tab } from './Layout.tsx';
+import { PeekRegion } from './Peek.tsx';
 import { TraceList } from './TraceList.tsx';
 import { type Crumb, Empty, Icon, IconButton, type Verdict } from './ui.tsx';
 
@@ -47,7 +48,7 @@ export const TracesPage = ({ rows, run, filters, tab, q, query, shell, selected,
       crumbs={crumbs}
       actions={action}
       script="traces"
-      aside={<aside class="aside aside-wide pane" id="pane" aria-label="Trace" hidden={!pane}>{pane}</aside>}
+      aside={<PeekRegion>{pane}</PeekRegion>}
     >
       {filters || q ? (
         <div class="chips" style="margin-bottom: var(--space-16)">

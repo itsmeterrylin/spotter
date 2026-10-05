@@ -2,6 +2,7 @@ import type { IconName } from '../../../design-system/src/icons.ts';
 import type { Run } from '../db/repos/run.ts';
 import type { Trace } from '../db/repos/trace.ts';
 import { urls } from '../urls.ts';
+import { peekRow } from './Peek.tsx';
 import { ago, Icon, pct, short, summarize, type Verdict, VerdictPill } from './ui.tsx';
 
 export type TraceItem = { trace: Trace; verdict: Verdict | null; scores: Array<[name: string, value: number]>; run: Run | null };
@@ -17,7 +18,7 @@ const groups: Group[] = [
 ];
 
 const TraceRow = ({ item: { trace, verdict, scores, run }, selected }: { item: TraceItem; selected?: string }) => (
-  <div class="list-row" data-row data-trace={trace.id} data-selected={trace.id === selected ? '1' : undefined}>
+  <div class="list-row" data-row {...peekRow({ kind: 'trace', id: trace.id }, selected)}>
     <span class="id mono">{short(trace.id)}</span>
     <a class="grow row-link" href={urls.trace(trace.id)}>{summarize(trace.output) || 'No output'}</a>
     {scores.map(([name, value]) => <span class="chip-v num" title={name}>{`${name} ${pct(value)}`}</span>)}

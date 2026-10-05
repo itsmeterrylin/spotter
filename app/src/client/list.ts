@@ -2,6 +2,13 @@ const rowsNow = (): HTMLElement[] => [...document.querySelectorAll<HTMLElement>(
 
 let active: HTMLElement | null = null;
 
+const focusListeners: Array<(row: HTMLElement) => void> = [];
+
+/** Run `fn` each time focus lands on a row, whether from j/k, a click, or code. */
+export const onFocusRow = (fn: (row: HTMLElement) => void): void => {
+  focusListeners.push(fn);
+};
+
 /** The row j/k last landed on, if it is still on the page. */
 export const focusedRow = (): HTMLElement | null => (active?.isConnected ? active : null);
 
@@ -13,6 +20,7 @@ export function focusRow(row: HTMLElement | undefined): void {
   active = row;
   row.setAttribute('data-focus', '1');
   row.scrollIntoView({ block: 'nearest' });
+  for (const fn of focusListeners) fn(row);
 }
 
 const step = (by: number): void => {

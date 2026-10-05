@@ -6,6 +6,8 @@ import type { TraceView } from '../services/traces.ts';
 import { urls } from '../urls.ts';
 import { initials, type Shell } from './data.ts';
 import { Layout, type Tab } from './Layout.tsx';
+import { Panel } from './panels.tsx';
+import { PeekRegion, peekRow } from './Peek.tsx';
 import { Turns } from './Trace.tsx';
 import { ago, BulkBar, Empty, Icon, issueOptions, pct, Prop, RowCheck, SeverityPill, severityPill, short, since, State, StatusMenu, statusLabel, Values } from './ui.tsx';
 
@@ -13,18 +15,18 @@ export type IssueTab = 'overview' | 'traces' | 'backtest';
 
 const turnLabel = (turn: number | null): string => (turn === null ? 'whole trace' : `turn ${turn}`);
 
-type ListProps = { issues: IssueListRow[]; status: IssueStatus; counts: Record<IssueStatus, number>; project?: string; shell: Shell };
+type ListProps = { issues: IssueListRow[]; status: IssueStatus; counts: Record<IssueStatus, number>; project?: string; shell: Shell; selected?: string; pane?: Child };
 
 const listTabs = (status: IssueStatus, counts: Record<IssueStatus, number>, project?: string): Tab[] =>
   issueStatuses.map((s) => ({ href: s === 'open' && !project ? urls.home() : urls.issues({ status: s, project }), label: statusLabel[s], count: counts[s], current: s === status }));
 
-export const IssuesPage = ({ issues, status, counts, project, shell }: ListProps) => (
-  <Layout title="Issues" section="issues" shell={shell} tabs={listTabs(status, counts, project)} script="issues">
+export const IssuesPage = ({ issues, status, counts, project, shell, selected, pane }: ListProps) => (
+  <Layout title="Issues" section="issues" shell={shell} tabs={listTabs(status, counts, project)} script="issues" aside={<PeekRegion>{pane}</PeekRegion>}>
     {issues.length ? (
       <div class="card card-flush issue-list" data-list data-status={status}>
         <div class="group-head"><State status={status} />{statusLabel[status]}<span class="count">{issues.length}</span></div>
         {issues.map((i) => (
-          <div class="list-row" data-row data-id={i.id}>
+          <div class="list-row" data-row data-id={i.id} {...peekRow({ kind: 'issue', id: i.id }, selected)}>
             <RowCheck label={i.title} />
             <StatusMenu kind="issue" id={i.id} current={i.status} options={issueOptions(i.status)} />
             <a class="grow strong row-link" href={i.url}>{i.title}</a>
@@ -47,7 +49,7 @@ export const IssuesPage = ({ issues, status, counts, project, shell }: ListProps
   </Layout>
 );
 
-type DetailProps = { issue: IssueView; tab: IssueTab; seed: TraceView | null; projectTraces: number; judges: Judge[]; shell: Shell };
+type DetailProps = { issue: IssueView; tab: IssueTab; seed: TraceView | null; projectTraces: number; judges: Judge[]; shell: Shell; selected?: string; pane?: Child };
 
 const detailTabs = (issue: IssueView, tab: IssueTab): Tab[] => [
   { href: urls.issue(issue.id), label: 'Overview', current: tab === 'overview' },
@@ -105,8 +107,8 @@ const Overview = ({ issue, seed, projectTraces }: Pick<DetailProps, 'issue' | 's
   );
 };
 
-const OccurrenceRow = ({ o }: { o: OccurrenceView }) => (
-  <div class="list-row" data-row>
+const OccurrenceRow = ({ o, selected }: { o: OccurrenceView; selected?: string }) => (
+  <div class="list-row" data-row {...peekRow({ kind: 'trace', id: o.trace_id }, selected)}>
     <a class="id mono row-link" href={o.url}>{short(o.trace_id)}</a>
     <span class="meta">{turnLabel(o.turn)}</span>
     <span class="grow muted">{o.evidence ?? ''}</span>
@@ -115,9 +117,9 @@ const OccurrenceRow = ({ o }: { o: OccurrenceView }) => (
   </div>
 );
 
-const Occurrences = ({ issue }: { issue: IssueView }) =>
+const Occurrences = ({ issue, selected }: { issue: IssueView; selected?: string }) =>
   issue.occurrence_list.length ? (
-    <div class="card card-flush" data-list>{issue.occurrence_list.map((o) => <OccurrenceRow o={o} />)}</div>
+    <div class="card card-flush" data-list>{issue.occurrence_list.map((o) => <OccurrenceRow o={o} selected={selected} />)}</div>
   ) : (
     <Empty icon="trace" title="No occurrences" />
   );
@@ -176,62 +178,7 @@ const BacktestTab = ({ issue, judges }: { issue: IssueView; judges: Judge[] }) =
   );
 };
 
-const Properties = ({ issue }: { issue: IssueView }) => (
-  <aside class="aside" aria-label="Issue" data-issue={issue.id}>
-    <section class="stack" style="--gap: var(--space-8)">
-      <h2>Status</h2>
-      <StatusMenu kind="issue" id={issue.id} current={issue.status} options={issueOptions(issue.status)} variant="field" reload />
-      <form class="dismiss-form stack" data-dismiss-form hidden={issue.status !== 'dismissed' || undefined} style="--gap: var(--space-8)">
-        <input class="input" name="reason" placeholder="Reason" aria-label="Reason" value={issue.dismissed_reason ?? ''} required />
-        <button class="btn btn-fail" type="submit"><Icon name="dismiss" size="sm" />{issue.status === 'dismissed' ? 'Save reason' : 'Dismiss'}</button>
-      </form>
-      <p class="error" data-error></p>
-    </section>
-    <section>
-      <h2>Properties</h2>
-      <dl>
-        <Prop name="Severity" icon="flag" field>
-          <select class="input" name="severity" aria-label="Severity" data-patch="severity">
-            {(['low', 'medium', 'high'] as const).map((s) => <option value={s} selected={s === issue.severity}>{s}</option>)}
-          </select>
-        </Prop>
-        <Prop name="Project" icon="dataset">{issue.project}</Prop>
-        <Prop name="Created by" icon="human">{`Created by ${issue.created_by}`}</Prop>
-        <Prop name="Created" icon="time" class="num" hint={issue.created_at}>{since('Created', issue.created_at)}</Prop>
-        <Prop name="Updated" icon="time" class="num" hint={issue.updated_at}>{since('Updated', issue.updated_at)}</Prop>
-      </dl>
-    </section>
-    <section>
-      <h2>Relations</h2>
-      <dl>
-        <Prop name="Judge" icon="judge" empty={<a class="link" href={urls.issue(issue.id, 'backtest')}>Link judge</a>}>
-          {issue.judge_name ? <a class="link" href={urls.judge(issue.judge_name)}>{issue.judge_name}</a> : null}
-        </Prop>
-        <Prop name="Seed trace" icon="trace" class="mono" empty="No seed trace">
-          {issue.seed_trace_id ? <a class="link" href={urls.trace(issue.seed_trace_id)}>{short(issue.seed_trace_id)}</a> : null}
-        </Prop>
-      </dl>
-    </section>
-    <section class="stack" style="--gap: var(--space-8)">
-      <h2>Recent occurrences</h2>
-      {issue.occurrence_list.length ? (
-        <div class="occ-list">
-          {issue.occurrence_list.slice(0, 6).map((o) => (
-            <div class="list-row" data-row>
-              <a class="id mono row-link" href={o.url}>{short(o.trace_id)}</a>
-              <span class="grow"></span>
-              <span class="meta">{turnLabel(o.turn)}</span>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <p class="muted">None</p>
-      )}
-    </section>
-  </aside>
-);
-
-export const IssuePage = ({ issue, tab, seed, projectTraces, judges, shell }: DetailProps) => (
+export const IssuePage = ({ issue, tab, seed, projectTraces, judges, shell, selected, pane }: DetailProps) => (
   <Layout
     title={issue.title}
     heading
@@ -241,13 +188,18 @@ export const IssuePage = ({ issue, tab, seed, projectTraces, judges, shell }: De
     tabs={detailTabs(issue, tab)}
     crumbs={[[urls.issues({ status: issue.status === 'open' ? undefined : issue.status }), 'Issues']]}
     script="issue"
-    aside={<Properties issue={issue} />}
+    aside={
+      <>
+        <aside class="aside" aria-label="Issue"><Panel data={{ kind: 'issue', issue, projectTraces }} /></aside>
+        <PeekRegion>{pane}</PeekRegion>
+      </>
+    }
   >
     {issue.status === 'dismissed' && issue.dismissed_reason ? (
       <p class="dismissed-note"><span class="pill"><Icon name="dismiss" size="sm" />Dismissed</span> {issue.dismissed_reason}</p>
     ) : null}
     {tab === 'overview' ? <Overview issue={issue} seed={seed} projectTraces={projectTraces} /> : null}
-    {tab === 'traces' ? <Occurrences issue={issue} /> : null}
+    {tab === 'traces' ? <Occurrences issue={issue} selected={selected} /> : null}
     {tab === 'backtest' ? <BacktestTab issue={issue} judges={judges} /> : null}
   </Layout>
 );

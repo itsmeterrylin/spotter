@@ -5,6 +5,7 @@ import { getIssue, issueStatuses, listIssues } from '../services/issues.ts';
 import { getTrace } from '../services/traces.ts';
 import type { Shell } from './data.ts';
 import { IssuePage, IssuesPage, type IssueTab } from './Issues.tsx';
+import { peekFromQuery } from './peekRoutes.tsx';
 
 const listQuery = z.object({ status: z.enum(issueStatuses).default('open'), project: z.string().min(1).optional() });
 const tabQuery = z.enum(['overview', 'traces', 'backtest']).default('overview');
@@ -15,7 +16,8 @@ export function issueRoutes(repos: Repos, shell: () => Shell): Hono {
   const list = (c: Context) => {
     const q = listQuery.parse(c.req.query());
     const result = listIssues(repos, q);
-    return c.html(<IssuesPage issues={result.issues} status={q.status} counts={result.counts} project={q.project} shell={shell()} />);
+    const { selected, pane } = peekFromQuery(repos, c, (id) => ({ kind: 'issue', id }));
+    return c.html(<IssuesPage issues={result.issues} status={q.status} counts={result.counts} project={q.project} shell={shell()} selected={selected} pane={pane} />);
   };
   app.get('/', list);
   app.get('/issues', list);
@@ -23,6 +25,7 @@ export function issueRoutes(repos: Repos, shell: () => Shell): Hono {
   app.get('/issues/:id', (c) => {
     const issue = getIssue(repos, c.req.param('id'));
     const tab: IssueTab = tabQuery.parse(c.req.query('tab'));
+    const { selected, pane } = peekFromQuery(repos, c, (traceId) => ({ kind: 'trace', id: traceId }), 'trace');
     return c.html(
       <IssuePage
         issue={issue}
@@ -31,6 +34,8 @@ export function issueRoutes(repos: Repos, shell: () => Shell): Hono {
         projectTraces={repos.traces.count(issue.project_id)}
         judges={repos.judges.list()}
         shell={shell()}
+        selected={selected}
+        pane={pane}
       />,
     );
   });

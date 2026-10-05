@@ -1,21 +1,25 @@
+import type { Child } from 'hono/jsx';
 import type { Dataset, DatasetItem } from '../db/repos/dataset.ts';
 import type { Run } from '../db/repos/run.ts';
 import { urls } from '../urls.ts';
 import type { RunCard, Shell } from './data.ts';
 import { Layout } from './Layout.tsx';
+import type { PanelData } from './panelData.ts';
+import { Panel } from './panels.tsx';
+import { PeekRegion, peekRow } from './Peek.tsx';
 import { RunsList, when } from './Runs.tsx';
 import { Empty, Icon, IconButton, short, summarize } from './ui.tsx';
 
 export type DatasetRow = { dataset: Dataset; items: number; runs: number; last: Run | null };
 
-type ListProps = { rows: DatasetRow[]; shell: Shell };
+type ListProps = { rows: DatasetRow[]; shell: Shell; selected?: string; pane?: Child };
 
-export const DatasetsPage = ({ rows, shell }: ListProps) => (
-  <Layout title="Datasets" section="datasets" shell={shell} script="rows">
+export const DatasetsPage = ({ rows, shell, selected, pane }: ListProps) => (
+  <Layout title="Datasets" section="datasets" shell={shell} script="rows" aside={<PeekRegion>{pane}</PeekRegion>}>
     {rows.length ? (
       <div class="card card-flush" data-list>
         {rows.map(({ dataset, items, runs, last }) => (
-          <div class="list-row" data-row>
+          <div class="list-row" data-row {...peekRow({ kind: 'dataset', id: dataset.id }, selected)}>
             <Icon name="dataset" size="sm" />
             <a class="grow strong row-link" href={urls.dataset(dataset.id)}>{dataset.name}</a>
             <span class="meta num" title="Items">{items} {items === 1 ? 'item' : 'items'}</span>
@@ -35,8 +39,8 @@ export const DatasetsPage = ({ rows, shell }: ListProps) => (
   </Layout>
 );
 
-const ItemRow = ({ item }: { item: DatasetItem }) => (
-  <div class="list-row" data-row={item.source_trace_id ? true : undefined}>
+const ItemRow = ({ item, selected }: { item: DatasetItem; selected?: string }) => (
+  <div class="list-row" data-row {...peekRow({ kind: 'item', dataset: item.dataset_id, id: item.id }, selected)}>
     <span class="id mono">{short(item.id)}</span>
     <span class="grow">{summarize(item.input)}</span>
     <span class="meta expected">{summarize(item.expected) || '–'}</span>
@@ -44,13 +48,13 @@ const ItemRow = ({ item }: { item: DatasetItem }) => (
   </div>
 );
 
-const ItemsList = ({ items }: { items: DatasetItem[] }) => (
+const ItemsList = ({ items, selected }: { items: DatasetItem[]; selected?: string }) => (
   <div class="card card-flush" data-list>
-    {items.map((item) => <ItemRow item={item} />)}
+    {items.map((item) => <ItemRow item={item} selected={selected} />)}
   </div>
 );
 
-type DetailProps = { dataset: Dataset; items: DatasetItem[]; cards: RunCard[]; shell: Shell };
+type DetailProps = { data: Extract<PanelData, { kind: 'dataset' }>; items: DatasetItem[]; shell: Shell; selected?: string; pane?: Child };
 
 const latestCompare = (dataset: Dataset, cards: RunCard[]) => {
   const [newest, previous] = cards;
@@ -60,15 +64,32 @@ const latestCompare = (dataset: Dataset, cards: RunCard[]) => {
   );
 };
 
-export const DatasetPage = ({ dataset, items, cards, shell }: DetailProps) => (
-  <Layout title={dataset.name} heading section="datasets" shell={shell} crumbs={[[urls.datasets(), 'Datasets']]} actions={latestCompare(dataset, cards)} script="rows">
-    <section class="group">
-      <h2 class="t-content bold">Items</h2>
-      {items.length ? <ItemsList items={items} /> : <Empty icon="dataset" title="No items yet" />}
-    </section>
-    <section class="group">
-      <h2 class="t-content bold">Runs</h2>
-      {cards.length ? <RunsList cards={cards} grouped={false} /> : <Empty icon="run" title="No runs yet" />}
-    </section>
-  </Layout>
-);
+export const DatasetPage = ({ data, items, shell, selected, pane }: DetailProps) => {
+  const { dataset, cards } = data;
+  return (
+    <Layout
+      title={dataset.name}
+      heading
+      section="datasets"
+      shell={shell}
+      crumbs={[[urls.datasets(), 'Datasets']]}
+      actions={latestCompare(dataset, cards)}
+      script="rows"
+      aside={
+        <>
+          <aside class="aside" aria-label="Dataset"><Panel data={data} /></aside>
+          <PeekRegion>{pane}</PeekRegion>
+        </>
+      }
+    >
+      <section class="group">
+        <h2 class="t-content bold">Items</h2>
+        {items.length ? <ItemsList items={items} selected={selected} /> : <Empty icon="dataset" title="No items yet" />}
+      </section>
+      <section class="group">
+        <h2 class="t-content bold">Runs</h2>
+        {cards.length ? <RunsList cards={cards} grouped={false} selected={selected} /> : <Empty icon="run" title="No runs yet" />}
+      </section>
+    </Layout>
+  );
+};

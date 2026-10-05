@@ -46,7 +46,8 @@ describe('layout', () => {
     expect(html).toContain('<h1 class="crumb-current">Issues</h1>');
     expect(html).toContain('<header class="header">');
     expect(html).toContain('<a class="crumb" href="http://localhost:3000/">copper</a>');
-    expect(html).not.toContain('class="aside');
+    expect(html).not.toContain('<aside class="aside" ');
+    expect(html).toContain('<aside class="aside pane" id="pane" aria-label="Peek" hidden="">');
     expect(html).toContain('/pages.css');
     expect(html).toContain('<symbol id="i-paw"');
     expect(html).toContain('<link rel="icon" href="/favicon.svg"');
@@ -98,10 +99,10 @@ describe('layout', () => {
     const [, html] = await page(app, '/traces');
     const heads = [...html.matchAll(/<div class="group-head">.*?<\/span>([A-Za-z]+)<span class="count">(\d+)<\/span><\/div>/g)].map((m) => `${m[1]} ${m[2]}`);
     expect(heads).toEqual(['Failing 1', 'Unlabeled 5']);
-    expect(html.match(/class="list-row" data-row="true" data-trace="/g)?.length).toBe(6);
+    expect(html.match(/class="list-row" data-row="true" data-peek="\/traces\//g)?.length).toBe(6);
     for (const id of [...s.a, ...s.b]) expect(html).toContain(`<a class="grow row-link" href="${base}/traces/${id}">`);
     const [, pane] = await page(app, `/traces?trace=${s.b[0]}`);
-    expect(pane).toContain(`data-trace="${s.b[0]}" data-selected="1"`);
+    expect(pane).toContain(`data-peek="/traces/${s.b[0]}/pane" data-peek-id="${s.b[0]}" data-peeked="1"`);
     expect(pane).toContain('<div class="pane-inner"');
   });
 
@@ -115,15 +116,15 @@ describe('layout', () => {
 
   test('/traces?q= searches transcript text and ?tab=unlabeled keeps traces without a human label', async () => {
     const [, all] = await page(app, '/traces');
-    expect(all.match(/class="list-row" data-row="true" data-trace=/g)?.length).toBe(6);
+    expect(all.match(/class="list-row" data-row="true" data-peek="\/traces\//g)?.length).toBe(6);
     expect(all).toContain('<a class="tab" href="http://localhost:3000/traces" aria-current="page">All</a>');
     const [, found] = await page(app, '/traces?q=squat');
-    expect(found.match(/class="list-row" data-row="true" data-trace=/g)?.length).toBe(1);
+    expect(found.match(/class="list-row" data-row="true" data-peek="\/traces\//g)?.length).toBe(1);
     expect(found).toContain('<span class="pill"><svg class="ic ic-sm" aria-hidden="true"><use href="#i-search"/></svg>squat</span>');
     const [, none] = await page(app, '/traces?q=nothing-matches');
     expect(none).toContain('No matches');
     const [, unlabeled] = await page(app, '/traces?tab=unlabeled');
-    expect(unlabeled.match(/class="list-row" data-row="true" data-trace=/g)?.length).toBe(5);
+    expect(unlabeled.match(/class="list-row" data-row="true" data-peek="\/traces\//g)?.length).toBe(5);
     expect(unlabeled).toContain('<a class="tab" href="http://localhost:3000/traces?tab=unlabeled" aria-current="page">Unlabeled</a>');
   });
 

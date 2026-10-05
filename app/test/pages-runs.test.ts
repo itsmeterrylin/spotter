@@ -16,7 +16,7 @@ describe('runs', () => {
     const [status, html] = await page(app, '/runs');
     expect(status).toBe(200);
     expect(html).toContain('<div class="group-head">');
-    expect(html).toContain(`<div class="list-row" data-row="true"><a class="grow strong row-link" href="${base}/runs/${s.runB}">rules-v2</a>`);
+    expect(html).toContain(`<div class="list-row" data-row="true" data-peek="/runs/${s.runB}/pane" data-peek-id="${s.runB}"><a class="grow strong row-link" href="${base}/runs/${s.runB}">rules-v2</a>`);
     expect(html).toContain(`href="${base}/runs/${s.runB}">rules-v2</a>`);
     expect(html).toContain(`href="${base}/runs/${s.runA}">rules-v1</a>`);
     expect(html).toContain(`href="${base}/datasets/${s.datasetId}">golden-`);

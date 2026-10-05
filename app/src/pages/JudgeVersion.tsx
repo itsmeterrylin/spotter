@@ -1,7 +1,7 @@
 import type { Json } from '../db/types.ts';
 import type { JudgeView, VersionView } from '../services/judges.ts';
 import { urls } from '../urls.ts';
-import { ActivateForm, DisagreementsLink, Rates, StatusPill, versionStatus } from './Judges.tsx';
+import { ActivateForm, DisagreementsLink, Rates, StatusPill, versionStatus } from './judgeParts.tsx';
 import type { Shell } from './data.ts';
 import { Layout } from './Layout.tsx';
 import { when } from './Runs.tsx';

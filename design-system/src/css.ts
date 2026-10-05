@@ -51,7 +51,6 @@ ${spaces}
   --rail: ${size.rail}px;
   --sidebar: ${size.sidebar}px;
   --aside: ${size.aside}px;
-  --aside-wide: ${size.asideWide}px;
   --statusbar: ${size.statusbar}px;
   --header: ${size.header}px;
   --tint: 14%;
@@ -187,12 +186,12 @@ textarea.input { height: auto; min-height: 96px; padding: var(--space-8) var(--s
 
 /* 11. Aside */
 .aside { display: flex; flex-direction: column; gap: var(--space-10); width: var(--aside); flex: none; padding: var(--space-16) var(--space-12); border-left: 1px solid var(--border-subtle); }
-.aside-wide { width: var(--aside-wide); }
-.aside h2 { padding-inline: var(--space-8); font-size: var(--text-ui); font-weight: ${w.medium}; line-height: 20px; color: var(--ink-muted); }
+.panel-body { display: flex; flex-direction: column; gap: var(--space-10); }
+.panel-body h2 { padding-inline: var(--space-8); font-size: var(--text-ui); font-weight: ${w.medium}; line-height: 20px; color: var(--ink-muted); }
 
 /* 12. Property: one 28px row, icon then value. The name is a visually hidden dt and the hover title. */
 .sr { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
-.aside dl { display: flex; flex-direction: column; }
+.panel-body dl { display: flex; flex-direction: column; }
 .prop { display: flex; align-items: center; min-height: var(--control); min-width: 0; }
 .prop > dd { margin: 0; min-width: 0; max-width: 100%; }
 .propbtn { display: inline-flex; align-items: center; gap: var(--space-6); max-width: 100%; height: var(--control); padding: 0 var(--space-10) 0 var(--space-6); border-radius: var(--radius-pill); background: transparent; color: var(--ink-secondary); font-size: var(--text-ui); line-height: var(--lh-ui); font-weight: ${w.medium}; text-decoration: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: background var(--duration); }

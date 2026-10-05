@@ -5,14 +5,15 @@ import { notFound } from '../errors.ts';
 import type { Filter } from '../services/filters.ts';
 import { notifications } from '../services/notifications.ts';
 import { counts, rollup } from '../services/rollup.ts';
-import { getTrace, listTraces } from '../services/traces.ts';
+import { listTraces } from '../services/traces.ts';
 import { urls } from '../urls.ts';
 import { humanVerdict, runCard, type Shell } from './data.ts';
 import { DatasetsPage, DatasetPage, type DatasetRow } from './Datasets.tsx';
 import { NotificationsPage } from './Notifications.tsx';
 import { RunsPage } from './Runs.tsx';
 import { type TraceListRow, TracesPage, type TracesTab } from './Traces.tsx';
-import { TracePane } from './Trace.tsx';
+import { loadPanel, type PanelData } from './panelData.ts';
+import { peekFromQuery } from './peekRoutes.tsx';
 
 const traceLimit = 200;
 const unlabeledFilter: Filter = { field: 'source', operator: '!=', value: 'human' };
@@ -25,7 +26,8 @@ export function listRoutes(repos: Repos, shell: () => Shell): Hono {
     const dataset = datasetId ? repos.datasets.get(datasetId) : null;
     if (datasetId && !dataset) throw notFound('dataset', datasetId);
     const cards = repos.runs.list(datasetId).map((r) => runCard(repos, r));
-    return c.html(<RunsPage cards={cards} dataset={dataset} shell={shell()} />);
+    const { selected, pane } = peekFromQuery(repos, c, (id) => ({ kind: 'run', id }));
+    return c.html(<RunsPage cards={cards} dataset={dataset} shell={shell()} selected={selected} pane={pane} />);
   };
   app.get('/runs', runs);
   app.get('/inbox', (c) => c.redirect(urls.notifications(), 301));
@@ -35,15 +37,15 @@ export function listRoutes(repos: Repos, shell: () => Shell): Hono {
       const runs = repos.runs.list(dataset.id);
       return { dataset, items: repos.datasets.countItems(dataset.id), runs: runs.length, last: runs[0] ?? null };
     });
-    return c.html(<DatasetsPage rows={rows} shell={shell()} />);
+    const { selected, pane } = peekFromQuery(repos, c, (id) => ({ kind: 'dataset', id }));
+    return c.html(<DatasetsPage rows={rows} shell={shell()} selected={selected} pane={pane} />);
   });
 
   app.get('/datasets/:id', (c) => {
     const id = c.req.param('id');
-    const dataset = repos.datasets.get(id);
-    if (!dataset) throw notFound('dataset', id);
-    const cards = repos.runs.list(id).map((r) => runCard(repos, r));
-    return c.html(<DatasetPage dataset={dataset} items={repos.datasets.listItems(id)} cards={cards} shell={shell()} />);
+    if (!repos.datasets.get(id)) throw notFound('dataset', id);
+    const { selected, pane } = peekFromQuery(repos, c, (peek) => (repos.datasets.getItem(peek) ? { kind: 'item', dataset: id, id: peek } : { kind: 'run', id: peek }));
+    return c.html(<DatasetPage data={loadPanel(repos, { kind: 'dataset', id }) as Extract<PanelData, { kind: 'dataset' }>} items={repos.datasets.listItems(id)} shell={shell()} selected={selected} pane={pane} />);
   });
 
   app.get('/datasets/:id/items', (c) => c.redirect(urls.dataset(c.req.param('id')), 301));
@@ -63,16 +65,10 @@ export function listRoutes(repos: Repos, shell: () => Shell): Hono {
       values: rollup(counts(repos, trace.scores)),
       verdict: humanVerdict(trace.scores)?.verdict ?? null,
     }));
-    const selected = c.req.query('trace');
+    const { selected, pane } = peekFromQuery(repos, c, (id) => ({ kind: 'trace', id }), 'trace');
     const query = new URL(c.req.url).searchParams;
     query.delete('trace');
-    const closeHref = `${urls.traces()}${query.size ? `?${query}` : ''}`;
-    const pane = selected
-      ? (() => {
-          const t = getTrace(repos, selected);
-          return <TracePane trace={t} run={t.run_id ? repos.runs.get(t.run_id) : null} verdict={humanVerdict(t.scores)} closeHref={closeHref} />;
-        })()
-      : undefined;
+    query.delete('peek');
     return c.html(<TracesPage rows={rows} run={run} filters={filters.length} tab={tab} q={q} query={query} shell={shell()} selected={selected} pane={pane} />);
   });
 

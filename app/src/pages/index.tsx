@@ -19,7 +19,9 @@ import { ReviewEmpty, ReviewPage } from './Review.tsx';
 import { SettingsPage } from './Settings.tsx';
 import { getAttributeMap } from '../services/attributeMap.ts';
 import { RunPage, type TraceRow } from './Run.tsx';
-import { TracePage, TracePane } from './Trace.tsx';
+import { TracePage } from './Trace.tsx';
+import { loadPanel, type PanelData } from './panelData.ts';
+import { peekFromQuery, peekRoutes } from './peekRoutes.tsx';
 
 const defaultFilter = 'unlabeled';
 
@@ -62,18 +64,21 @@ export function createPages(repos: Repos): Hono {
     return c.body(js, 200, { 'content-type': 'text/javascript; charset=utf-8' });
   });
 
+  app.route('/', peekRoutes(repos));
   app.route('/', issueRoutes(repos, shell));
   app.route('/', listRoutes(repos, shell));
 
   app.get('/runs/:id', (c) => {
     const run = runOrThrow(c.req.param('id'));
-    const card = runCard(repos, run, c.req.query('score'));
+    const data = loadPanel(repos, { kind: 'run', id: run.id }, { score: c.req.query('score') }) as Extract<PanelData, { kind: 'run' }>;
+    const card = data.card;
     const rows: TraceRow[] = repos.traces.listByRun(run.id).map((trace) => {
       const scores = repos.scores.listByTrace(trace.id);
       const values = rollup(counts(repos, scores));
       return { trace, verdict: humanVerdict(scores), value: card.primary ? (values.get(card.primary) ?? null) : null };
     });
-    return c.html(<RunPage card={card} rows={rows} shell={shell()} />);
+    const { selected, pane } = peekFromQuery(repos, c, (id) => ({ kind: 'trace', id }), 'trace');
+    return c.html(<RunPage data={data} rows={rows} shell={shell()} selected={selected} pane={pane} />);
   });
 
   app.get('/datasets/:id/compare', (c) => {
@@ -83,13 +88,6 @@ export function createPages(repos: Repos): Hono {
     if (runs.length < 2) return c.html(<ErrorPage view={compareNeedsTwo(getDataset(repos, id))} shell={shell()} />, 400);
     const comparison = compare(repos, id, runs, only ? 'changes' : undefined);
     return c.html(<ComparePage comparison={comparison} dataset={getDataset(repos, id)} only={only} score={c.req.query('score')} shell={shell()} />);
-  });
-
-  app.get('/traces/:id/pane', (c) => {
-    const trace = getTrace(repos, c.req.param('id'));
-    const run = trace.run_id ? repos.runs.get(trace.run_id) : null;
-    const closeHref = c.req.query('close') ?? urls.traces();
-    return c.html(<TracePane trace={trace} run={run} verdict={humanVerdict(trace.scores)} closeHref={closeHref} />);
   });
 
   app.get('/traces/:id', (c) => {

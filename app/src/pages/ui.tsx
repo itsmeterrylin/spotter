@@ -183,30 +183,42 @@ const judgeBlock = (from: JudgeState, to: JudgeState, liveBlocker: string | null
 export const judgeOptions = (from: JudgeState | null, liveBlocker: string | null = null): StatusOption[] =>
   judgeStates.map((s) => ({ value: s, label: judgeStateLabel[s], icon: <JudgeStateIcon state={s} />, disabledReason: from === null ? undefined : judgeBlock(from, s, liveBlocker) }));
 
+export const severityLabel: Record<Severity, string> = { low: 'Low', medium: 'Medium', high: 'High' };
+
+/** Options for an issue's severity menu. Any human may move between any two. */
+export const severityOptions: StatusOption[] = (['low', 'medium', 'high'] as const).map((s) => ({
+  value: s,
+  label: severityLabel[s],
+  icon: <span class={`sev sev-${s}`}><Icon name="flag" /></span>,
+}));
+
 type StatusMenuProps = {
-  kind: 'issue' | 'judge';
+  kind: 'issue' | 'judge' | 'severity';
   id: string;
   current: string | null;
   options: StatusOption[];
   variant?: 'icon' | 'field' | 'bulk';
   reload?: boolean;
+  /** What the menu changes. Names the trigger and the search box. */
+  noun?: string;
 };
 
-const Trigger = ({ variant, current }: { variant: 'icon' | 'field' | 'bulk'; current: StatusOption | undefined }) => {
+const Trigger = ({ variant, current, noun }: { variant: 'icon' | 'field' | 'bulk'; current: StatusOption | undefined; noun: string }) => {
   const common = { type: 'button', 'aria-haspopup': 'menu', 'aria-expanded': 'false', 'data-status-trigger': true } as const;
-  if (variant === 'bulk') return <button class="btn btn-secondary" {...common}>Status</button>;
-  const label = `Status: ${current?.label ?? 'none'}`;
-  if (variant === 'field') return <button class="propbtn" {...common} aria-label={label} title="Status">{current?.icon}{current?.label}</button>;
-  return <button class="status-trigger" {...common} aria-label={label} title="Change status (S)">{current?.icon}</button>;
+  const Noun = noun[0]?.toUpperCase() + noun.slice(1);
+  if (variant === 'bulk') return <button class="btn btn-secondary" {...common}>{Noun}</button>;
+  const label = `${Noun}: ${current?.label ?? 'none'}`;
+  if (variant === 'field') return <button class="propbtn" {...common} aria-label={label} title={Noun}>{current?.icon}{current?.label}</button>;
+  return <button class="status-trigger" {...common} aria-label={label} title={`Change ${noun} (S)`}>{current?.icon}</button>;
 };
 
 /** Trigger plus a hidden popover. client/statusMenu.ts wires it through the data attributes. */
-export const StatusMenu = ({ kind, id, current, options, variant = 'icon', reload }: StatusMenuProps) => (
+export const StatusMenu = ({ kind, id, current, options, variant = 'icon', reload, noun = 'status' }: StatusMenuProps) => (
   <span class="status-menu" data-status-menu data-kind={kind} data-id={id} data-current={current ?? undefined} data-variant={variant} data-reload={reload ? '1' : undefined} data-up={variant === 'bulk' ? '1' : undefined}>
-    <Trigger variant={variant} current={options.find((o) => o.value === current)} />
-    <div class="status-popover menu-panel" role="menu" aria-label="Change status" data-status-popover hidden>
+    <Trigger variant={variant} current={options.find((o) => o.value === current)} noun={noun} />
+    <div class="status-popover menu-panel" role="menu" aria-label={`Change ${noun}`} data-status-popover hidden>
       <div class="status-search">
-        <input type="text" placeholder="Change status..." aria-label="Change status" autocomplete="off" data-status-search />
+        <input type="text" placeholder={`Change ${noun}...`} aria-label={`Change ${noun}`} autocomplete="off" data-status-search />
         <kbd class="kbd">S</kbd>
       </div>
       <div class="status-items">

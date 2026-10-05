@@ -39,7 +39,7 @@ describe('issue pages', () => {
     expect(html).not.toContain('<h1 class="t-title">');
     expect(html).toContain('<h1 class="crumb-current">Issues</h1>');
     expect(html.match(/<div class="list-row" data-row="true"/g)?.length).toBe(2);
-    expect(html).toContain(`<div class="list-row" data-row="true" data-id="${ids.open}">`);
+    expect(html).toContain(`<div class="list-row" data-row="true" data-id="${ids.open}" data-peek="/issues/${ids.open}/pane" data-peek-id="${ids.open}">`);
     expect(html).toContain(`<span class="status-menu" data-status-menu="true" data-kind="issue" data-id="${ids.open}" data-current="open" data-variant="icon">`);
     expect(html).toContain('<button class="status-trigger" type="button" aria-haspopup="menu" aria-expanded="false" data-status-trigger="true" aria-label="Status: Open" title="Change status (S)"><span class="state" role="img" aria-label="Open"></span></button>');
     expect(html).toContain(`<a class="grow strong row-link" href="${base}/issues/${ids.open}">Reply slips into Dutch</a>`);
@@ -64,11 +64,11 @@ describe('issue pages', () => {
   test('issue detail renders the six regions, three tabs, stats, seed transcript, and the backtest action', async () => {
     const [status, html] = await page(app, `/issues/${ids.open}`);
     expect(status).toBe(200);
-    for (const cls of ['<nav class="rail"', '<aside class="sidebar">', '<nav class="tabs"', `<aside class="aside" aria-label="Issue" data-issue="${ids.open}">`, '<footer class="statusbar">']) expect(html).toContain(cls);
+    for (const cls of ['<nav class="rail"', '<aside class="sidebar">', '<nav class="tabs"', `<aside class="aside" aria-label="Issue"><div data-issue="${ids.open}" class="panel-body">`, '<footer class="statusbar">']) expect(html).toContain(cls);
     expect(html).toContain(`<a class="tab" href="${base}/issues/${ids.open}" aria-current="page">Overview</a>`);
     expect(html).toContain(`<a class="tab" href="${base}/issues/${ids.open}?tab=traces">Traces<span class="count">1</span></a>`);
     expect(html).toContain(`<a class="tab" href="${base}/issues/${ids.open}?tab=backtest">Backtest<span class="count">1</span></a>`);
-    expect(html).toContain('<span class="label"><svg class="ic ic-sm" aria-hidden="true"><use href="#i-issue"/></svg>Traces affected</span><span class="t-stat num">50%</span>');
+    expect(html).toContain('<dt class="sr">Traces affected</dt><dd><span class="propbtn num" title="Traces affected"><svg class="ic" aria-hidden="true"><use href="#i-issue"/></svg>50% of traces</span></dd>');
     expect(html).toContain('<div class="turn" id="turn-3" data-focus="1">');
     expect(html).toContain('Natuurlijk, tot 13:00.');
     expect(html).toContain(`href="${base}/issues/${ids.open}?tab=backtest"><svg class="ic" aria-hidden="true"><use href="#i-backtest"/></svg>Backtest with language-leak</a>`);
@@ -87,7 +87,7 @@ describe('issue pages', () => {
 
   test('the Traces tab lists occurrences with their turn', async () => {
     const [, html] = await page(app, `/issues/${ids.open}?tab=traces`);
-    expect(html).toContain(`<div class="list-row" data-row="true"><a class="id mono row-link" href="${base}/traces/${ids.trace}?turn=3">`);
+    expect(html).toContain(`<div class="list-row" data-row="true" data-peek="/traces/${ids.trace}/pane" data-peek-id="${ids.trace}"><a class="id mono row-link" href="${base}/traces/${ids.trace}?turn=3">`);
     expect(html).toContain('<span class="meta">turn 3</span>');
   });
 
@@ -115,7 +115,7 @@ describe('issue pages', () => {
     const [, html] = await page(app, `/traces/${ids.trace}?turn=3`);
     expect(html).toContain('<button class="turn-flag" type="button" data-new-issue-open="true" data-turn="3" aria-label="New issue at turn 3" title="New issue at turn 3">');
     expect(html).toContain('<option value="3" selected="">Turn 3</option>');
-    expect(html).toContain(`<div class="list-row" data-row="true"><span class="state" role="img" aria-label="Open"></span><a class="grow row-link" href="${base}/issues/${ids.open}">Reply slips into Dutch</a></div>`);
+    expect(html).toContain(`<a class="link" href="${base}/issues/${ids.open}">Reply slips into Dutch</a>`);
   });
 
   test('unknown issues 404 and a bad tab is 400', async () => {
