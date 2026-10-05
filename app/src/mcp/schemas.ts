@@ -15,6 +15,7 @@ export const writeOps = [
   'items.from_traces',
   'judge.propose',
   'judge.activate',
+  'judge.transition',
   'judge.calibrate',
   'attribute_map.set',
   'issues.upsert',
@@ -34,6 +35,7 @@ export const listArgs = {
   judge: z.string().optional(),
   version: z.number().int().optional(),
   status: z.enum(['open', 'confirmed', 'dismissed']).optional(),
+  state: z.enum(['draft', 'live', 'paused']).optional(),
   project: z.string().optional(),
   limit: z.number().int().min(1).max(500).default(50),
 };

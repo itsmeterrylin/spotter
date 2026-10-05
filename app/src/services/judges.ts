@@ -1,12 +1,12 @@
 import type { Calibration, Judge, JudgeVersion } from '../db/repos/judge.ts';
 import type { Repos } from '../db/repos/index.ts';
-import type { CreatedBy, Json, JsonObject, JudgeScope } from '../db/types.ts';
-import { invalid, notFound } from '../errors.ts';
+import type { CreatedBy, Json, JsonObject, JudgeScope, JudgeState } from '../db/types.ts';
+import { conflict, invalid, notFound } from '../errors.ts';
 import { urls } from '../urls.ts';
 
 export type VersionView = JudgeVersion & { calibration: Calibration[]; active: boolean; calibrated: boolean; url: string };
 export type JudgeStatus = 'calibrated' | 'needs_labels' | 'pending';
-export type JudgeView = Judge & { active_version: number | null; status: JudgeStatus; labels: number; versions: VersionView[]; url: string };
+export type JudgeView = Judge & { active_version: number | null; status: JudgeStatus; labels: number; live_blocker: string | null; versions: VersionView[]; url: string };
 export type JudgeRow = Omit<JudgeView, 'versions'> & { version_count: number; disagreements: number; disagreements_url: string | null };
 
 export type ProposeInput = {
@@ -19,6 +19,17 @@ export type ProposeInput = {
   scope?: JudgeScope;
   note?: string | null;
   created_by: CreatedBy;
+};
+
+export const judgeStates = ['draft', 'live', 'paused'] as const satisfies readonly JudgeState[];
+
+const anyone: readonly CreatedBy[] = ['human', 'agent'];
+
+/** Allowed state moves and who may make each. Anything absent is a 409. Only a human puts a judge live. */
+export const judgeTransitions: Record<JudgeState, Partial<Record<JudgeState, readonly CreatedBy[]>>> = {
+  draft: { live: ['human'] },
+  live: { paused: anyone, draft: anyone },
+  paused: { live: ['human'], draft: anyone },
 };
 
 export const calibrationBar = 0.9;
@@ -53,13 +64,27 @@ const statusOf = (versions: VersionView[], judge: Judge): JudgeStatus => {
   return active.calibration.length ? 'pending' : 'needs_labels';
 };
 
+const barPct = `${Math.round(calibrationBar * 100)}%`;
+
+/** Why a judge cannot go live, or null when its active version is calibrated. */
+export function liveBlocker(repos: Repos, judge: Judge): string | null {
+  const version = judge.active_version_id ? repos.judges.getVersion(judge.active_version_id) : null;
+  if (!version) return 'it has no active version';
+  const cals = repos.judges.calibrations(version.id);
+  if (isCalibrated(cals)) return null;
+  if (!cals.length) return `needs labels, ${repos.judges.labelCount(judge.name)} of ${labelTarget} collected`;
+  const test = cals.find((c) => c.split === 'test');
+  if (!test) return `v${version.number} has no test-split calibration`;
+  return `v${version.number} test TPR ${Math.round(test.tpr * 100)}% and TNR ${Math.round(test.tnr * 100)}% must both reach ${barPct}`;
+}
+
 export function judgeView(repos: Repos, judge: Judge): JudgeView {
   const versions = repos.judges
     .versions(judge.name)
     .map((v) => versionView(repos, judge, v))
     .reverse();
   const active = versions.find((v) => v.active);
-  return { ...judge, active_version: active?.number ?? null, status: statusOf(versions, judge), labels: repos.judges.labelCount(judge.name), versions, url: urls.judge(judge.name) };
+  return { ...judge, active_version: active?.number ?? null, status: statusOf(versions, judge), labels: repos.judges.labelCount(judge.name), live_blocker: liveBlocker(repos, judge), versions, url: urls.judge(judge.name) };
 }
 
 export function getJudge(repos: Repos, name: string): JudgeView {
@@ -123,6 +148,22 @@ export function activate(repos: Repos, name: string, number: number): JudgeView 
   repos.tx(() => {
     repos.judges.activate(name, version.id);
     repos.judges.setNote(version.id, version.note ? `${version.note}\n${line}` : line);
+    if (judge.state === 'live' && !isCalibrated(repos.judges.calibrations(version.id))) repos.judges.setState(name, 'draft');
   });
+  return getJudge(repos, name);
+}
+
+export function transitionJudge(repos: Repos, name: string, to: JudgeState, actor: CreatedBy): JudgeView {
+  const judge = repos.judges.get(name);
+  if (!judge) throw notFound('judge', name);
+  if (to === judge.state) return judgeView(repos, judge);
+  const allowed = judgeTransitions[judge.state][to];
+  if (!allowed) throw conflict(`judge ${name} cannot move from ${judge.state} to ${to}`);
+  if (!allowed.includes(actor)) throw conflict(`only a ${allowed.join(' or ')} can move judge ${name} from ${judge.state} to ${to}`);
+  if (to === 'live') {
+    const blocker = liveBlocker(repos, judge);
+    if (blocker) throw conflict(`judge ${name} cannot go live: ${blocker}`);
+  }
+  repos.judges.setState(name, to);
   return getJudge(repos, name);
 }

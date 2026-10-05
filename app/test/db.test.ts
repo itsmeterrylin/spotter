@@ -1,4 +1,8 @@
+import { Database } from 'bun:sqlite';
 import { describe, expect, test } from 'bun:test';
+import { mkdtempSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { uuid7 } from '@spotter/evals/uuid7';
 import { openDatabase } from '../src/db/client.ts';
 import { createRepos } from '../src/db/repos/index.ts';
@@ -13,6 +17,23 @@ describe('schema', () => {
     const schema = db.query<{ sql: string }, []>("SELECT sql FROM sqlite_master WHERE name = 'trace'").get()?.sql;
     expect(schema).toContain('"end"');
     expect(() => openDatabase(':memory:')).not.toThrow();
+  });
+});
+
+describe('migration', () => {
+  test('adds judge.state once to a database created without it and keeps existing rows as draft', () => {
+    const path = join(mkdtempSync(join(tmpdir(), 'spotter-')), 'old.sqlite');
+    const old = new Database(path, { create: true });
+    old.exec('CREATE TABLE judge (name TEXT PRIMARY KEY, active_version_id TEXT, description TEXT, created_at TEXT NOT NULL)');
+    old.exec("INSERT INTO judge (name, created_at) VALUES ('legacy', '2026-09-01T00:00:00.000Z')");
+    old.close();
+    for (const _ of [1, 2]) {
+      const db = openDatabase(path);
+      const columns = db.query<{ name: string }, []>('PRAGMA table_info(judge)').all().filter((c) => c.name === 'state');
+      expect(columns).toHaveLength(1);
+      expect(createRepos(db).judges.get('legacy')?.state).toBe('draft');
+      db.close();
+    }
   });
 });
 

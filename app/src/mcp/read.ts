@@ -44,6 +44,7 @@ const audit = (repos: Repos): ToolResult => ({
   judges: listJudges(repos).judges.map((j) => ({
     name: j.name,
     active_version: j.active_version,
+    state: j.state,
     status: j.status,
     labels: j.labels,
     labels_needed: Math.max(0, labelTarget - j.labels),

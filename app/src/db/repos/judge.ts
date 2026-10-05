@@ -1,9 +1,9 @@
 import type { Database } from 'bun:sqlite';
 import { uuid7 } from '@spotter/evals/uuid7';
 import { must, nowIso, parseJson, toJson } from '../json.ts';
-import type { CreatedBy, Json, JsonObject, JudgeScope, Split } from '../types.ts';
+import type { CreatedBy, Json, JsonObject, JudgeScope, JudgeState, Split } from '../types.ts';
 
-export type Judge = { name: string; active_version_id: string | null; description: string | null; created_at: string };
+export type Judge = { name: string; active_version_id: string | null; description: string | null; state: JudgeState; created_at: string };
 
 type VersionRow = {
   id: string;
@@ -64,6 +64,7 @@ export const judgeRepo = (db: Database) => {
     `INSERT INTO judge_version (id, judge_name, number, parent_id, scope, prompt, model, params, examples, content_hash, created_by, note, created_at)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *`,
   );
+  const setState = db.query<Judge, [JudgeState, string]>('UPDATE judge SET state = ? WHERE name = ? RETURNING *');
   const activate = db.query<Judge, [string, string]>('UPDATE judge SET active_version_id = ? WHERE name = ? RETURNING *');
   const calibrations = db.query<Calibration, [string]>('SELECT * FROM judge_calibration WHERE judge_version_id = ? ORDER BY split');
   const insertCalibration = db.query<Calibration, [string, string | null, Split, number, number, number, string]>(
@@ -102,6 +103,7 @@ export const judgeRepo = (db: Database) => {
         ),
       ),
     activate: (name: string, versionId: string): Judge | null => activate.get(versionId, name),
+    setState: (name: string, state: JudgeState): Judge => must(setState.get(state, name), 'judge'),
     calibrations: (versionId: string): Calibration[] => calibrations.all(versionId),
     putCalibration: (c: Omit<Calibration, 'created_at'>): Calibration => must(insertCalibration.get(c.judge_version_id, c.dataset_id, c.split, c.n, c.tpr, c.tnr, nowIso()), 'calibration'),
     calibratedVersionIds: (bar: number): Set<string> => new Set(calibrated.all(bar, bar).map((r) => r.judge_version_id)),

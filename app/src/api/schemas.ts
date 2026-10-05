@@ -184,6 +184,8 @@ export const issuePatch = z.object({
   actor: actor.default('human'),
 });
 
+export const judgeTransition = z.object({ state: z.enum(['draft', 'live', 'paused']), actor: actor.default('human') });
+
 export const issueAttach = z.object({ traces: z.array(occurrence).min(1).max(500), created_by: actor.default('human') });
 
 export const issueListQuery = z.object({ status: issueStatus.optional(), project: z.string().min(1).optional() });

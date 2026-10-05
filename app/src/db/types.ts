@@ -6,6 +6,7 @@ export type DatasetPurpose = 'eval' | 'judge_labels';
 export type JudgeScope = 'turn' | 'transcript';
 export type CreatedBy = 'human' | 'agent';
 export type Split = 'dev' | 'test';
+export type JudgeState = 'draft' | 'live' | 'paused';
 export type IssueStatus = 'open' | 'confirmed' | 'dismissed';
 export type Severity = 'low' | 'medium' | 'high';
 

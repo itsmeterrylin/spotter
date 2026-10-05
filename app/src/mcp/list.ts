@@ -70,7 +70,7 @@ export function list(repos: Repos, args: ListArgs): ToolResult {
       return notes(repos, args);
     case 'judges': {
       const list = listJudges(repos);
-      return { items: list.judges.slice(0, args.limit), url: list.url };
+      return { items: list.judges.filter((j) => !args.state || j.state === args.state).slice(0, args.limit), url: list.url };
     }
     case 'disagreements': {
       if (!args.judge) throw invalid('judge is required to list disagreements');

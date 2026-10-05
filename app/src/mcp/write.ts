@@ -5,7 +5,7 @@ import { putAttributeMap } from '../services/attributeMap.ts';
 import { calibrate } from '../services/calibration.ts';
 import { createDataset, itemsFromTraces, upsertItems } from '../services/datasets.ts';
 import { attachOccurrences, transitionIssue, upsertIssue } from '../services/issues.ts';
-import { activate, propose } from '../services/judges.ts';
+import { activate, propose, transitionJudge } from '../services/judges.ts';
 import { createRun } from '../services/runs.ts';
 import { insertBatch, patchMetadata, putScores } from '../services/traces.ts';
 import { later, type ToolResult } from './result.ts';
@@ -56,6 +56,10 @@ const ops: Record<WriteOp, Handler | number> = {
   'judge.activate': op(judgeActivate.extend({ judge: z.string().min(1) }), (repos, body) => {
     const view = activate(repos, body.judge, body.version);
     return { ids: [view.active_version_id ?? ''], active_version: view.active_version, url: view.url };
+  }),
+  'judge.transition': op(z.object({ judge: z.string().min(1), state: z.enum(['draft', 'live', 'paused']) }), (repos, body) => {
+    const view = transitionJudge(repos, body.judge, body.state, 'agent');
+    return { ids: [view.name], state: view.state, url: view.url };
   }),
   'judge.calibrate': op(judgeCalibrate.extend({ judge: z.string().min(1), version: z.number().int().positive() }), (repos, body) => {
     const { judge_version_id, ...report } = calibrate(repos, body.judge, body.version, body.dataset_id ?? null);

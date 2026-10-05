@@ -158,6 +158,16 @@ describe('MCP /mcp', () => {
     expect((audit.judges as unknown[])[0]).toMatchObject({ name: 'exercise_match', active_version: 2, status: 'needs_labels', labels: 2, labels_needed: 98, disagreements: 0 });
   });
 
+  test('judge.transition acts as an agent: it cannot set a judge live, and list judges filters by state', async () => {
+    const { body } = await rpc('tools/call', { name: 'write', arguments: { op: 'judge.transition', data: { judge: 'exercise_match', state: 'live' } } });
+    const result = body.result as ToolResult;
+    expect(result.isError).toBe(true);
+    expect(JSON.parse(result.content[0]?.text ?? '{}')).toMatchObject({ error: { code: 'conflict', message: 'only a human can move judge exercise_match from draft to live' } });
+    expect(((await call('list', { type: 'judges', state: 'draft' })).items as { name: string; state: string }[]).map((j) => [j.name, j.state])).toEqual([['exercise_match', 'draft']]);
+    expect((await call('list', { type: 'judges', state: 'live' })).items).toEqual([]);
+    expect(await call('write', { op: 'judge.transition', data: { judge: 'exercise_match', state: 'draft' }, dry_run: true })).toMatchObject({ ok: true, dry_run: true });
+  });
+
   test('judge.calibrate stores the splits and reports rates for the version', async () => {
     const cal = await call('write', { op: 'judge.calibrate', data: { judge: 'exercise_match', version: 1 } });
     expect(cal).toMatchObject({ ok: true, judge: 'exercise_match', version: 1, dataset_id: null, url: 'http://localhost:3000/judges/exercise_match/versions/1' });
