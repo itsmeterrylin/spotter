@@ -24,7 +24,7 @@ export const StatusPill = ({ status }: { status: JudgeStatus }) => {
 const Rate = ({ label, value }: { label: string; value: number }) => (
   <div class="stat">
     <span class="label">{label}</span>
-    <span class="t-title num">{pct(value)}</span>
+    <span class="t-heading num">{pct(value)}</span>
     <div class={`bar ${value >= calibrationBar ? 'bar-pass' : 'bar-fail'}`}><i style={`width:${pct(value)}`}></i></div>
   </div>
 );
@@ -39,7 +39,7 @@ export const Rates = ({ row }: { row: Calibration }) => (
 export const ActivateForm = ({ name, number }: { name: string; number: number }) => (
   <form method="post" action={`/judges/${name}/activate`}>
     <input type="hidden" name="version" value={String(number)} />
-    <button class="btn btn-secondary btn-compact" type="submit"><Icon name="pass" size="sm" />Activate v{number}</button>
+    <button class="btn btn-secondary" type="submit"><Icon name="pass" size="sm" />Activate v{number}</button>
   </form>
 );
 
@@ -80,7 +80,7 @@ const Version = ({ name, version: v, disagreements }: VersionProps) => {
   return (
     <div class="version" data-active={v.active ? '1' : undefined}>
       <div class="stack" style="--gap: 4px">
-        <a class="link t-title num" href={v.url}>v{v.number}</a>
+        <a class="link t-heading num" href={v.url}>v{v.number}</a>
         {v.active ? <span class="pill pill-pass"><Icon name="pass" size="sm" />Active</span> : null}
       </div>
       <div class="stack">
@@ -103,7 +103,7 @@ export const JudgePage = ({ judge, disagreements, shell }: DetailProps) => (
   <Layout title={judge.name} section="judges" shell={shell} crumbs={[[urls.judges(), 'Judges']]}>
     <div class="page-head">
       <div class="chips">
-        <span class="t-caption muted num">{judge.versions.length} {judge.versions.length === 1 ? 'version' : 'versions'}</span>
+        <span class="t-meta muted num">{judge.versions.length} {judge.versions.length === 1 ? 'version' : 'versions'}</span>
         <StatusPill status={judge.status} />
       </div>
     </div>

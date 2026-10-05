@@ -48,7 +48,7 @@ describe('review', () => {
   test('GET /review/:id renders the counter, the verdict buttons, and the next link', async () => {
     const [status, html] = await page(app, `/review/${s.b[0]}?run=${s.runB}`);
     expect(status).toBe(200);
-    expect(html).toContain('<h1 class="t-title heavy">Review</h1>');
+    expect(html).toContain('<h1 class="t-title">Review</h1>');
     expect(html).toContain('2 <span class="muted">left</span>');
     expect(html).toContain('data-verdict="pass"');
     expect(html).toContain('>Pass<span class="kbd">1</span>');

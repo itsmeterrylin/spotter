@@ -26,19 +26,19 @@ const fontLinks = `<link rel="stylesheet" href="${font.googleFontsUrl}">`;
 
 const docCss = `
 .doc { max-width: var(--container-narrow); margin-inline: auto; padding: var(--space-64) var(--space-64) var(--space-64); }
-.doc h1 { font-size: var(--text-title); font-weight: 800; letter-spacing: -0.01em; line-height: var(--lh-title); margin-bottom: var(--space-16); }
-.doc h2 { font-size: var(--text-title); font-weight: 600; letter-spacing: -0.01em; line-height: var(--lh-title); margin: var(--space-64) 0 var(--space-16); padding-top: var(--space-16); border-top: 1px solid var(--border); }
-.doc h3 { font-size: var(--text-body); font-weight: 600; margin: var(--space-32) 0 var(--space-8); color: var(--ink-muted); }
+.doc h1 { font-size: var(--text-title); font-weight: 600; letter-spacing: -0.01em; line-height: var(--lh-title); margin-bottom: var(--space-16); }
+.doc h2 { font-size: var(--text-heading); font-weight: 600; letter-spacing: -0.01em; line-height: var(--lh-heading); margin: var(--space-64) 0 var(--space-16); padding-top: var(--space-16); border-top: 1px solid var(--border); }
+.doc h3 { font-size: var(--text-ui); font-weight: 600; margin: var(--space-32) 0 var(--space-8); color: var(--ink-muted); }
 .doc p, .doc li { max-width: 68ch; }
 .doc p { margin: 0 0 var(--space-16); }
 .doc ul, .doc ol { padding-left: var(--space-16); margin: 0 0 var(--space-16); }
 .doc li { margin-bottom: var(--space-8); }
 .doc strong { font-weight: 600; }
-.doc code { font-family: var(--font-mono); font-size: var(--text-caption); background: color-mix(in srgb, var(--ink) 6%, var(--surface)); padding: 2px 6px; border-radius: 6px; }
-.doc pre { background: color-mix(in srgb, var(--ink) 6%, var(--surface)); border-radius: var(--radius); padding: var(--space-16) var(--space-16); overflow-x: auto; margin: 0 0 var(--space-16); }
-.doc pre code { background: none; padding: 0; font-size: var(--text-caption); line-height: 1.6; }
+.doc code { font-family: var(--font-mono); font-size: var(--text-ui); background: color-mix(in srgb, var(--ink) 6%, var(--surface)); padding: 2px 6px; border-radius: 6px; }
+.doc pre { background: color-mix(in srgb, var(--ink) 6%, var(--surface)); border-radius: var(--radius-control); padding: var(--space-16) var(--space-16); overflow-x: auto; margin: 0 0 var(--space-16); }
+.doc pre code { background: none; padding: 0; font-size: var(--text-ui); line-height: 1.6; }
 .doc .diagram { position: relative; margin: 0 0 var(--space-16); }
-.doc .diagram-view { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: var(--space-16); overflow: auto; cursor: zoom-in; -webkit-overflow-scrolling: touch; min-height: 120px; }
+.doc .diagram-view { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-control); padding: var(--space-16); overflow: auto; cursor: zoom-in; -webkit-overflow-scrolling: touch; min-height: 120px; }
 .doc .diagram-view:focus-visible { box-shadow: 0 0 0 4px var(--focus); outline: none; }
 .doc .diagram-view svg { max-width: none !important; display: block; }
 .doc .diagram-open { position: absolute; top: var(--space-8); right: var(--space-8); }
@@ -49,12 +49,12 @@ const docCss = `
 .zoom-body { flex: 1; overflow: auto; padding: var(--space-16); touch-action: pan-x pan-y pinch-zoom; cursor: grab; }
 .zoom-body svg { max-width: none !important; display: block; }
 .doc .scroll { overflow-x: auto; margin: 0 0 var(--space-16); }
-.doc table { border-collapse: collapse; width: 100%; font-size: var(--text-caption); }
+.doc table { border-collapse: collapse; width: 100%; font-size: var(--text-ui); }
 .doc th { text-align: left; font-weight: 600; color: var(--ink-muted); padding: var(--space-8) var(--space-16); border-bottom: 2px solid var(--border); white-space: nowrap; }
 .doc td { padding: var(--space-8) var(--space-16); border-bottom: 1px solid var(--border); vertical-align: top; }
 .doc td code { white-space: nowrap; }
 .doc blockquote { margin: 0 0 var(--space-16); padding-left: var(--space-16); border-left: 4px solid var(--brand); color: var(--ink-muted); }
-.doc .meta { color: var(--ink-muted); font-size: var(--text-caption); margin-bottom: var(--space-32); }
+.doc .meta { color: var(--ink-muted); font-size: var(--text-ui); margin-bottom: var(--space-32); }
 `;
 
 for (const [name, file] of Object.entries(docs)) {

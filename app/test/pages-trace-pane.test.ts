@@ -12,7 +12,7 @@ describe('trace pane', () => {
     expect(html).toContain(`data-trace="${id}" data-selected="1"`);
     expect(html).toContain(`<div class="pane-inner" data-trace="${id}">`);
     expect(html).toContain('data-pane-close');
-    expect(html).toContain('<button class="btn btn-primary btn-compact" type="button" data-new-issue-open="true">');
+    expect(html).toContain('<button class="btn btn-primary" type="button" data-new-issue-open="true">');
     expect(html).toContain('/client/traces.js');
   });
 

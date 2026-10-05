@@ -19,7 +19,7 @@ mkdirSync(dist, { recursive: true });
 
 const system = css();
 writeFileSync(join(dist, 'spotter.css'), system);
-writeFileSync(join(dist, 'tokens.json'), JSON.stringify({ color: tokens.color, font: tokens.font, space: tokens.space, radius: tokens.radius, duration: tokens.duration, iconSize: tokens.iconSize, size: tokens.size }, null, 2));
+writeFileSync(join(dist, 'tokens.json'), JSON.stringify({ color: tokens.color, font: tokens.font, space: tokens.space, radius: tokens.radius, shadow: tokens.shadow, duration: tokens.duration, iconSize: tokens.iconSize, size: tokens.size }, null, 2));
 
 const fontLink = `<link rel="stylesheet" href="${tokens.font.googleFontsUrl}">`;
 const sprite = `<svg hidden aria-hidden="true">${iconNames

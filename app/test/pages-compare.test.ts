@@ -14,7 +14,7 @@ describe('compare', () => {
   test('shows every item, the run chips, the toggle off, and the runs breadcrumb', async () => {
     const [status, html] = await page(app, `/datasets/${s.datasetId}/compare?runs=${s.runA},${s.runB}`);
     expect(status).toBe(200);
-    expect(html).toContain('<h1 class="t-title heavy">Compare</h1>');
+    expect(html).toContain('<h1 class="t-title">Compare</h1>');
     expect(html).toContain('>Runs</a>');
     expect(html).toContain('>rules-v2</a>');
     expect(html).toContain('Only changes');

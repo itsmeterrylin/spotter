@@ -59,7 +59,7 @@ describe('runs', () => {
   test('GET /runs/:id shows stat cards, trace rows with verdict pills, and the two buttons', async () => {
     const [status, html] = await page(app, `/runs/${s.runB}`);
     expect(status).toBe(200);
-    expect(html).toContain('<h1 class="t-title heavy">rules-v2</h1>');
+    expect(html).toContain('<h1 class="t-title">rules-v2</h1>');
     expect(html).toContain(`<a href="${base}/runs?dataset=${s.datasetId}">Runs</a>`);
     expect(html).toContain('exercise_match');
     expect(html).toContain('Compare with rules-v1');

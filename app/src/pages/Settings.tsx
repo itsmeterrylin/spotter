@@ -39,7 +39,7 @@ const tools: Array<[string, string]> = [
 
 const Section = ({ icon, title, children }: { icon: Parameters<typeof Icon>[0]['name']; title: string; children: unknown }) => (
   <section class="settings-section">
-    <h2 class="t-title"><Icon name={icon} />{title}</h2>
+    <h2 class="t-heading"><Icon name={icon} />{title}</h2>
     <div class="stack">{children}</div>
   </section>
 );
@@ -49,9 +49,9 @@ export const SettingsPage = ({ maps, authSet, judge, shell }: Props) => (
     <div class="stack settings">
       <Section icon="human" title="Appearance">
         <div class="cluster" style="--gap: var(--space-8)" role="group" aria-label="Theme">
-          <button type="button" class="btn btn-secondary btn-compact" data-theme-choice="system" aria-pressed="true">Auto</button>
-          <button type="button" class="btn btn-secondary btn-compact" data-theme-choice="light" aria-pressed="false">Light</button>
-          <button type="button" class="btn btn-secondary btn-compact" data-theme-choice="dark" aria-pressed="false">Dark</button>
+          <button type="button" class="btn btn-secondary" data-theme-choice="system" aria-pressed="true">Auto</button>
+          <button type="button" class="btn btn-secondary" data-theme-choice="light" aria-pressed="false">Light</button>
+          <button type="button" class="btn btn-secondary" data-theme-choice="dark" aria-pressed="false">Dark</button>
         </div>
       </Section>
 
@@ -74,22 +74,22 @@ export const SettingsPage = ({ maps, authSet, judge, shell }: Props) => (
 
       <Section icon="trace" title="Data sources">
         <div class="card stack">
-          <span class="t-caption muted">OpenTelemetry (OTLP/HTTP JSON)</span>
+          <span class="t-meta muted">OpenTelemetry (OTLP/HTTP JSON)</span>
           <dl class="kv"><dt>Endpoint</dt><dd class="mono">{config.baseUrl}/api/otel/v1/traces</dd></dl>
           <Code text={otlpEnv} />
-          <span class="t-caption muted">Resource or span attributes: spotter.project · spotter.run_id · spotter.dataset_item_id</span>
+          <span class="t-meta muted">Resource or span attributes: spotter.project · spotter.run_id · spotter.dataset_item_id</span>
         </div>
         <div class="card stack">
-          <span class="t-caption muted">REST batch</span>
+          <span class="t-meta muted">REST batch</span>
           <Code text={restExample} />
         </div>
         <div class="card stack">
-          <span class="t-caption muted">SDK</span>
+          <span class="t-meta muted">SDK</span>
           <Code text={`spotter init\nspotter run evals/<name>.ts`} />
         </div>
         {maps.map((m) => (
           <div class="card card-flush">
-            <div class="row"><Icon name="filter" /><div class="grow"><span class="strong">Attribute map</span> <span class="muted">· {m.project}</span></div><span class="t-caption mono muted">write attribute_map.set</span></div>
+            <div class="row"><Icon name="filter" /><div class="grow"><span class="strong">Attribute map</span> <span class="muted">· {m.project}</span></div><span class="t-meta mono muted">write attribute_map.set</span></div>
             {m.map.length ? (
               <table class="table">
                 <thead><tr><th>Source</th><th>Target</th><th>Type</th></tr></thead>

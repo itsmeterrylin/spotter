@@ -7,7 +7,7 @@ import { parseMaybeJson } from '../db/json.ts';
 import { urls } from '../urls.ts';
 import type { HumanVerdict, Shell } from './data.ts';
 import { Layout } from './Layout.tsx';
-import { ago, Icon, JsonView, pct, short, State, summarize, Values, VerdictPill } from './ui.tsx';
+import { ago, Icon, JsonView, pct, PropValue, short, State, summarize, Values, VerdictPill } from './ui.tsx';
 
 const scoreIcon = (s: Score): 'pass' | 'fail' | 'score' => (s.value === 1 ? 'pass' : s.value === 0 ? 'fail' : 'score');
 
@@ -74,7 +74,7 @@ const NewIssueForm = ({ trace, turn }: { trace: TraceView; turn?: number }) => {
 };
 
 const NewIssueButton = ({ compact }: { compact?: boolean }) => (
-  <button class={`btn btn-primary${compact ? ' btn-compact' : ''}`} type="button" data-new-issue-open><Icon name="issue" size={compact ? 'sm' : 'md'} />New issue</button>
+  <button class="btn btn-primary" type="button" data-new-issue-open><Icon name="issue" size={compact ? 'sm' : 'md'} />New issue</button>
 );
 
 const Scores = ({ scores, verdict }: { scores: Score[]; verdict: HumanVerdict | null }) => (
@@ -104,7 +104,7 @@ const Events = ({ events }: { events: TraceEvent[] }) => (
       <div class="row">
         <Icon name="time" />
         <div class="grow">{e.name} <span class="muted num">· {e.at}</span></div>
-        {e.data === undefined ? null : <span class="mono t-caption">{summarize(e.data)}</span>}
+        {e.data === undefined ? null : <span class="mono t-meta">{summarize(e.data)}</span>}
       </div>
     ))}
   </div>
@@ -145,10 +145,10 @@ const TraceAside = ({ trace, run, issues }: Pick<Props, 'trace' | 'run' | 'issue
     <section>
       <h2>Properties</h2>
       <dl>
-        <div class="prop"><dt>Run</dt><dd>{run ? <a class="link" href={urls.run(run.id)}>{run.name}</a> : '–'}</dd></div>
-        <div class="prop"><dt>Item</dt><dd class="mono">{trace.dataset_item_id ? short(trace.dataset_item_id) : '–'}</dd></div>
-        <div class="prop"><dt>Turns</dt><dd class="num">{trace.messages?.length ?? 0}</dd></div>
-        <div class="prop"><dt>Start</dt><dd class="num" title={trace.start}>{ago(trace.start)}</dd></div>
+        <div class="prop"><dt>Run</dt><dd><PropValue icon="run">{run ? <a class="link" href={urls.run(run.id)}>{run.name}</a> : '–'}</PropValue></dd></div>
+        <div class="prop"><dt>Item</dt><dd><PropValue icon="dataset" class="mono">{trace.dataset_item_id ? short(trace.dataset_item_id) : '–'}</PropValue></dd></div>
+        <div class="prop"><dt>Turns</dt><dd><PropValue icon="score" class="num">{trace.messages?.length ?? 0}</PropValue></dd></div>
+        <div class="prop"><dt>Start</dt><dd><PropValue icon="time" class="num" title={trace.start}>{ago(trace.start)}</PropValue></dd></div>
       </dl>
     </section>
     <section class="stack" style="--gap: var(--space-8)">
@@ -193,12 +193,12 @@ export const TracePane = ({ trace, run, verdict, closeHref }: { trace: TraceView
     <div class="pane-head">
       <div class="stack" style="--gap: 2px">
         <a class="link strong mono" href={urls.trace(trace.id)}>{short(trace.id)}</a>
-        {run ? <a class="link t-caption" href={urls.run(run.id)}>{run.name}</a> : null}
+        {run ? <a class="link t-meta" href={urls.run(run.id)}>{run.name}</a> : null}
       </div>
       <div class="cluster" style="--gap: var(--space-8)">
         <NewIssueButton compact />
-        <a class="btn btn-secondary btn-compact" href={urls.reviewTrace(trace.id, { run: run?.id })}><Icon name="human" size="sm" />{verdict ? 'Change' : 'Label'}</a>
-        <a class="btn btn-secondary btn-compact" href={urls.trace(trace.id)} aria-label="Open trace page"><Icon name="open" size="sm" />Open</a>
+        <a class="btn btn-secondary" href={urls.reviewTrace(trace.id, { run: run?.id })}><Icon name="human" size="sm" />{verdict ? 'Change' : 'Label'}</a>
+        <a class="btn btn-secondary" href={urls.trace(trace.id)} aria-label="Open trace page"><Icon name="open" size="sm" />Open</a>
         <a class="btn btn-ghost btn-icon" href={closeHref} data-pane-close aria-label="Close"><Icon name="fail" /></a>
       </div>
     </div>

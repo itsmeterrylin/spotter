@@ -31,14 +31,14 @@ const searchBoot = `<script>(function(){var i=document.getElementById('sidebar-s
 
 const count = (n: number): string => n.toLocaleString('en-US');
 
-type NavItem = [Section, string, IconName, string, (s: Shell) => string];
+type NavItem = [Section, string, IconName, string, (s: Shell) => string, string];
 
 const nav: NavItem[] = [
-  ['issues', 'Issues', 'issue', urls.home(), (s) => `${count(s.counts.open)} open`],
-  ['traces', 'Traces', 'trace', urls.traces(), (s) => count(s.counts.traces)],
-  ['judges', 'Judges', 'judge', urls.judges(), (s) => `${count(s.counts.activeJudges)} active`],
-  ['runs', 'Runs', 'run', urls.runs(), (s) => count(s.counts.runs)],
-  ['datasets', 'Datasets', 'dataset', urls.datasets(), (s) => count(s.counts.datasets)],
+  ['issues', 'Issues', 'issue', urls.home(), (s) => count(s.counts.open), 'Open issues'],
+  ['traces', 'Traces', 'trace', urls.traces(), (s) => count(s.counts.traces), 'Traces'],
+  ['judges', 'Judges', 'judge', urls.judges(), (s) => count(s.counts.activeJudges), 'Active judges'],
+  ['runs', 'Runs', 'run', urls.runs(), (s) => count(s.counts.runs), 'Runs'],
+  ['datasets', 'Datasets', 'dataset', urls.datasets(), (s) => count(s.counts.datasets), 'Datasets'],
 ];
 
 const current = (on: boolean) => (on ? 'page' : undefined);
@@ -70,18 +70,18 @@ const ProjectRow = ({ shell }: { shell: Shell }) =>
   shell.projects.length > 1 ? (
     <details class="project-row">
       <summary>
-        <span class="strong">All projects</span>
+        <span>All projects</span>
         <Icon name="chevron" size="sm" />
       </summary>
-      <div class="project-menu">
+      <div class="project-menu menu-panel">
         {shell.projects.map((p) => (
-          <a class="nav2" href={urls.issues({ project: p })}><span class="avatar">{initials(p)}</span><span class="label">{p}</span></a>
+          <a class="nav2" href={urls.issues({ project: p })}><span class="label">{p}</span></a>
         ))}
       </div>
     </details>
   ) : (
     <div class="project-row">
-      <span class="strong">{shell.project ?? 'No project yet'}</span>
+      <span>{shell.project ?? 'No project yet'}</span>
     </div>
   );
 
@@ -93,13 +93,11 @@ const Sidebar = ({ section, shell }: { section: Section | null; shell: Shell }) 
       <input class="input" id="sidebar-search" type="search" name="q" placeholder="Search traces" aria-label="Search traces" />
     </form>
     <nav class="nav" aria-label="Sections">
-      {nav.map(([key, label, icon, href, meta]) => (
+      {nav.map(([key, label, icon, href, meta, hint]) => (
         <a class="nav2" href={href} aria-current={current(key === section)}>
-          <span class="dot"><Icon name={icon} /></span>
-          <span>
-            <span class="label">{label}</span>
-            <span class="meta">{meta(shell)}</span>
-          </span>
+          <Icon name={icon} size="sm" />
+          <span class="label">{label}</span>
+          <span class="meta" title={hint}>{meta(shell)}</span>
         </a>
       ))}
     </nav>
@@ -159,7 +157,7 @@ export const Layout = ({ title, meta, section, shell, tabs, crumbs = [], action,
                 <header class="page-title">
                   <div class="head">
                     {crumbs.length ? <Crumbs items={crumbs} /> : null}
-                    <h1 class="t-title heavy">{title}</h1>
+                    <h1 class="t-title">{title}</h1>
                     {meta ? <p class="meta muted">{meta}</p> : null}
                   </div>
                   {action ? <div class="actions">{action}</div> : null}

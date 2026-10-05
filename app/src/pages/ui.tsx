@@ -12,6 +12,13 @@ type IconProps = { name: IconName; size?: 'sm' | 'md' | 'lg'; label?: string };
 export const Icon = ({ name, size = 'md', label }: IconProps) =>
   raw(`<svg class="ic${size === 'md' ? '' : ` ic-${size}`}" ${label ? `role="img" aria-label="${label}"` : 'aria-hidden="true"'}><use href="#i-${name}"/></svg>`);
 
+export const PropValue = ({ icon, children, ...rest }: { icon: IconName; children: Child; class?: string; title?: string }) => (
+  <span class={`propbtn${rest.class ? ` ${rest.class}` : ''}`} title={rest.title}>
+    <Icon name={icon} />
+    {children}
+  </span>
+);
+
 export const pct = (x: number): string => (x >= 0 && x <= 1 ? `${Math.round(x * 100)}%` : x.toFixed(2));
 
 const pts = (d: number): string => (Math.abs(d) <= 1 ? `${Math.abs(Math.round(d * 100))} pts` : Math.abs(d).toFixed(2));
@@ -31,7 +38,7 @@ export const Delta = ({ value }: { value: number | null }) => {
 export type Crumb = [string, string];
 
 export const Crumbs = ({ items }: { items: Crumb[] }) => (
-  <nav class="crumbs t-caption">
+  <nav class="crumbs t-ui">
     {items.map(([href, label], i) => (
       <>
         {i > 0 ? <Icon name="next" size="sm" /> : null}
@@ -44,7 +51,7 @@ export const Crumbs = ({ items }: { items: Crumb[] }) => (
 export const Empty = ({ icon, title, action }: { icon: IconName; title: string; action?: Child }) => (
   <div class="card empty">
     <Icon name={icon} size="lg" />
-    <span class="t-title">{title}</span>
+    <span class="t-heading">{title}</span>
     {action}
   </div>
 );

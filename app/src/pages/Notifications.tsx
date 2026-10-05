@@ -18,7 +18,7 @@ export const NotificationsPage = ({ items, shell }: Props) => (
             <div class="grow">
               <span class="strong num">{n.count}</span> {n.title} <span class="muted">· {n.detail}</span>
             </div>
-            <a class="btn btn-primary btn-compact" href={n.url}>{n.action}</a>
+            <a class="btn btn-primary" href={n.url}>{n.action}</a>
           </div>
         ))}
       </div>

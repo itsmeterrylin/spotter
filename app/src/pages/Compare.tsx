@@ -46,7 +46,7 @@ export const ComparePage = ({ comparison, dataset, only, score, shell }: Props) 
             </>
           ))}
         </div>
-        <button class="btn btn-secondary btn-compact" type="button" aria-pressed={only ? 'true' : 'false'} data-only>
+        <button class="btn btn-secondary" type="button" aria-pressed={only ? 'true' : 'false'} data-only>
           <Icon name="filter" size="sm" />Only changes
         </button>
       </div>
@@ -72,7 +72,7 @@ export const ComparePage = ({ comparison, dataset, only, score, shell }: Props) 
                     <td class="item">
                       <div class="stack" style="--gap: 2px">
                         <span class="strong mono id">{short(item.item_id)}</span>
-                        <span class="t-caption muted">{summarize(item.input)}</span>
+                        <span class="t-meta muted">{summarize(item.input)}</span>
                       </div>
                     </td>
                     {runs.map((r) => <td class="out">{summarize(item.cells[r.id]?.output)}</td>)}

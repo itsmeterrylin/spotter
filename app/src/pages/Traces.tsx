@@ -59,7 +59,7 @@ const Table = ({ rows, names, score, selected }: Pick<Props, 'rows' | 'names' | 
             <td>
               <div class="stack" style="--gap: 2px">
                 <a class="link strong mono" href={urls.trace(trace.id)}>{short(trace.id)}</a>
-                {trace.dataset_item_id ? <span class="t-caption muted mono">{short(trace.dataset_item_id)}</span> : null}
+                {trace.dataset_item_id ? <span class="t-meta muted mono">{short(trace.dataset_item_id)}</span> : null}
               </div>
             </td>
             <td class="run">{run ? <a class="link" href={urls.traces({ run: run.id })}>{run.name}</a> : <Dash />}</td>

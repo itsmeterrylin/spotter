@@ -39,7 +39,7 @@ type RowProps = { turn: number | null; verdict: Verdict | null; focus: boolean }
 const VerdictRow = ({ turn, verdict, focus }: RowProps) => (
   <div class={turn === null ? 'verdict-row' : 'verdict-row verdict-row-turn'} data-turn={turn ?? ''} data-verdict={verdict ?? ''} data-focus={focus ? '1' : undefined}>
     {verdicts.map(([v, label, key]) => (
-      <button class={`btn btn-${v}${turn === null ? '' : ' btn-compact'}`} type="button" data-verdict={v} aria-pressed={verdict === v ? 'true' : 'false'}>
+      <button class={`btn btn-${v}`} type="button" data-verdict={v} aria-pressed={verdict === v ? 'true' : 'false'}>
         <Icon name={v} />{label}{turn === null ? <span class="kbd">{key}</span> : null}
       </button>
     ))}
@@ -81,7 +81,7 @@ export const ReviewPage = ({ trace, verdict, judgeSaid, score, queue, next, prev
       data-home={urls.notifications()}
     >
       <div class="cluster" style="justify-content: space-between">
-        <span class="t-title num">
+        <span class="t-heading num">
           {queue.ids.length} <span class="muted">left</span>
           {queue.judge ? <span class="muted"> · disagreements with {queue.judge.name} v{queue.judge.version}</span> : queue.run ? <span class="muted"> · {queue.run.name}</span> : null}
         </span>
@@ -120,7 +120,7 @@ export const ReviewPage = ({ trace, verdict, judgeSaid, score, queue, next, prev
     </div>
     <div class="picker" id="picker">
       <div class="card stack">
-        <span class="t-title">Add to dataset</span>
+        <span class="t-heading">Add to dataset</span>
         <div class="stack" id="pickerOptions">
           {datasets.map((d) => (
             <button type="button" class="btn btn-secondary opt" data-dataset={d.id}><Icon name="dataset" />{d.name}</button>

@@ -1,6 +1,6 @@
 # Spotter design system
 
-One tokens file, one generated CSS file, seven components, eight shell components. The class names are the contract.
+One tokens file, one generated CSS file, seven components, shell components. The class names are the contract.
 
 ```bash
 npm run build       # dist/spotter.css, dist/tokens.json, preview/index.html, preview/prototype.html
@@ -13,21 +13,24 @@ npm run check:deps  # 60-day release-age gate
 
 | Rule | Value |
 |---|---|
-| Type | Open Sans. caption 13, body 15, title 22, stat 44. Weights 400, 600, 800. |
+| Type | Open Sans variable (wght 300..800). meta 12, ui 13, content 15, heading 18, title 24, stat 32. Weights 400, 450, 500, 550, 600. |
 | Mono | System monospace. Raw JSON and ids only. |
-| Color | 10 roles: canvas, surface, border, ink, ink-muted, brand, pass, fail, defer, focus. Tints via `color-mix`. Light and dark. |
-| Space | 4, 8, 12, 16, 24, 32, 48, 64 |
-| Radius | 10, and pill. No shadows. |
-| Controls | 40px, 32px compact, 44px rows, 40px list rows. One primary action per screen. |
-| Shell | Rail 56, sidebar 248, aside 300 (wide 440), status bar 32. Hairline borders, no shadows. |
+| Color | 16 roles: canvas, surface (panel), raised, fill, fill-strong, border, border-subtle, ink, ink-secondary, ink-muted, ink-faint, brand, pass, fail, defer, focus. Neutrals are Linear's. Tints via `color-mix`. Light and dark. |
+| Space | 4, 6, 8, 10, 12, 16, 24, 32, 48, 64 |
+| Radius | 8 control, 12 panel and menu, 10 workspace switcher, pill. |
+| Shadow | Two: panel (cards, buttons, the main panel) and popover (menus, pickers). |
+| Controls | 28px buttons, inputs, tabs, nav items, property buttons. 24px chips. 32px menu items. 36px group headers. 44px rows. One primary action per screen. |
+| Icons | 14, 16, 20 rendered. Stroke 2 on the 24 grid. They take the color of the adjacent text. |
+| Shell | Rail 48 and sidebar 244 on the canvas, no borders. Tabs, main, and aside form one inset panel (8px from top and right, radius 12). Aside 386 (wide 440). Status bar 28 below the panel. |
+| Source | Measured values and their rationale: `docs/design/linear-reference.md`. |
 
 ## Components
 
 | Class | Variants |
 |---|---|
-| `.btn` | `-primary` `-secondary` `-ghost` `-pass` `-fail` `-defer` `-compact` `-icon`, `aria-pressed` |
+| `.btn` | `-primary` `-secondary` `-ghost` `-pass` `-fail` `-defer` `-icon`, `aria-pressed` |
 | `.pill` | `-pass` `-fail` `-defer` `-brand` `-lg` |
-| `.card` | `-flush` |
+| `.card` | `-flush` (no chrome, for lists and tables) |
 | `.row` | child `.grow` |
 | `.table` | cell `.num` |
 | `.input`, `.field` | textarea |
@@ -38,15 +41,17 @@ Shell components:
 | Class | Holds |
 |---|---|
 | `.rail`, `.rail-btn`, `.avatar` | Icon-only left rail; `aria-current="page"` marks the active button |
-| `.nav2` | Two-line sidebar item: `.dot` icon circle, `.label`, `.meta` |
-| `.tabs`, `.tab` | Section tabs; child `.count`; `aria-current="page"` |
+| `.nav2` | One-line sidebar item: icon, `.label`, trailing `.meta` count |
+| `.tabs`, `.tab` | Pill tabs; child `.count`; `aria-current="page"` |
 | `.aside` | Right sidebar; `-wide`; `h2` section labels |
-| `.prop` | Property row: `dt`/`.key`, `dd`/`.value` |
+| `.prop`, `.propbtn` | Property group: label `dt`/`.key` over a 28px pill value `dd`/`.value` |
 | `.statusbar` | Bottom bar with left and right groups |
 | `.state` | Issue status circle: `-confirmed` `-dismissed`; plain is open |
-| `.list-row` | Dense list row; child `.grow` `.meta`; `data-focus` |
+| `.list-row` | 44px list row; child `.grow` `.meta`; `data-focus` |
+| `.group-head` | 36px group header with `.count` |
+| `.menu-panel` | Popover menu; children `.nav2` become 32px items |
 
-Utilities: `.t-caption` `.t-body` `.t-title` `.t-stat`, `.strong` `.heavy` `.muted` `.mono` `.num` `.link` `.pos` `.neg`, `.stack` `.cluster` `.container` `.narrow` `.scroll-x`, `.ic` `.ic-sm` `.ic-lg`, `.bar`.
+Utilities: `.t-meta` `.t-ui` `.t-content` `.t-heading` `.t-title` `.t-stat`, `.strong` `.bold` `.muted` `.faint` `.mono` `.num` `.link` `.pos` `.neg`, `.stack` `.cluster` `.container` `.narrow` `.scroll-x`, `.ic` `.ic-sm` `.ic-lg`, `.bar`.
 
 ## Files
 

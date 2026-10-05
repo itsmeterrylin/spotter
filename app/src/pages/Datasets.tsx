@@ -87,11 +87,11 @@ const latestCompare = (dataset: Dataset, cards: RunCard[]) => {
 export const DatasetPage = ({ dataset, items, cards, shell }: DetailProps) => (
   <Layout title={dataset.name} section="datasets" shell={shell} crumbs={[[urls.datasets(), 'Datasets']]} action={latestCompare(dataset, cards)} script="rows">
     <section class="group">
-      <h2 class="t-caption muted">Items</h2>
+      <h2 class="t-content bold">Items</h2>
       {items.length ? <ItemsTable items={items} /> : <Empty icon="dataset" title="No items yet" />}
     </section>
     <section class="group">
-      <h2 class="t-caption muted">Runs</h2>
+      <h2 class="t-content bold">Runs</h2>
       {cards.length ? <RunsTable cards={cards} /> : <Empty icon="run" title="No runs yet" />}
     </section>
   </Layout>

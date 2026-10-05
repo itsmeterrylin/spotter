@@ -7,7 +7,7 @@ import { urls } from '../urls.ts';
 import { initials, type Shell } from './data.ts';
 import { Layout, type Tab } from './Layout.tsx';
 import { Turns } from './Trace.tsx';
-import { ago, Empty, Icon, pct, SeverityPill, severityPill, short, State, statusLabel, Values } from './ui.tsx';
+import { ago, Empty, Icon, pct, PropValue, SeverityPill, severityPill, short, State, statusLabel, Values } from './ui.tsx';
 
 export type IssueTab = 'overview' | 'traces' | 'backtest';
 
@@ -22,6 +22,7 @@ export const IssuesPage = ({ issues, status, counts, project, shell }: ListProps
   <Layout title="Issues" meta={`${counts[status]} ${status}${project ? ` · ${project}` : ''}`} section="issues" shell={shell} tabs={listTabs(status, counts, project)} script="issues">
     {issues.length ? (
       <div class="card card-flush issue-list" data-status={status}>
+        <div class="group-head"><State status={status} />{statusLabel[status]}<span class="count">{issues.length}</span></div>
         {issues.map((i) => (
           <a class="list-row" href={i.url} data-issue={i.id}>
             <State status={i.status} />
@@ -34,7 +35,7 @@ export const IssuesPage = ({ issues, status, counts, project, shell }: ListProps
         ))}
         <form class="row-dismiss" id="row-dismiss" hidden>
           <input class="input" name="reason" placeholder="Reason" aria-label="Reason" required />
-          <button class="btn btn-fail btn-compact" type="submit"><Icon name="dismiss" size="sm" />Dismiss</button>
+          <button class="btn btn-fail" type="submit"><Icon name="dismiss" size="sm" />Dismiss</button>
           <p class="error" data-error></p>
         </form>
       </div>
@@ -66,7 +67,7 @@ const ActionCard = ({ issue }: { issue: IssueView }) => {
       <span class="avatar">{b ? initials(b.judge) : <Icon name="judge" size="sm" />}</span>
       <div class="grow stack" style="--gap: 0">
         <span class="strong">{b ? b.judge : 'No judge'}</span>
-        {b ? <span class="muted t-caption">{b.version === null ? 'no active version' : `v${b.version} · ${b.fails} of ${b.scored} fail`}</span> : null}
+        {b ? <span class="muted t-meta">{b.version === null ? 'no active version' : `v${b.version} · ${b.fails} of ${b.scored} fail`}</span> : null}
       </div>
       <a class="btn btn-primary" href={urls.issue(issue.id, 'backtest')}>
         <Icon name="backtest" />
@@ -150,7 +151,7 @@ const BacktestTab = ({ issue, judges }: { issue: IssueView; judges: Judge[] }) =
         <span class="block-label"><Icon name="run" size="sm" />Run</span>
         <div class="command">
           <pre class="code">{b.command}</pre>
-          <button class="btn btn-secondary btn-compact" type="button" data-copy={b.command}><Icon name="copy" size="sm" /><span>Copy</span></button>
+          <button class="btn btn-secondary" type="button" data-copy={b.command}><Icon name="copy" size="sm" /><span>Copy</span></button>
         </div>
       </div>
       <div class="block">
@@ -190,7 +191,7 @@ const Properties = ({ issue }: { issue: IssueView }) => (
       </div>
       <form class="dismiss-form stack" data-dismiss-form hidden={issue.status !== 'dismissed' || undefined} style="--gap: var(--space-8)">
         <input class="input" name="reason" placeholder="Reason" aria-label="Reason" value={issue.dismissed_reason ?? ''} required />
-        <button class="btn btn-fail btn-compact" type="submit"><Icon name="dismiss" size="sm" />{issue.status === 'dismissed' ? 'Save reason' : 'Dismiss'}</button>
+        <button class="btn btn-fail" type="submit"><Icon name="dismiss" size="sm" />{issue.status === 'dismissed' ? 'Save reason' : 'Dismiss'}</button>
       </form>
       <p class="error" data-error></p>
     </section>
@@ -205,12 +206,12 @@ const Properties = ({ issue }: { issue: IssueView }) => (
             </select>
           </dd>
         </div>
-        <div class="prop"><dt>Judge</dt><dd>{issue.judge_name ? <a class="link" href={urls.judge(issue.judge_name)}>{issue.judge_name}</a> : <a class="link" href={urls.issue(issue.id, 'backtest')}>Link</a>}</dd></div>
-        <div class="prop"><dt>Seed trace</dt><dd>{issue.seed_trace_id ? <a class="link mono" href={urls.trace(issue.seed_trace_id)}>{short(issue.seed_trace_id)}</a> : '–'}</dd></div>
-        <div class="prop"><dt>Project</dt><dd>{issue.project}</dd></div>
-        <div class="prop"><dt>Created by</dt><dd>{issue.created_by}</dd></div>
-        <div class="prop"><dt>Created</dt><dd class="num" title={issue.created_at}>{ago(issue.created_at)}</dd></div>
-        <div class="prop"><dt>Updated</dt><dd class="num" title={issue.updated_at}>{ago(issue.updated_at)}</dd></div>
+        <div class="prop"><dt>Judge</dt><dd><PropValue icon="judge">{issue.judge_name ? <a class="link" href={urls.judge(issue.judge_name)}>{issue.judge_name}</a> : <a class="link" href={urls.issue(issue.id, 'backtest')}>Link</a>}</PropValue></dd></div>
+        <div class="prop"><dt>Seed trace</dt><dd><PropValue icon="trace">{issue.seed_trace_id ? <a class="link mono" href={urls.trace(issue.seed_trace_id)}>{short(issue.seed_trace_id)}</a> : '–'}</PropValue></dd></div>
+        <div class="prop"><dt>Project</dt><dd><PropValue icon="dataset">{issue.project}</PropValue></dd></div>
+        <div class="prop"><dt>Created by</dt><dd><PropValue icon="human">{issue.created_by}</PropValue></dd></div>
+        <div class="prop"><dt>Created</dt><dd><PropValue icon="time" class="num" title={issue.created_at}>{ago(issue.created_at)}</PropValue></dd></div>
+        <div class="prop"><dt>Updated</dt><dd><PropValue icon="time" class="num" title={issue.updated_at}>{ago(issue.updated_at)}</PropValue></dd></div>
       </dl>
     </section>
     <section class="stack" style="--gap: var(--space-8)">

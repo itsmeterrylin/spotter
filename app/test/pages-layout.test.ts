@@ -13,7 +13,7 @@ describe('layout before any data', () => {
     expect(html).toContain('All clear');
     expect(html).not.toContain('class="badge"');
     expect(html).toContain('<a class="nav2" href="http://localhost:3000/runs">');
-    expect(html).toContain('<div class="project-row"><span class="strong">No project yet</span></div>');
+    expect(html).toContain('<div class="project-row"><span>No project yet</span></div>');
   });
 });
 
@@ -28,22 +28,22 @@ describe('layout', () => {
     expect(status).toBe(200);
     for (const cls of ['<nav class="rail" aria-label="App">', '<aside class="sidebar">', '<nav class="tabs" aria-label="Tabs">', '<footer class="statusbar">']) expect(html).toContain(cls);
     for (const path of ['traces', 'judges', 'runs', 'datasets']) expect(html).toContain(`<a class="nav2" href="${base}/${path}">`);
-    expect(html).toContain(`<a class="nav2" href="${base}/" aria-current="page"><span class="dot"><svg class="ic" aria-hidden="true"><use href="#i-issue"/></svg></span><span><span class="label">Issues</span><span class="meta">0 open</span></span></a>`);
-    expect(html).toContain('<span class="label">Traces</span><span class="meta">6</span>');
-    expect(html).toContain('<span class="label">Judges</span><span class="meta">0 active</span>');
-    expect(html).toContain('<span class="label">Runs</span><span class="meta">2</span>');
-    expect(html).toContain('<span class="label">Datasets</span><span class="meta">1</span>');
+    expect(html).toContain(`<a class="nav2" href="${base}/" aria-current="page"><svg class="ic ic-sm" aria-hidden="true"><use href="#i-issue"/></svg><span class="label">Issues</span><span class="meta" title="Open issues">0</span></a>`);
+    expect(html).toContain('<span class="label">Traces</span><span class="meta" title="Traces">6</span>');
+    expect(html).toContain('<span class="label">Judges</span><span class="meta" title="Active judges">0</span>');
+    expect(html).toContain('<span class="label">Runs</span><span class="meta" title="Runs">2</span>');
+    expect(html).toContain('<span class="label">Datasets</span><span class="meta" title="Datasets">1</span>');
     expect(html).toContain(`<a class="rail-btn" href="${base}/" aria-label="Issues" title="Issues" aria-current="page">`);
     expect(html).toContain(`<a class="rail-btn" href="${base}/traces#sidebar-search" aria-label="Search" title="Search" data-search="true">`);
     expect(html).toContain('<input class="input" id="sidebar-search" type="search" name="q" placeholder="Search traces" aria-label="Search traces"/>');
     expect(html).toContain('<span class="avatar rail-foot" title="copper">co</span>');
-    expect(html).toContain('<div class="project-row"><span class="strong">copper</span></div>');
+    expect(html).toContain('<div class="project-row"><span>copper</span></div>');
     expect(html).toContain('<span><span>copper</span><span class="build">v0.1.0</span></span>');
     expect(html).toContain(`<a href="${base}/traces?tab=unlabeled">5 unlabeled</a>`);
     expect(html).toContain(`<span class="mcp" title="${base}/mcp"><i class="live" aria-hidden="true"></i>MCP localhost:3000/mcp</span>`);
     expect(html).toContain('id="nav-toggle"');
     expect(html).toContain('aria-label="Menu"');
-    expect(html).toContain('<h1 class="t-title heavy">Issues</h1>');
+    expect(html).toContain('<h1 class="t-title">Issues</h1>');
     expect(html).not.toContain('class="aside');
     expect(html).toContain('/pages.css');
     expect(html).toContain('<symbol id="i-paw"');

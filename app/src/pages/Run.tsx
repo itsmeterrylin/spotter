@@ -32,7 +32,7 @@ export const RunPage = ({ card, rows, shell }: Props) => {
           <div class="card stat">
             <span class="label"><Icon name="flag" size="sm" />Regressions</span>
             <span class="t-stat num">{regressed.length}</span>
-            {regressed.length ? <a class="link t-caption" href={compareUrl}>See them</a> : null}
+            {regressed.length ? <a class="link t-meta" href={compareUrl}>See them</a> : null}
           </div>
         ) : null}
       </div>
