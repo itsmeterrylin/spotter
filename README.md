@@ -52,10 +52,12 @@ claude mcp add --transport http spotter http://localhost:3000/mcp
 
 | Tool | Input | Returns |
 |---|---|---|
-| `list` | `{type: 'datasets' \| 'items' \| 'runs' \| 'traces' \| 'notes' \| 'judges' \| 'disagreements' \| 'issues' \| 'alerts' \| 'deliveries', filters?, dataset_id?, run_id?, judge?, version?, status?, project?, limit?}` | `{items, url}`; every row carries `url`; `issues` adds `counts` and `dismissed_fingerprints` |
-| `read` | `{type: 'run' \| 'trace' \| 'dataset' \| 'judge' \| 'issue' \| 'audit' \| 'attribute_map', id?}` | one object with `url`; `audit` returns counts; `issue` adds occurrences and the backtest |
-| `write` | `{op: 'dataset.create' \| 'items.upsert' \| 'run.create' \| 'traces.insert' \| 'trace.patch_metadata' \| 'scores.put' \| 'issues.upsert' \| 'issue.transition' \| 'issue.attach' \| ..., data, dry_run?}` | `{ok, ids, url}`; `issues.upsert` adds `created`, `suppressed`, `added` |
+| `list` | `{type: 'datasets' \| 'items' \| 'runs' \| 'traces' \| 'notes' \| 'judges' \| 'disagreements' \| 'issues' \| 'inbox' \| 'alerts' \| 'deliveries', filters?, dataset_id?, run_id?, judge?, version?, status?, project?, limit?}` | `{items, url}`; every row carries `url`; `issues` adds `counts` and `dismissed_fingerprints`; `inbox` is the PM queue (`kind`, `title`, `count`, `url`) |
+| `read` | `{type: 'run' \| 'trace' \| 'dataset' \| 'judge' \| 'judge_version' \| 'issue' \| 'audit' \| 'attribute_map', id?, version?}` | one object with `url`; `judge_version` takes the judge name as `id` plus `version`; `audit` returns counts; `issue` adds occurrences and the backtest |
+| `write` | `{op: 'dataset.create' \| 'items.upsert' \| 'run.create' \| 'traces.insert' \| 'trace.patch_metadata' \| 'scores.put' \| 'items.from_traces' \| 'issues.upsert' \| 'issue.transition' \| 'issue.attach' \| ..., data, dry_run?}` | `{ok, ids, url}`; `issues.upsert` adds `created`, `suppressed`, `added`; `items.from_traces` returns `ids`, `added` |
 | `compare` | `{dataset_id, run_ids, only?: 'changes'}` | items with per-run cells, per-score summary, `url` |
+
+`items.from_traces {dataset_id or dataset_name+project, trace_ids? or issue_id?, tags?}` copies `input` and `expected` from each trace into a dataset item with `source_trace_id` set. It dedupes on `(dataset_id, source_trace_id)`, so a repeat adds nothing. REST: `POST /api/datasets/:id/items/from-traces`.
 
 Issues dedupe on `(project, fingerprint)`. Without a `fingerprint`, the title is lowercased, stripped of punctuation and stopwords, and used as the key. Once an issue is dismissed, `issues.upsert` and `issue.attach` on it return `suppressed: true` and write nothing. Only a human can reopen it, through `PATCH /api/issues/:id`.
 
@@ -68,6 +70,13 @@ curl -s http://localhost:3000/mcp -H 'content-type: application/json' -H 'accept
   "jsonrpc": "2.0", "id": 1, "method": "tools/call",
   "params": {"name": "compare", "arguments": {"dataset_id": "<dataset>", "run_ids": ["<baseline>", "<candidate>"], "only": "changes"}}
 }'
+```
+
+The CLI forwards to the same tools, so `spotter list|read|write|compare` print the tool JSON with every `url`. Set `SPOTTER_URL` to the server origin.
+
+```bash
+bun run spotter list inbox
+bun run spotter read issue <id>
 ```
 
 The agent-facing guide, with the loop and the deep-link contract, is `skills/spotter.md`.

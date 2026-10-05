@@ -31,7 +31,7 @@ Every successful result carries `url`. Every list row carries `url`. Errors come
 ### list
 
 ```
-{type: 'datasets' | 'items' | 'runs' | 'traces' | 'notes' | 'judges' | 'disagreements' | 'issues' | 'alerts' | 'deliveries',
+{type: 'datasets' | 'items' | 'runs' | 'traces' | 'notes' | 'judges' | 'disagreements' | 'issues' | 'inbox' | 'alerts' | 'deliveries',
  filters?: [{field, key?, operator, value?}], dataset_id?, run_id?, judge?, version?, status?, project?, limit?}
 ```
 
@@ -41,18 +41,20 @@ Every successful result carries `url`. Every list row carries `url`. Errors come
 - `judges` returns every judge with `active_version`, `status` (`calibrated`, `needs_labels`, `pending`), `labels`, and `disagreements`.
 - `disagreements` needs `judge` and accepts `version` (default: the active version). It returns traces where the human verdict and that judge version differ in pass or fail.
 - `issues` accepts `status` (`open`, `confirmed`, `dismissed`) and `project`. It returns rows with `occurrences` and `traces`, plus `counts` per status and `dismissed_fingerprints`. Put the dismissed fingerprints in your prompt as exclusions before you look for new failures.
+- `inbox` returns the PM queue as rows `{kind, title, detail, count, url, action}`: regressions, unlabeled traces, judge disagreements, labels needed, finished runs. Check it first to see what a person is waiting on.
 - `alerts`, `deliveries` return `{items: [], note: 'available after phase 9'}` until that phase ships.
 
 ### read
 
 ```
-{type: 'run' | 'trace' | 'dataset' | 'judge' | 'issue' | 'audit' | 'attribute_map', id?}
+{type: 'run' | 'trace' | 'dataset' | 'judge' | 'judge_version' | 'issue' | 'audit' | 'attribute_map', id?, version?}
 ```
 
 - `run` returns the run with `aggregates` (trace count, per-score mean, p50 duration, tokens, and `pending`: score names whose judge version is not yet calibrated, so those judge scores are excluded).
 - `trace` returns the trace with its `scores`.
 - `dataset` returns the dataset with `item_count` and its `runs`.
 - `judge` returns the judge with `versions` (newest first, each with `calibration`, `active`, `calibrated`, `url`) and the active version's `disagreements`.
+- `judge_version` takes the judge name as `id` and a `version` number. It returns that version with `prompt`, `model`, `calibration`, `active`, and `url`.
 - `issue` returns the issue with `occurrence_list` and `backtest` (the linked judge's active version: `scored`, `fails`, `fail_rate`, `failing` traces with turns, and the `spotter judge run` command), or `backtest: null` when no judge is linked.
 - `attribute_map` takes a project id or name and returns its `map` (`[{source, target, type}]`).
 - `audit` returns counts: `datasets`, `runs`, `traces`, `human_labels`, `runs_without_baseline`, `datasets_without_runs`, and `judges` (per judge: `active_version`, `status`, `labels`, `labels_needed`, `disagreements`). Call it first when you do not know the state of the server.
@@ -71,6 +73,7 @@ Every successful result carries `url`. Every list row carries `url`. Errors come
 | `traces.insert` | `{traces: [{id, project, run_id?, dataset_item_id?, input, output, expected?, start, end?, metrics?, scores?: [{name, value, source}]}]}` |
 | `trace.patch_metadata` | `{trace_id, metadata?, events?}` |
 | `scores.put` | `{trace_id, scores: [{name, value or verdict, reason?, source, judge_version_id?}]}` |
+| `items.from_traces` | `{dataset_id or dataset_name+project, trace_ids? or issue_id?, tags?}`; copies `input` and `expected` from each trace into an item with `source_trace_id`. Idempotent on `(dataset_id, source_trace_id)`: returns `{ids, added, url}` and a repeat has `added: 0`. `issue_id` takes every trace in the issue. This builds the replay dataset for verifying a fix |
 | `judge.propose` | `{judge, from_version?, prompt?, model?, params?, examples?, scope?, note}`; returns the new version, or the existing one with `existing: true` when the definition hash matches; a first version needs `prompt` and `model` and becomes active |
 | `judge.activate` | `{judge, version}`; rollback is activation of an older version |
 | `attribute_map.set` | `{project, map: [{source, target, type}]}`; replaces the project's map. On every trace insert and metadata patch, `metadata.attributes[source]` or an event named `source` is copied to `metadata[target]` as `string`, `number`, or `boolean`, so it filters as `metadata.<target>` |
@@ -82,7 +85,7 @@ Every successful result carries `url`. Every list row carries `url`. Errors come
 - `dry_run: true` validates `data` and returns `{ok: true, dry_run: true}` without writing.
 - Set `metadata.baseline` on a run to the run id you compare against. `read audit` counts runs that lack it.
 - Trace ids are yours. Insert is idempotent by id: a repeat reports `skipped`.
-- `items.from_traces`, `alert.create`, `alert.test` return `{ok: false, note}` until their phase ships.
+- `alert.create`, `alert.test` return `{ok: false, note}` until their phase ships.
 
 ### compare
 
@@ -91,6 +94,24 @@ Every successful result carries `url`. Every list row carries `url`. Errors come
 ```
 
 Returns `items` with one cell per run (output, scores, trace url), `summary` per score (means per run, `diff`, `improvements`, `regressions`), and the compare page `url`. Pass `only: 'changes'` to get only the items whose scores differ.
+
+## CLI
+
+`spotter list|read|write|compare` forward to the tools above over HTTP and print the tool JSON, so every `url` shows. They contain no service logic. `--json` prints compact JSON. A tool error exits 1 and prints the error on stderr. Set `SPOTTER_URL` (default `http://localhost:3000`).
+
+```bash
+spotter list issues --status open --project copper        # list <type> [--status --project --judge --version --run --dataset --limit --filters '<json>']
+spotter read judge_version exercise_match --version 2     # read <type> [id] [--version n]
+spotter write items.from_traces --data '{"issue_id":"<id>","dataset_name":"replay","project":"copper"}' --dry-run
+echo '{"project":"copper","name":"golden"}' | spotter write dataset.create --data -     # --data accepts JSON, @file.json, or - for stdin
+spotter compare <dataset_id> <baseline_run>,<candidate_run> --only changes
+```
+
+`spotter compare <a> <b>` with exactly two ids and no comma is the older form, `<baseline_run> <run>`, and prints the run summary. A comma in the second argument, or a third id, selects the dataset form above.
+
+## Verify with links
+
+Every result and every row has a `url`. When you finish a step, paste the urls for the human and say what to look at: the compare url for a change, the trace url for a failure, the dataset url after `items.from_traces`, the issue url after `issues.upsert`. Do not describe a result without its link. To verify a fix, build a replay dataset with `items.from_traces`, run it, and send the compare url.
 
 ## Deep links
 
