@@ -133,6 +133,11 @@ describe('layout', () => {
     expect(runs).not.toContain('pill-brand');
   });
 
+  test('section labels lay out icon and text on one line, flush with the content', async () => {
+    const pages = await (await app.request('/pages.css')).text();
+    expect(pages).toContain('.block-label { display: flex; align-items: center; gap: var(--space-6); padding-inline: 0;');
+  });
+
   test('serves pages.css and the built client modules', async () => {
     const css = await app.request('/pages.css');
     expect(css.status).toBe(200);
