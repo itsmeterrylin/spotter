@@ -1,9 +1,9 @@
 import { z } from 'zod';
-import { attributeMapPut, datasetCreate, issueUpsert, occurrence, itemsUpsert, judgeActivate, judgeCalibrate, judgePropose, metadataPatch, runCreate, scoresPut, toNewScore, tracesBatch } from '../api/schemas.ts';
+import { attributeMapPut, datasetCreate, issueUpsert, occurrence, itemsFromTraces as itemsFromTracesSchema, itemsUpsert, judgeActivate, judgeCalibrate, judgePropose, metadataPatch, runCreate, scoresPut, toNewScore, tracesBatch } from '../api/schemas.ts';
 import type { Repos } from '../db/repos/index.ts';
 import { putAttributeMap } from '../services/attributeMap.ts';
 import { calibrate } from '../services/calibration.ts';
-import { createDataset, upsertItems } from '../services/datasets.ts';
+import { createDataset, itemsFromTraces, upsertItems } from '../services/datasets.ts';
 import { attachOccurrences, transitionIssue, upsertIssue } from '../services/issues.ts';
 import { activate, propose } from '../services/judges.ts';
 import { createRun } from '../services/runs.ts';
@@ -45,7 +45,10 @@ const ops: Record<WriteOp, Handler | number> = {
     const trace = putScores(repos, body.trace_id, body.scores.map(toNewScore));
     return { ids: [body.trace_id], scores: trace.scores, url: trace.url };
   }),
-  'items.from_traces': 8,
+  'items.from_traces': op(itemsFromTracesSchema, (repos, body) => {
+    const result = itemsFromTraces(repos, body);
+    return { ids: result.ids, added: result.added, url: result.url };
+  }),
   'judge.propose': op(judgePropose.extend({ judge: z.string().min(1), created_by: judgePropose.shape.created_by.default('agent') }), (repos, { judge, ...body }) => {
     const result = propose(repos, { ...body, name: judge });
     return { ids: [result.version.id], existing: result.existing, version: result.version, url: result.version.url };

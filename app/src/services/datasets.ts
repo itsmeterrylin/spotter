@@ -1,7 +1,9 @@
 import type { Dataset, DatasetItem, NewItem } from '../db/repos/dataset.ts';
 import type { Repos } from '../db/repos/index.ts';
+import type { Trace } from '../db/repos/trace.ts';
 import type { DatasetPurpose } from '../db/types.ts';
-import { conflict, notFound } from '../errors.ts';
+import { uuid7 } from '@spotter/evals/uuid7';
+import { conflict, invalid, notFound } from '../errors.ts';
 import { urls } from '../urls.ts';
 
 export type DatasetView = Dataset & { item_count: number; url: string };
@@ -40,4 +42,55 @@ export function listItems(repos: Repos, datasetId: string): ItemList {
   getDataset(repos, datasetId);
   const items = repos.datasets.listItems(datasetId).map((item) => ({ ...item, url: urls.datasetItem(datasetId, item.id) }));
   return { items, url: urls.datasetItems(datasetId) };
+}
+
+export type FromTracesInput = {
+  dataset_id?: string;
+  dataset_name?: string;
+  project?: string;
+  trace_ids?: string[];
+  issue_id?: string;
+  tags?: string[];
+};
+
+export type FromTracesResult = { ids: string[]; added: number; url: string };
+
+function resolveTarget(repos: Repos, input: FromTracesInput): string {
+  if (input.dataset_id) return getDataset(repos, input.dataset_id).id;
+  if (input.dataset_name && input.project) return createDataset(repos, { project: input.project, name: input.dataset_name }).dataset.id;
+  throw invalid('pass dataset_id, or dataset_name with project');
+}
+
+function sourceTraceIds(repos: Repos, input: FromTracesInput): string[] {
+  const issueTraces = input.issue_id ? occurrenceTraces(repos, input.issue_id) : [];
+  const ids = [...new Set([...(input.trace_ids ?? []), ...issueTraces])];
+  if (!ids.length) throw invalid('pass trace_ids or an issue_id with at least one occurrence');
+  return ids;
+}
+
+function occurrenceTraces(repos: Repos, issueId: string): string[] {
+  if (!repos.issues.get(issueId)) throw notFound('issue', issueId);
+  return repos.issues.occurrences(issueId).map((o) => o.trace_id);
+}
+
+function requireTrace(repos: Repos, id: string): Trace {
+  const trace = repos.traces.get(id);
+  if (!trace) throw notFound('trace', id);
+  return trace;
+}
+
+/** Copies input and expected from each trace into a dataset item. Idempotent on (dataset_id, source_trace_id). */
+export function itemsFromTraces(repos: Repos, input: FromTracesInput): FromTracesResult {
+  const traceIds = sourceTraceIds(repos, input);
+  const traces = traceIds.map((id) => requireTrace(repos, id));
+  return repos.tx(() => {
+    const datasetId = resolveTarget(repos, input);
+    const existing = repos.datasets.itemsBySourceTrace(datasetId);
+    const fresh = traces
+      .filter((t) => !existing.has(t.id))
+      .map((t) => ({ id: uuid7(), input: t.input ?? null, expected: t.expected, tags: input.tags ?? null, source_trace_id: t.id }));
+    repos.datasets.upsertItems(datasetId, fresh);
+    const ids = traces.map((t) => existing.get(t.id) ?? fresh.find((f) => f.source_trace_id === t.id)?.id ?? '');
+    return { ids, added: fresh.length, url: urls.datasetItems(datasetId) };
+  });
 }

@@ -57,6 +57,7 @@ export const datasetRepo = (db: Database) => {
   );
   const items = db.query<ItemRow, [string]>('SELECT * FROM dataset_item WHERE dataset_id = ? AND archived_at IS NULL ORDER BY id');
   const itemById = db.query<ItemRow, [string]>('SELECT * FROM dataset_item WHERE id = ?');
+  const sourced = db.query<{ id: string; source_trace_id: string }, [string]>('SELECT id, source_trace_id FROM dataset_item WHERE dataset_id = ? AND source_trace_id IS NOT NULL');
   const countItems = db.query<{ n: number }, [string]>('SELECT COUNT(*) AS n FROM dataset_item WHERE dataset_id = ? AND archived_at IS NULL');
 
   const upsertItems = db.transaction((datasetId: string, list: NewItem[]): number => {
@@ -79,6 +80,7 @@ export const datasetRepo = (db: Database) => {
       const row = itemById.get(id);
       return row ? parseItem(row) : null;
     },
+    itemsBySourceTrace: (datasetId: string): Map<string, string> => new Map(sourced.all(datasetId).map((r) => [r.source_trace_id, r.id])),
     countItems: (datasetId: string): number => countItems.get(datasetId)?.n ?? 0,
   };
 };

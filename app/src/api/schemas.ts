@@ -30,6 +30,15 @@ export const itemsUpsert = z.object({
     .max(1000),
 });
 
+export const itemsFromTraces = z.object({
+  dataset_id: id.optional(),
+  dataset_name: z.string().min(1).optional(),
+  project: z.string().min(1).optional(),
+  trace_ids: z.array(id).max(1000).optional(),
+  issue_id: id.optional(),
+  tags: z.array(z.string()).optional(),
+});
+
 export const runCreate = z.object({ id: id.optional(), dataset_id: id, name: z.string().min(1), metadata: jsonObject.nullish() });
 
 const verdictValue = { pass: 1, fail: 0, defer: 0 } as const;
