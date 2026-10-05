@@ -1,8 +1,8 @@
-import { Hono } from 'hono';
+import { type Context, Hono } from 'hono';
 import { ZodError } from 'zod';
 import { versionNumber } from '../api/schemas.ts';
 import type { Repos } from '../db/repos/index.ts';
-import { ApiError, notFound } from '../errors.ts';
+import { notFound } from '../errors.ts';
 import { compare } from '../services/compare.ts';
 import { getDataset } from '../services/datasets.ts';
 import { counts, rollup } from '../services/rollup.ts';
@@ -14,7 +14,7 @@ import { humanVerdict, judgeSaid, neighbors, primaryScore, queue, runCard, shell
 import { issueRoutes } from './issueRoutes.tsx';
 import { judgeRoutes } from './judgeRoutes.tsx';
 import { listRoutes } from './listRoutes.tsx';
-import { ErrorPage } from './NotFound.tsx';
+import { badLink, compareNeedsTwo, ErrorPage, missingPage, viewOf } from './NotFound.tsx';
 import { ReviewEmpty, ReviewPage } from './Review.tsx';
 import { SettingsPage } from './Settings.tsx';
 import { getAttributeMap } from '../services/attributeMap.ts';
@@ -30,6 +30,12 @@ const versionOf = (raw: string | undefined): number | undefined => (raw === unde
 
 const turnOf = (raw: string | undefined): number | undefined => (raw === undefined || raw === '' || Number.isNaN(Number(raw)) ? undefined : Number(raw));
 
+const apiPrefixes = ['/api/', '/mcp'];
+
+/** Top-level fallback: an unknown page renders inside the shell; API and MCP paths keep the plain 404. */
+export const pageNotFound = (repos: Repos) => (c: Context) =>
+  apiPrefixes.some((p) => c.req.path.startsWith(p)) ? c.text('404 Not Found', 404) : c.html(<ErrorPage view={missingPage(c.req.path)} shell={shellData(repos)} />, 404);
+
 export function createPages(repos: Repos): Hono {
   const app = new Hono();
   const shell = (): Shell => shellData(repos);
@@ -40,9 +46,9 @@ export function createPages(repos: Repos): Hono {
   };
 
   app.onError((err, c) => {
-    if (err instanceof ApiError) return c.html(<ErrorPage status={err.status} shell={shell()} />, err.status);
-    if (err instanceof ZodError) return c.html(<ErrorPage status={400} shell={shell()} />, 400);
-    throw err;
+    const view = err instanceof ZodError ? badLink : viewOf(err);
+    if (!view) throw err;
+    return c.html(<ErrorPage view={view} shell={shell()} />, view.status as 400 | 404 | 409 | 415);
   });
 
   app.get('/pages.css', () => new Response(pagesCss(), { headers: { 'content-type': 'text/css; charset=utf-8' } }));
@@ -74,6 +80,7 @@ export function createPages(repos: Repos): Hono {
     const id = c.req.param('id');
     const runs = (c.req.query('runs') ?? '').split(',').filter(Boolean);
     const only = c.req.query('only') === 'changes';
+    if (runs.length < 2) return c.html(<ErrorPage view={compareNeedsTwo(getDataset(repos, id))} shell={shell()} />, 400);
     const comparison = compare(repos, id, runs, only ? 'changes' : undefined);
     return c.html(<ComparePage comparison={comparison} dataset={getDataset(repos, id)} only={only} score={c.req.query('score')} shell={shell()} />);
   });

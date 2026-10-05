@@ -41,7 +41,8 @@ describe('runs', () => {
     expect(html).toContain(`<a href="${base}/datasets/${s.datasetId}">golden-`);
     const [missing, body] = await page(app, '/runs?dataset=nope');
     expect(missing).toBe(404);
-    expect(body).toContain('Not here');
+    expect(body).toContain('<h1 class="t-title">No dataset nope</h1>');
+    expect(body).toContain(`href="${base}/datasets">Datasets</a>`);
   });
 
   test('a run with ended_at shows Done and a delta up or down', async () => {

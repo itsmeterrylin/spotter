@@ -165,11 +165,33 @@ describe('layout', () => {
     expect((await app.request('/client/nope.js')).status).toBe(404);
   });
 
-  test('error pages keep the sidebar and offer the runs list', async () => {
-    const [status, html] = await page(app, '/runs/nope');
-    expect(status).toBe(404);
-    expect(html).toContain('Not here');
-    expect(html).toContain('<aside class="sidebar">');
-    expect(html).toContain(`href="${base}/runs">Runs</a>`);
+  test('an unknown object says what is missing and offers its own parent list', async () => {
+    const cases: Array<[path: string, title: string, list: string, label: string]> = [
+      ['/runs/nope', 'No run nope', 'runs', 'Runs'],
+      ['/traces/nope', 'No trace nope', 'traces', 'Traces'],
+      ['/datasets/nope', 'No dataset nope', 'datasets', 'Datasets'],
+      ['/issues/nope', 'No issue nope', '', 'Issues'],
+      ['/judges/nope', 'No judge nope', 'judges', 'Judges'],
+          ];
+    for (const [path, title, list, label] of cases) {
+      const [status, html] = await page(app, path);
+      expect(status).toBe(404);
+      expect(html).toContain(`<h1 class="t-title">${title}</h1>`);
+      expect(html).toContain('<aside class="sidebar">');
+      expect(html).toContain(`<a class="btn btn-primary" href="${base}/${list}">${label}</a>`);
+    }
   });
+
+  test('an unknown route renders inside the shell with the path, while API and MCP paths keep the plain 404', async () => {
+    const [status, html] = await page(app, '/no/such/page');
+    expect(status).toBe(404);
+    expect(html).toContain('<h1 class="t-title">Page not found</h1>');
+    expect(html).toContain('/no/such/page');
+    expect(html).toContain('<aside class="sidebar">');
+    expect(html).toContain('<title>Page not found · Spotter</title>');
+    const api = await app.request('/api/no/such/route');
+    expect(api.status).toBe(404);
+    expect(await api.text()).toBe('404 Not Found');
+  });
+
 });

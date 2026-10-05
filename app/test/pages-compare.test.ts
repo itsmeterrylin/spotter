@@ -10,6 +10,8 @@ beforeAll(async () => {
   s = await seedPages(app);
 });
 
+const base = 'http://localhost:3000';
+
 describe('compare', () => {
   test('shows every item, the run chips, the toggle off, and the runs breadcrumb', async () => {
     const [status, html] = await page(app, `/datasets/${s.datasetId}/compare?runs=${s.runA},${s.runB}`);
@@ -56,6 +58,10 @@ describe('compare', () => {
 
   test('unknown dataset is 404, one run is 400', async () => {
     expect((await page(app, `/datasets/nope/compare?runs=${s.runA},${s.runB}`))[0]).toBe(404);
-    expect((await page(app, `/datasets/${s.datasetId}/compare?runs=${s.runA}`))[0]).toBe(400);
+    const [status, html] = await page(app, `/datasets/${s.datasetId}/compare?runs=${s.runA}`);
+    expect(status).toBe(400);
+    expect(html.match(/Compare needs at least two runs in dataset /g)?.length).toBe(2);
+    expect(html).toContain('<h1 class="t-title">Compare needs at least two runs in dataset golden-');
+    expect(html).toContain(`href="${base}/datasets/${s.datasetId}">Back to golden-`);
   });
 });

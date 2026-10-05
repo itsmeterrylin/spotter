@@ -82,7 +82,7 @@ export const Crumbs = ({ items }: { items: Crumb[] }) => (
 export const Empty = ({ icon, title, action }: { icon: IconName; title: string; action?: Child }) => (
   <div class="card empty">
     <Icon name={icon} size="lg" />
-    <span class="t-heading">{title}</span>
+    {title ? <span class="t-heading">{title}</span> : null}
     {action}
   </div>
 );
