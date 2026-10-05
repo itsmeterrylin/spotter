@@ -183,20 +183,21 @@ textarea.input { height: auto; min-height: 96px; padding: var(--space-8) var(--s
 .tab .count { color: var(--ink-faint); font-weight: ${w.book}; font-variant-numeric: tabular-nums; }
 
 /* 11. Aside */
-.aside { display: flex; flex-direction: column; gap: var(--space-24); width: var(--aside); flex: none; padding: var(--space-16) var(--space-12); border-left: 1px solid var(--border-subtle); }
+.aside { display: flex; flex-direction: column; gap: var(--space-10); width: var(--aside); flex: none; padding: var(--space-16) var(--space-12); border-left: 1px solid var(--border-subtle); }
 .aside-wide { width: var(--aside-wide); }
 .aside h2 { padding-inline: var(--space-8); font-size: var(--text-ui); font-weight: ${w.medium}; line-height: 20px; color: var(--ink-muted); }
 
-/* 12. Property: label and value on one 28px row */
-.aside dl { display: flex; flex-direction: column; gap: 2px; }
-.prop { display: grid; grid-template-columns: 96px minmax(0, 1fr); align-items: center; gap: var(--space-8); min-height: var(--control); min-width: 0; }
-.prop > dt, .prop > .key { padding-inline: var(--space-8); font-size: var(--text-ui); font-weight: ${w.medium}; line-height: 20px; color: var(--ink-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.prop > dd, .prop > .value { margin: 0; min-width: 0; }
-.propbtn { display: inline-flex; align-items: center; gap: var(--space-6); max-width: 100%; height: var(--control); padding: 0 var(--space-10) 0 var(--space-6); border-radius: var(--radius-control); background: transparent; color: var(--ink-secondary); font-size: var(--text-ui); font-weight: ${w.medium}; text-decoration: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: background var(--duration); }
+/* 12. Property: one 28px row, icon then value. The name is a visually hidden dt and the hover title. */
+.sr { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.aside dl { display: flex; flex-direction: column; }
+.prop { display: flex; align-items: center; min-height: var(--control); min-width: 0; }
+.prop > dd { margin: 0; min-width: 0; max-width: 100%; }
+.propbtn { display: inline-flex; align-items: center; gap: var(--space-6); max-width: 100%; height: var(--control); padding: 0 var(--space-10) 0 var(--space-6); border-radius: var(--radius-pill); background: transparent; color: var(--ink-secondary); font-size: var(--text-ui); line-height: var(--lh-ui); font-weight: ${w.medium}; text-decoration: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: background var(--duration); }
 .propbtn:hover { background: var(--fill); }
 .propbtn > .ic { color: var(--ink-muted); }
+.propbtn.is-empty, .propbtn.is-empty > .ic { color: var(--ink-muted); }
 .propbtn .link { color: inherit; text-decoration: none; }
-
+.propbtn .link:hover { text-decoration: underline; text-underline-offset: 3px; }
 /* 13. Status bar: below the panel, on the canvas */
 .statusbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-4) var(--space-12); min-height: var(--statusbar); padding-inline: var(--space-12); color: var(--ink-muted); font-size: var(--text-meta); line-height: var(--lh-meta); font-weight: ${w.book}; }
 .statusbar > * { display: inline-flex; flex-wrap: wrap; align-items: center; gap: var(--space-12); }

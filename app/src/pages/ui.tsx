@@ -14,12 +14,41 @@ type IconProps = { name: IconName; size?: 'sm' | 'md' | 'lg'; label?: string };
 export const Icon = ({ name, size = 'md', label }: IconProps) =>
   raw(`<svg class="ic${size === 'md' ? '' : ` ic-${size}`}" ${label ? `role="img" aria-label="${label}"` : 'aria-hidden="true"'}><use href="#i-${name}"/></svg>`);
 
-export const PropValue = ({ icon, children, ...rest }: { icon: IconName; children: Child; class?: string; title?: string }) => (
-  <span class={`propbtn${rest.class ? ` ${rest.class}` : ''}`} title={rest.title}>
-    <Icon name={icon} />
-    {children}
-  </span>
-);
+type PropProps = {
+  name: string;
+  icon: IconName;
+  children?: Child;
+  /** Action phrase shown, muted, when children is empty. */
+  empty?: Child;
+  class?: string;
+  hint?: string;
+  field?: boolean;
+};
+
+const blank = (c: Child): boolean => c === null || c === undefined || c === '' || c === false;
+
+/** One Linear-style property row: icon and value on a single line. The name is a visually hidden dt and the hover title. */
+export const Prop = ({ name, icon, children, empty, class: cls, hint, field }: PropProps) => {
+  const isEmpty = blank(children);
+  const classes = ['propbtn', field ? 'propfield' : '', isEmpty ? 'is-empty' : (cls ?? '')].filter(Boolean).join(' ');
+  return (
+    <div class="prop">
+      <dt class="sr">{name}</dt>
+      <dd>
+        <span class={classes} title={hint ? `${name}: ${hint}` : name}>
+          <Icon name={icon} />
+          {isEmpty ? empty : children}
+        </span>
+      </dd>
+    </div>
+  );
+};
+
+/** "Created 3d ago", "Updated now", or "Created 2026-09-01" for old dates. */
+export const since = (prefix: string, iso: string): string => {
+  const a = ago(iso);
+  return /^\d+[mhd]$/.test(a) ? `${prefix} ${a} ago` : `${prefix} ${a}`;
+};
 
 export const pct = (x: number): string => (x >= 0 && x <= 1 ? `${Math.round(x * 100)}%` : x.toFixed(2));
 
@@ -173,7 +202,7 @@ const Trigger = ({ variant, current }: { variant: 'icon' | 'field' | 'bulk'; cur
   const common = { type: 'button', 'aria-haspopup': 'menu', 'aria-expanded': 'false', 'data-status-trigger': true } as const;
   if (variant === 'bulk') return <button class="btn btn-secondary" {...common}>Status</button>;
   const label = `Status: ${current?.label ?? 'none'}`;
-  if (variant === 'field') return <button class="propbtn" {...common} aria-label={label}>{current?.icon}{current?.label}</button>;
+  if (variant === 'field') return <button class="propbtn" {...common} aria-label={label} title="Status">{current?.icon}{current?.label}</button>;
   return <button class="status-trigger" {...common} aria-label={label} title="Change status (S)">{current?.icon}</button>;
 };
 

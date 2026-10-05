@@ -71,7 +71,7 @@ describe('issue pages', () => {
     expect(html).toContain('<div class="turn" id="turn-3" data-focus="1">');
     expect(html).toContain('Natuurlijk, tot 13:00.');
     expect(html).toContain(`href="${base}/issues/${ids.open}?tab=backtest"><svg class="ic" aria-hidden="true"><use href="#i-backtest"/></svg>Backtest with language-leak</a>`);
-    expect(html).toContain('<button class="propbtn" type="button" aria-haspopup="menu" aria-expanded="false" data-status-trigger="true" aria-label="Status: Open">');
+    expect(html).toContain('<button class="propbtn" type="button" aria-haspopup="menu" aria-expanded="false" data-status-trigger="true" aria-label="Status: Open" title="Status">');
     expect(html).toContain('role="menuitemradio" aria-checked="true" data-value="open" data-label="Open">');
     expect(html).toContain('<form class="dismiss-form stack" data-dismiss-form="true" hidden="" style="--gap: var(--space-8)">');
     expect(html).not.toContain('data-new-issue-open data-turn');

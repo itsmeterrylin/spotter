@@ -99,23 +99,23 @@ describe('judge page', () => {
     const [, html] = await page('/judges/alpha');
     expect(html).toContain('<aside class="aside" aria-label="Judge" data-judge="alpha">');
     expect(html).toContain('data-kind="judge" data-id="alpha" data-current="draft" data-variant="field" data-reload="1"');
-    expect(html).toContain('<dt>Active version</dt><dd><select class="input" name="version" aria-label="Active version" data-activate="true"><option value="1" selected="">v1</option></select></dd>');
-    expect(html).toContain('<dt>Description</dt><dd><input class="input" name="description" aria-label="Description" placeholder="Add a description" value="" data-description="true"/></dd>');
-    expect(html).toContain('<dt>Labels collected</dt><dd><span class="propbtn num"><svg class="ic" aria-hidden="true"><use href="#i-score"/></svg>0/100</span></dd>');
-    for (const fact of ['Calibration status', 'TPR', 'TNR', 'Scope', 'Model', 'Created']) expect(html).toContain(`<dt>${fact}</dt>`);
+    expect(html).toContain('<dt class="sr">Active version</dt><dd><span class="propbtn propfield" title="Active version"><svg class="ic" aria-hidden="true"><use href="#i-backtest"/></svg><select class="input" name="version" aria-label="Active version" data-activate="true"><option value="1" selected="">v1</option></select></span></dd>');
+    expect(html).toContain('<dt class="sr">Description</dt><dd><span class="propbtn propfield" title="Description"><svg class="ic" aria-hidden="true"><use href="#i-menu"/></svg><input class="input" name="description" aria-label="Description" placeholder="Add a description" value="" data-description="true"/></span></dd>');
+    expect(html).toContain('<dt class="sr">Labels collected</dt><dd><span class="propbtn num" title="Labels collected"><svg class="ic" aria-hidden="true"><use href="#i-score"/></svg>0/100 labels</span></dd>');
+    for (const fact of ['Calibration status', 'TPR', 'TNR', 'Scope', 'Model', 'Created']) expect(html).toContain(`<dt class="sr">${fact}</dt>`);
     expect(html).toContain(`<a class="link" href="${base}/judges/alpha?tab=versions">1 version</a>`);
-    expect(html).toContain(`<a class="link" href="${base}/judges/alpha?tab=disagreements">0</a>`);
-    expect(html).toContain(`<a class="link" href="${base}/judges/alpha?tab=issues">1</a>`);
+    expect(html).toContain(`<a class="link" href="${base}/judges/alpha?tab=disagreements">0 disagreements</a>`);
+    expect(html).toContain(`<a class="link" href="${base}/judges/alpha?tab=issues">1 open issue</a>`);
     expect(html.indexOf('<h2>Status</h2>')).toBeLessThan(html.indexOf('<h2>Properties</h2>'));
-    expect(html.indexOf('<h2>Properties</h2>')).toBeLessThan(html.indexOf('<h2>Facts</h2>'));
-    expect(html.indexOf('<h2>Facts</h2>')).toBeLessThan(html.indexOf('<h2>Relations</h2>'));
+    expect(html.indexOf('<h2>Properties</h2>')).toBeLessThan(html.indexOf('<h2>Relations</h2>'));
+    expect(html).not.toContain('<h2>Facts</h2>');
     expect(html).toContain('/client/judge.js');
   });
 
-  test('the calibrated judge shows its rates in Facts', async () => {
+  test('the calibrated judge shows its rates in Properties', async () => {
     const [, html] = await page('/judges/beta');
-    expect(html).toContain('<dt>TPR</dt><dd><span class="propbtn num"><svg class="ic" aria-hidden="true"><use href="#i-pass"/></svg>92%</span></dd>');
-    expect(html).toContain('<dt>TNR</dt><dd><span class="propbtn num"><svg class="ic" aria-hidden="true"><use href="#i-pass"/></svg>95%</span></dd>');
+    expect(html).toContain('<dt class="sr">TPR</dt><dd><span class="propbtn num" title="TPR"><svg class="ic" aria-hidden="true"><use href="#i-pass"/></svg>TPR 92%</span></dd>');
+    expect(html).toContain('<dt class="sr">TNR</dt><dd><span class="propbtn num" title="TNR"><svg class="ic" aria-hidden="true"><use href="#i-pass"/></svg>TNR 95%</span></dd>');
   });
 
   test('the Issues tab lists issues linked to the judge, and Versions lists the timeline', async () => {

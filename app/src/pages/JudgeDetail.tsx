@@ -6,7 +6,7 @@ import type { Shell } from './data.ts';
 import { ActivateForm, DisagreementsLink, Rates, StatusPill } from './Judges.tsx';
 import { VersionBody } from './JudgeVersion.tsx';
 import { Layout, type Tab } from './Layout.tsx';
-import { ago, Empty, Icon, JudgeStateIcon, judgeOptions, judgeStateLabel, pct, PropValue, SeverityPill, short, State, StatusMenu, summarize } from './ui.tsx';
+import { ago, Empty, Icon, JudgeStateIcon, judgeOptions, judgeStateLabel, pct, Prop, SeverityPill, short, since, State, StatusMenu, summarize } from './ui.tsx';
 
 export type JudgeTab = 'overview' | 'versions' | 'disagreements' | 'issues';
 
@@ -115,39 +115,30 @@ const Properties = ({ judge, disagreements, openIssues }: { judge: JudgeView; di
       <section>
         <h2>Properties</h2>
         <dl>
-          <div class="prop">
-            <dt>Active version</dt>
-            <dd>
-              <select class="input" name="version" aria-label="Active version" data-activate disabled={judge.versions.length ? undefined : true}>
-                {judge.versions.length ? [...judge.versions].reverse().map(versionOption) : <option>none</option>}
-              </select>
-            </dd>
-          </div>
-          <div class="prop">
-            <dt>Description</dt>
-            <dd><input class="input" name="description" aria-label="Description" placeholder="Add a description" value={judge.description ?? ''} data-description /></dd>
-          </div>
+          <Prop name="Active version" icon="backtest" field>
+            <select class="input" name="version" aria-label="Active version" data-activate disabled={judge.versions.length ? undefined : true}>
+              {judge.versions.length ? [...judge.versions].reverse().map(versionOption) : <option>none</option>}
+            </select>
+          </Prop>
+          <Prop name="Description" icon="menu" field>
+            <input class="input" name="description" aria-label="Description" placeholder="Add a description" value={judge.description ?? ''} data-description />
+          </Prop>
+          <div class="prop"><dt class="sr">Calibration status</dt><dd><StatusPill status={judge.status} /></dd></div>
+          <Prop name="Labels collected" icon="score" class="num">{`${judge.labels}/${labelTarget} labels`}</Prop>
+          <Prop name="TPR" icon="pass" class="num" empty="No TPR yet">{row ? `TPR ${pct(row.tpr)}` : null}</Prop>
+          <Prop name="TNR" icon="pass" class="num" empty="No TNR yet">{row ? `TNR ${pct(row.tnr)}` : null}</Prop>
+          <Prop name="Scope" icon="settings" empty="No active version">{active ? `${active.scope} scope` : null}</Prop>
+          <Prop name="Model" icon="judge" empty="No active version">{active?.model ?? null}</Prop>
+          <Prop name="Created" icon="time" class="num" hint={judge.created_at}>{since('Created', judge.created_at)}</Prop>
         </dl>
         <p class="error" data-error></p>
       </section>
       <section>
-        <h2>Facts</h2>
-        <dl>
-          <div class="prop"><dt>Calibration status</dt><dd><StatusPill status={judge.status} /></dd></div>
-          <div class="prop"><dt>Labels collected</dt><dd><PropValue icon="score" class="num">{judge.labels}/{labelTarget}</PropValue></dd></div>
-          <div class="prop"><dt>TPR</dt><dd><PropValue icon="pass" class="num">{row ? pct(row.tpr) : '–'}</PropValue></dd></div>
-          <div class="prop"><dt>TNR</dt><dd><PropValue icon="pass" class="num">{row ? pct(row.tnr) : '–'}</PropValue></dd></div>
-          <div class="prop"><dt>Scope</dt><dd><PropValue icon="settings">{active?.scope ?? '–'}</PropValue></dd></div>
-          <div class="prop"><dt>Model</dt><dd><PropValue icon="judge">{active?.model ?? '–'}</PropValue></dd></div>
-          <div class="prop"><dt>Created</dt><dd><PropValue icon="time" class="num" title={judge.created_at}>{ago(judge.created_at)}</PropValue></dd></div>
-        </dl>
-      </section>
-      <section>
         <h2>Relations</h2>
         <dl>
-          <div class="prop"><dt>Versions</dt><dd><PropValue icon="backtest"><a class="link" href={urls.judge(judge.name, 'versions')}>{plural(judge.versions.length, 'version')}</a></PropValue></dd></div>
-          <div class="prop"><dt>Disagreements</dt><dd><PropValue icon="flag"><a class="link" href={urls.judge(judge.name, 'disagreements')}>{disagreements}</a></PropValue></dd></div>
-          <div class="prop"><dt>Open issues</dt><dd><PropValue icon="issue"><a class="link" href={urls.judge(judge.name, 'issues')}>{openIssues}</a></PropValue></dd></div>
+          <Prop name="Versions" icon="backtest"><a class="link" href={urls.judge(judge.name, 'versions')}>{plural(judge.versions.length, 'version')}</a></Prop>
+          <Prop name="Disagreements" icon="flag"><a class="link" href={urls.judge(judge.name, 'disagreements')}>{plural(disagreements, 'disagreement')}</a></Prop>
+          <Prop name="Open issues" icon="issue"><a class="link" href={urls.judge(judge.name, 'issues')}>{plural(openIssues, 'open issue')}</a></Prop>
         </dl>
       </section>
     </aside>

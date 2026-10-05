@@ -7,7 +7,7 @@ import { urls } from '../urls.ts';
 import { initials, type Shell } from './data.ts';
 import { Layout, type Tab } from './Layout.tsx';
 import { Turns } from './Trace.tsx';
-import { ago, BulkBar, Empty, Icon, issueOptions, pct, PropValue, RowCheck, SeverityPill, severityPill, short, State, StatusMenu, statusLabel, Values } from './ui.tsx';
+import { ago, BulkBar, Empty, Icon, issueOptions, pct, Prop, RowCheck, SeverityPill, severityPill, short, since, State, StatusMenu, statusLabel, Values } from './ui.tsx';
 
 export type IssueTab = 'overview' | 'traces' | 'backtest';
 
@@ -191,20 +191,26 @@ const Properties = ({ issue }: { issue: IssueView }) => (
     <section>
       <h2>Properties</h2>
       <dl>
-        <div class="prop">
-          <dt>Severity</dt>
-          <dd>
-            <select class="input" name="severity" aria-label="Severity" data-patch="severity">
-              {(['low', 'medium', 'high'] as const).map((s) => <option value={s} selected={s === issue.severity}>{s}</option>)}
-            </select>
-          </dd>
-        </div>
-        <div class="prop"><dt>Judge</dt><dd><PropValue icon="judge">{issue.judge_name ? <a class="link" href={urls.judge(issue.judge_name)}>{issue.judge_name}</a> : <a class="link" href={urls.issue(issue.id, 'backtest')}>Link</a>}</PropValue></dd></div>
-        <div class="prop"><dt>Seed trace</dt><dd><PropValue icon="trace">{issue.seed_trace_id ? <a class="link mono" href={urls.trace(issue.seed_trace_id)}>{short(issue.seed_trace_id)}</a> : '–'}</PropValue></dd></div>
-        <div class="prop"><dt>Project</dt><dd><PropValue icon="dataset">{issue.project}</PropValue></dd></div>
-        <div class="prop"><dt>Created by</dt><dd><PropValue icon="human">{issue.created_by}</PropValue></dd></div>
-        <div class="prop"><dt>Created</dt><dd><PropValue icon="time" class="num" title={issue.created_at}>{ago(issue.created_at)}</PropValue></dd></div>
-        <div class="prop"><dt>Updated</dt><dd><PropValue icon="time" class="num" title={issue.updated_at}>{ago(issue.updated_at)}</PropValue></dd></div>
+        <Prop name="Severity" icon="flag" field>
+          <select class="input" name="severity" aria-label="Severity" data-patch="severity">
+            {(['low', 'medium', 'high'] as const).map((s) => <option value={s} selected={s === issue.severity}>{s}</option>)}
+          </select>
+        </Prop>
+        <Prop name="Project" icon="dataset">{issue.project}</Prop>
+        <Prop name="Created by" icon="human">{`Created by ${issue.created_by}`}</Prop>
+        <Prop name="Created" icon="time" class="num" hint={issue.created_at}>{since('Created', issue.created_at)}</Prop>
+        <Prop name="Updated" icon="time" class="num" hint={issue.updated_at}>{since('Updated', issue.updated_at)}</Prop>
+      </dl>
+    </section>
+    <section>
+      <h2>Relations</h2>
+      <dl>
+        <Prop name="Judge" icon="judge" empty={<a class="link" href={urls.issue(issue.id, 'backtest')}>Link judge</a>}>
+          {issue.judge_name ? <a class="link" href={urls.judge(issue.judge_name)}>{issue.judge_name}</a> : null}
+        </Prop>
+        <Prop name="Seed trace" icon="trace" class="mono" empty="No seed trace">
+          {issue.seed_trace_id ? <a class="link" href={urls.trace(issue.seed_trace_id)}>{short(issue.seed_trace_id)}</a> : null}
+        </Prop>
       </dl>
     </section>
     <section class="stack" style="--gap: var(--space-8)">

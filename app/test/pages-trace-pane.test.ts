@@ -41,4 +41,17 @@ describe('trace pane', () => {
     expect(status).toBe(200);
     expect(js).toContain('data-pane-close');
   });
+
+  test('the pane lists properties as single rows with hidden names, action phrases for empties, and no empty sections', async () => {
+    const { app } = pageApp();
+    const seed = await seedPages(app);
+    const [, html] = await page(app, `/traces/${seed.b[1]}/pane`);
+    expect(html).toContain('<h2>Properties</h2>');
+    expect(html).toContain('<dt class="sr">Verdict</dt>');
+    expect(html).toContain('title="Verdict"');
+    expect(html).toContain('Set verdict');
+    expect(html).not.toContain('grid-template-columns');
+    expect(html).not.toContain('<span class="block-label">Expected</span>');
+    expect(html).toContain('title="Close" aria-label="Close"');
+  });
 });
