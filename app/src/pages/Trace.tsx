@@ -8,7 +8,7 @@ import { parseMaybeJson } from '../db/json.ts';
 import { urls } from '../urls.ts';
 import type { HumanVerdict, Shell } from './data.ts';
 import { Layout } from './Layout.tsx';
-import { Icon, JsonView, pct, Prop, short, since, State, summarize, Values, VerdictPill } from './ui.tsx';
+import { Icon, IconButton, JsonView, pct, Prop, short, since, State, summarize, Values, VerdictPill } from './ui.tsx';
 
 const scoreIcon = (s: Score): 'pass' | 'fail' | 'score' => (s.value === 1 ? 'pass' : s.value === 0 ? 'fail' : 'score');
 
@@ -213,13 +213,14 @@ const TraceAside = ({ trace, run, verdict, issues }: Pick<Props, 'trace' | 'run'
 export const TracePage = ({ trace, run, verdict, turn, issues, shell }: Props) => (
   <Layout
     title={short(trace.id)}
+    heading
     section="traces"
     shell={shell}
     crumbs={run ? [[urls.runs(run.dataset_id), 'Runs'], [urls.run(run.id), run.name]] : [[urls.traces(), 'Traces']]}
-    action={
+    actions={
       <>
-        <a class="btn btn-secondary" href={urls.reviewTrace(trace.id, { run: run?.id })}><Icon name="human" />{verdict ? 'Change verdict' : 'Label'}</a>
-        <NewIssueButton />
+        <IconButton href={urls.reviewTrace(trace.id, { run: run?.id })} icon="human" label={verdict ? 'Change verdict' : 'Label'} />
+        <button class="btn btn-icon" type="button" data-new-issue-open title="New issue" aria-label="New issue"><Icon name="issue" /></button>
       </>
     }
     script="trace"

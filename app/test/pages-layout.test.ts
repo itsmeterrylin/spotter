@@ -43,7 +43,9 @@ describe('layout', () => {
     expect(html).toContain(`<span class="mcp" title="${base}/mcp"><i class="live" aria-hidden="true"></i>MCP localhost:3000/mcp</span>`);
     expect(html).toContain('id="nav-toggle"');
     expect(html).toContain('aria-label="Menu"');
-    expect(html).toContain('<h1 class="t-title">Issues</h1>');
+    expect(html).toContain('<h1 class="crumb-current">Issues</h1>');
+    expect(html).toContain('<header class="header">');
+    expect(html).toContain('<a class="crumb" href="http://localhost:3000/">copper</a>');
     expect(html).not.toContain('class="aside');
     expect(html).toContain('/pages.css');
     expect(html).toContain('<symbol id="i-paw"');
@@ -51,6 +53,22 @@ describe('layout', () => {
     expect(html).toContain('Datasets');
     expect(html).toContain('Judges');
     expect(html).toContain('Traces');
+  });
+
+  test('every view renders the header bar; tabs sit in a row under it, only where a view has tabs; only detail pages title the body', async () => {
+    const [, issues] = await page(app, '/');
+    expect(issues.indexOf('<header class="header">')).toBeLessThan(issues.indexOf('<nav class="tabs"'));
+    for (const path of ['/runs', '/datasets', '/notifications', '/settings', '/traces', '/judges', '/']) {
+      const [status, html] = await page(app, path);
+      expect(status).toBe(200);
+      expect(html.match(/<header class="header">/g)?.length).toBe(1);
+      expect(html).not.toContain('<h1 class="t-title">');
+    }
+    const [, runs] = await page(app, '/runs');
+    expect(runs).not.toContain('<nav class="tabs"');
+    const [, detail] = await page(app, `/runs/${s.runB}`);
+    expect(detail).toContain('<h1 class="t-title">rules-v2</h1>');
+    expect(detail).toContain('<header class="header">');
   });
 
   test('each section page marks its own nav item active', async () => {
@@ -176,7 +194,7 @@ describe('layout', () => {
     for (const [path, title, list, label] of cases) {
       const [status, html] = await page(app, path);
       expect(status).toBe(404);
-      expect(html).toContain(`<h1 class="t-title">${title}</h1>`);
+      expect(html).toContain(`<h1 class="crumb-current">${title}</h1>`);
       expect(html).toContain('<aside class="sidebar">');
       expect(html).toContain(`<a class="btn btn-primary" href="${base}/${list}">${label}</a>`);
     }
@@ -185,7 +203,7 @@ describe('layout', () => {
   test('an unknown route renders inside the shell with the path, while API and MCP paths keep the plain 404', async () => {
     const [status, html] = await page(app, '/no/such/page');
     expect(status).toBe(404);
-    expect(html).toContain('<h1 class="t-title">Page not found</h1>');
+    expect(html).toContain('<h1 class="crumb-current">Page not found</h1>');
     expect(html).toContain('/no/such/page');
     expect(html).toContain('<aside class="sidebar">');
     expect(html).toContain('<title>Page not found · Spotter</title>');

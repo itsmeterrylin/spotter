@@ -151,6 +151,7 @@ export const JudgePage = ({ judge, tab, disagreements, issues, shell }: Props) =
   return (
     <Layout
       title={judge.name}
+      heading
       meta={`${judgeStateLabel[judge.state]}${active ? ` · v${active.number} active` : ''} · ${plural(judge.versions.length, 'version')}`}
       section="judges"
       shell={shell}

@@ -53,6 +53,7 @@ ${spaces}
   --aside: ${size.aside}px;
   --aside-wide: ${size.asideWide}px;
   --statusbar: ${size.statusbar}px;
+  --header: ${size.header}px;
   --tint: 14%;
   color-scheme: light;
 }

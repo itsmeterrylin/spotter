@@ -30,18 +30,17 @@ describe('runs', () => {
 
   test('the primary action compares the newest run with its baseline', async () => {
     const [, html] = await page(app, '/runs');
-    expect(html).toContain(`<a class="btn btn-primary" href="${base}/datasets/${s.datasetId}/compare?runs=${s.runA}%2C${s.runB}&amp;only=changes">`);
-    expect(html).toContain('Compare</a>');
+    expect(html).toContain(`<a class="btn btn-icon" href="${base}/datasets/${s.datasetId}/compare?runs=${s.runA}%2C${s.runB}&amp;only=changes" title="Compare with baseline" aria-label="Compare with baseline">`);
   });
 
   test('GET /runs?dataset= filters and shows the dataset in the breadcrumb; an unknown dataset is a 404 page', async () => {
     const [status, html] = await page(app, `/runs?dataset=${s.datasetId}`);
     expect(status).toBe(200);
-    expect(html).toContain(`<a href="${base}/datasets">Datasets</a>`);
-    expect(html).toContain(`<a href="${base}/datasets/${s.datasetId}">golden-`);
+    expect(html).toContain(`<a class="crumb" href="${base}/datasets">Datasets</a>`);
+    expect(html).toContain(`<a class="crumb" href="${base}/datasets/${s.datasetId}">golden-`);
     const [missing, body] = await page(app, '/runs?dataset=nope');
     expect(missing).toBe(404);
-    expect(body).toContain('<h1 class="t-title">No dataset nope</h1>');
+    expect(body).toContain('<h1 class="crumb-current">No dataset nope</h1>');
     expect(body).toContain(`href="${base}/datasets">Datasets</a>`);
   });
 
@@ -61,9 +60,9 @@ describe('runs', () => {
     const [status, html] = await page(app, `/runs/${s.runB}`);
     expect(status).toBe(200);
     expect(html).toContain('<h1 class="t-title">rules-v2</h1>');
-    expect(html).toContain(`<a href="${base}/runs?dataset=${s.datasetId}">Runs</a>`);
+    expect(html).toContain(`<a class="crumb" href="${base}/runs?dataset=${s.datasetId}">Runs</a>`);
     expect(html).toContain('exercise_match');
-    expect(html).toContain('Compare with rules-v1');
+    expect(html).toContain('aria-label="Compare with rules-v1"');
     expect(html).toContain('Review 2 unlabeled');
     for (const id of s.b) expect(html).toContain(short(id));
     expect(html).toContain('pill pill-fail');

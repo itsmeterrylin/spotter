@@ -109,4 +109,6 @@ export const size = {
   aside: 386,
   asideWide: 440,
   statusbar: 28,
+  /** Header bar at the top of the main panel. */
+  header: 44,
 } as const;

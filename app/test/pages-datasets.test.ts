@@ -31,9 +31,8 @@ describe('datasets', () => {
     expect(html).toContain('<td class="wrap">bench</td>');
     expect(html).toContain('rules-v1');
     expect(html).toContain('rules-v2');
-    expect(html).toContain(`<a class="btn btn-primary" href="${base}/datasets/${s.datasetId}/compare?runs=${s.runA}%2C${s.runB}&amp;only=changes">`);
-    expect(html).toContain('Compare latest</a>');
-    expect(html).toContain(`<a href="${base}/datasets">Datasets</a>`);
+    expect(html).toContain(`<a class="btn btn-icon" href="${base}/datasets/${s.datasetId}/compare?runs=${s.runA}%2C${s.runB}&amp;only=changes" title="Compare latest runs" aria-label="Compare latest runs">`);
+    expect(html).toContain(`<a class="crumb" href="${base}/datasets">Datasets</a>`);
     expect((await page(app, '/datasets/nope'))[0]).toBe(404);
   });
 
@@ -63,9 +62,9 @@ describe('traces', () => {
     expect(status).toBe(200);
     for (const id of s.b) expect(html).toContain(short(id));
     for (const id of s.a) expect(html).not.toContain(short(id));
-    expect(html).toContain(`<a class="btn btn-primary" href="${base}/review?run=${s.runB}&amp;filter=unlabeled">`);
+    expect(html).toContain(`<a class="btn btn-icon" href="${base}/review?run=${s.runB}&amp;filter=unlabeled" title="Review unlabeled" aria-label="Review unlabeled">`);
     expect(html).toContain('Review unlabeled');
-    expect(html).toContain(`<a href="${base}/runs/${s.runB}">rules-v2</a>`);
+    expect(html).toContain(`<a class="crumb" href="${base}/runs/${s.runB}">rules-v2</a>`);
     expect(html).toContain('data-score="exercise_match" data-selected="1"');
     expect((await page(app, '/traces?run=nope'))[0]).toBe(404);
   });

@@ -75,7 +75,7 @@ const JudgeListRow = ({ j }: { j: JudgeRow }) => (
 );
 
 export const JudgesPage = ({ judges, filter, counts, shell }: ListProps) => (
-  <Layout title="Judges" meta={`${counts[filter]} ${filter === 'all' ? (counts[filter] === 1 ? 'judge' : 'judges') : filter}`} section="judges" shell={shell} tabs={listTabs(filter, counts)} script="judges">
+  <Layout title="Judges" section="judges" shell={shell} tabs={listTabs(filter, counts)} script="judges">
     {judges.length ? (
       <div class="card card-flush judge-list" data-list data-filter={filter}>
         {groupOrder.map((state) => {

@@ -68,15 +68,9 @@ export const Delta = ({ value }: { value: number | null }) => {
 
 export type Crumb = [string, string];
 
-export const Crumbs = ({ items }: { items: Crumb[] }) => (
-  <nav class="crumbs t-ui">
-    {items.map(([href, label], i) => (
-      <>
-        {i > 0 ? <Icon name="next" size="sm" /> : null}
-        <a href={href}>{label}</a>
-      </>
-    ))}
-  </nav>
+/** A 28px round icon action for the header. The label is the tooltip and the accessible name. */
+export const IconButton = ({ href, icon, label }: { href: string; icon: IconName; label: string }) => (
+  <a class="btn btn-icon" href={href} title={label} aria-label={label}><Icon name={icon} /></a>
 );
 
 export const Empty = ({ icon, title, action }: { icon: IconName; title: string; action?: Child }) => (

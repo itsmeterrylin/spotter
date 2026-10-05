@@ -36,7 +36,8 @@ describe('issue pages', () => {
     expect(html).toContain(`<a class="tab" href="${base}/" aria-current="page">Open<span class="count">2</span></a>`);
     expect(html).toContain(`<a class="tab" href="${base}/issues?status=confirmed">Confirmed<span class="count">0</span></a>`);
     expect(html).toContain(`<a class="tab" href="${base}/issues?status=dismissed">Dismissed<span class="count">1</span></a>`);
-    expect(html).toContain('<p class="meta muted">2 open</p>');
+    expect(html).not.toContain('<h1 class="t-title">');
+    expect(html).toContain('<h1 class="crumb-current">Issues</h1>');
     expect(html.match(/<div class="list-row" data-row="true"/g)?.length).toBe(2);
     expect(html).toContain(`<div class="list-row" data-row="true" data-id="${ids.open}">`);
     expect(html).toContain(`<span class="status-menu" data-status-menu="true" data-kind="issue" data-id="${ids.open}" data-current="open" data-variant="icon">`);

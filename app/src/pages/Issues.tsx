@@ -19,7 +19,7 @@ const listTabs = (status: IssueStatus, counts: Record<IssueStatus, number>, proj
   issueStatuses.map((s) => ({ href: s === 'open' && !project ? urls.home() : urls.issues({ status: s, project }), label: statusLabel[s], count: counts[s], current: s === status }));
 
 export const IssuesPage = ({ issues, status, counts, project, shell }: ListProps) => (
-  <Layout title="Issues" meta={`${counts[status]} ${status}${project ? ` · ${project}` : ''}`} section="issues" shell={shell} tabs={listTabs(status, counts, project)} script="issues">
+  <Layout title="Issues" section="issues" shell={shell} tabs={listTabs(status, counts, project)} script="issues">
     {issues.length ? (
       <div class="card card-flush issue-list" data-list data-status={status}>
         <div class="group-head"><State status={status} />{statusLabel[status]}<span class="count">{issues.length}</span></div>
@@ -235,6 +235,7 @@ const Properties = ({ issue }: { issue: IssueView }) => (
 export const IssuePage = ({ issue, tab, seed, projectTraces, judges, shell }: DetailProps) => (
   <Layout
     title={issue.title}
+    heading
     meta={`${statusLabel[issue.status]} · ${issue.created_by} · ${ago(issue.created_at)}`}
     section="issues"
     shell={shell}

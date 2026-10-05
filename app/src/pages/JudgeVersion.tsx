@@ -77,7 +77,7 @@ export const VersionBody = ({ judge, version: v, disagreements }: Omit<Props, 's
 };
 
 export const JudgeVersionPage = ({ judge, version, disagreements, shell }: Props) => (
-  <Layout title={`${judge.name} v${version.number}`} section="judges" shell={shell} crumbs={[[urls.judges(), 'Judges'], [judge.url, judge.name]]}>
+  <Layout title={`${judge.name} v${version.number}`} heading section="judges" shell={shell} crumbs={[[urls.judges(), 'Judges'], [judge.url, judge.name]]}>
     <div class="review definition">
       <VersionBody judge={judge} version={version} disagreements={disagreements} />
     </div>

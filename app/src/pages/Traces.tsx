@@ -4,7 +4,7 @@ import type { Child } from 'hono/jsx';
 import { urls } from '../urls.ts';
 import type { Shell } from './data.ts';
 import { Layout, type Tab } from './Layout.tsx';
-import { type Crumb, Empty, Icon, pct, short, summarize, type Verdict, VerdictPill } from './ui.tsx';
+import { type Crumb, Empty, Icon, IconButton, pct, short, summarize, type Verdict, VerdictPill } from './ui.tsx';
 
 export type TraceListRow = { trace: Trace; run: Run | null; values: Map<string, number>; verdict: Verdict | null };
 
@@ -78,19 +78,15 @@ const Table = ({ rows, names, score, selected }: Pick<Props, 'rows' | 'names' | 
 
 export const TracesPage = ({ rows, names, run, score, filters, tab, q, query, limit, shell, selected, pane }: Props) => {
   const crumbs: Crumb[] = run ? [[urls.runs(run.dataset_id), 'Runs'], [urls.run(run.id), run.name]] : [];
-  const action = run ? (
-    <a class="btn btn-primary" href={urls.review({ run: run.id, filter: 'unlabeled' })}><Icon name="human" />Review unlabeled</a>
-  ) : undefined;
-  const meta = `${rows.length.toLocaleString('en-US')}${rows.length === limit ? '+' : ''} traces`;
+  const action = run ? <IconButton href={urls.review({ run: run.id, filter: 'unlabeled' })} icon="human" label="Review unlabeled" /> : undefined;
   return (
     <Layout
       title="Traces"
-      meta={meta}
       section="traces"
       shell={shell}
       tabs={tracesTabs(query, tab)}
       crumbs={crumbs}
-      action={action}
+      actions={action}
       script="traces"
       aside={<aside class="aside aside-wide pane" id="pane" aria-label="Trace" hidden={!pane}>{pane}</aside>}
     >

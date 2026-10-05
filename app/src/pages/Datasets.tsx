@@ -4,7 +4,7 @@ import { urls } from '../urls.ts';
 import type { RunCard, Shell } from './data.ts';
 import { Layout } from './Layout.tsx';
 import { RunsTable, when } from './Runs.tsx';
-import { Empty, Icon, short, summarize } from './ui.tsx';
+import { Empty, IconButton, short, summarize } from './ui.tsx';
 
 export type DatasetRow = { dataset: Dataset; items: number; runs: number; last: Run | null };
 
@@ -80,12 +80,12 @@ const latestCompare = (dataset: Dataset, cards: RunCard[]) => {
   const [newest, previous] = cards;
   if (!newest || !previous) return undefined;
   return (
-    <a class="btn btn-primary" href={urls.compare(dataset.id, [previous.run.id, newest.run.id], 'changes')}><Icon name="compare" />Compare latest</a>
+    <IconButton href={urls.compare(dataset.id, [previous.run.id, newest.run.id], 'changes')} icon="compare" label="Compare latest runs" />
   );
 };
 
 export const DatasetPage = ({ dataset, items, cards, shell }: DetailProps) => (
-  <Layout title={dataset.name} section="datasets" shell={shell} crumbs={[[urls.datasets(), 'Datasets']]} action={latestCompare(dataset, cards)} script="rows">
+  <Layout title={dataset.name} heading section="datasets" shell={shell} crumbs={[[urls.datasets(), 'Datasets']]} actions={latestCompare(dataset, cards)} script="rows">
     <section class="group">
       <h2 class="t-content bold">Items</h2>
       {items.length ? <ItemsTable items={items} /> : <Empty icon="dataset" title="No items yet" />}

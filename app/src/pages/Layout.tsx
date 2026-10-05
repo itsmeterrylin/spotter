@@ -4,20 +4,26 @@ import type { IconName } from '../../../design-system/src/icons.ts';
 import { font } from '../../../design-system/src/tokens.ts';
 import { urls } from '../urls.ts';
 import { initials, type Shell } from './data.ts';
-import { type Crumb, Crumbs, Icon, sprite } from './ui.tsx';
+import { type Crumb, Icon, sprite } from './ui.tsx';
 
 export type Section = 'issues' | 'runs' | 'datasets' | 'traces' | 'judges' | 'notifications' | 'settings';
 
 export type Tab = { href: string; label: string; count?: number; current: boolean };
 
 type Props = {
+  /** Document title. The header's current crumb shows it unless `current` says otherwise. */
   title: string;
+  /** Show the title and meta in the body. Detail pages only; lists and tools let the header name them. */
+  heading?: boolean;
   meta?: Child;
   section: Section | null;
   shell: Shell;
   tabs?: Tab[];
+  /** Parent links between the project and the current page. */
   crumbs?: Crumb[];
-  action?: Child;
+  current?: string;
+  /** Icon buttons for the right end of the header. */
+  actions?: Child;
   script?: string;
   aside?: Child;
   children: Child;
@@ -115,6 +121,26 @@ const Tabs = ({ tabs }: { tabs: Tab[] }) => (
   </nav>
 );
 
+type HeaderProps = { project: string | null; crumbs: Crumb[]; current: string; named: boolean; actions?: Child };
+
+const Header = ({ project, crumbs, current, named, actions }: HeaderProps) => {
+  const parents: Crumb[] = project ? [[urls.home(), project], ...crumbs] : crumbs;
+  return (
+    <header class="header">
+      <nav class="crumbs" aria-label="Breadcrumb">
+        {parents.map(([href, label]) => (
+          <>
+            <a class="crumb" href={href}>{label}</a>
+            <Icon name="crumb" size="sm" />
+          </>
+        ))}
+        {named ? <span class="crumb-current">{current}</span> : <h1 class="crumb-current">{current}</h1>}
+      </nav>
+      {actions ? <div class="header-actions">{actions}</div> : null}
+    </header>
+  );
+};
+
 const StatusBar = ({ shell }: { shell: Shell }) => (
   <footer class="statusbar">
     <span>
@@ -129,7 +155,7 @@ const StatusBar = ({ shell }: { shell: Shell }) => (
   </footer>
 );
 
-export const Layout = ({ title, meta, section, shell, tabs, crumbs = [], action, script, aside, children }: Props) => (
+export const Layout = ({ title, heading = false, meta, section, shell, tabs, crumbs = [], current, actions, script, aside, children }: Props) => (
   <>
     {raw('<!doctype html>')}
     <html lang="en">
@@ -151,21 +177,24 @@ export const Layout = ({ title, meta, section, shell, tabs, crumbs = [], action,
           <Rail section={section} shell={shell} />
           <Sidebar section={section} shell={shell} />
           <div class="work">
-            <main class="main">
-              {tabs?.length ? <Tabs tabs={tabs} /> : null}
-              <div class="container">
-                <header class="page-title">
-                  <div class="head">
-                    {crumbs.length ? <Crumbs items={crumbs} /> : null}
-                    <h1 class="t-title">{title}</h1>
-                    {meta ? <p class="meta muted">{meta}</p> : null}
-                  </div>
-                  {action ? <div class="actions">{action}</div> : null}
-                </header>
-                {children}
-              </div>
-            </main>
-            {aside}
+            <Header project={shell.project} crumbs={crumbs} current={current ?? title} named={heading} actions={actions} />
+            <div class="work-body">
+              <main class="main">
+                {tabs?.length ? <Tabs tabs={tabs} /> : null}
+                <div class={heading ? 'container' : 'container no-title'}>
+                  {heading ? (
+                    <div class="page-title">
+                      <div class="head">
+                        <h1 class="t-title">{title}</h1>
+                        {meta ? <p class="meta muted">{meta}</p> : null}
+                      </div>
+                    </div>
+                  ) : null}
+                  {children}
+                </div>
+              </main>
+              {aside}
+            </div>
           </div>
           <StatusBar shell={shell} />
         </div>

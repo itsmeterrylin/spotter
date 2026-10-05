@@ -6,7 +6,7 @@ import { urls } from '../urls.ts';
 import type { HumanVerdict, JudgeSaid, Queue, Shell } from './data.ts';
 import { Layout } from './Layout.tsx';
 import { Turn } from './Trace.tsx';
-import { type Crumb, Empty, Icon, JsonView, type Verdict } from './ui.tsx';
+import { type Crumb, Empty, Icon, JsonView, short, type Verdict } from './ui.tsx';
 
 type Props = {
   trace: TraceView;
@@ -70,7 +70,7 @@ const crumbsOf = (queue: Queue): Crumb[] => {
 };
 
 export const ReviewPage = ({ trace, verdict, judgeSaid, score, queue, next, prev, datasets, turn, shell }: Props) => (
-  <Layout title="Review" section={queue.judge ? 'judges' : 'traces'} shell={shell} crumbs={crumbsOf(queue)} script="review">
+  <Layout title="Review" current={short(trace.id)} section={queue.judge ? 'judges' : 'traces'} shell={shell} crumbs={crumbsOf(queue)} script="review">
     <div
       class="review"
       id="review"
