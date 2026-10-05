@@ -24,7 +24,7 @@ export const judgesApi = (repos: Repos) => {
 
   api.post('/:name/activate', async (c) => {
     const body = judgeActivate.parse(await c.req.json());
-    return c.json(activate(repos, c.req.param('name'), body.version));
+    return c.json(activate(repos, c.req.param('name'), body.version, body.actor));
   });
 
   api.post('/:name/versions/:number/calibrate', async (c) => {

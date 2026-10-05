@@ -152,10 +152,11 @@ describe('MCP /mcp', () => {
     expect(dis.items).toHaveLength(1);
     const judges = await call('list', { type: 'judges' });
     expect((judges.items as { name: string; disagreements: number; labels: number }[])[0]).toMatchObject({ name: 'exercise_match', disagreements: 1, labels: 2 });
-    const activated = await call('write', { op: 'judge.activate', data: { judge: 'exercise_match', version: 2 } });
-    expect(activated).toMatchObject({ ok: true, active_version: 2 });
+    const { body: refused } = await rpc('tools/call', { name: 'write', arguments: { op: 'judge.activate', data: { judge: 'exercise_match', version: 2 } } });
+    expect((refused.result as ToolResult).isError).toBe(true);
+    expect(JSON.parse((refused.result as ToolResult).content[0]?.text ?? '{}')).toMatchObject({ error: { code: 'conflict', message: 'only a human can activate judge exercise_match; send them http://localhost:3000/judges/exercise_match' } });
     const audit = await call('read', { type: 'audit' });
-    expect((audit.judges as unknown[])[0]).toMatchObject({ name: 'exercise_match', active_version: 2, status: 'needs_labels', labels: 2, labels_needed: 98, disagreements: 0 });
+    expect((audit.judges as unknown[])[0]).toMatchObject({ name: 'exercise_match', active_version: 1, status: 'needs_labels', labels: 2, labels_needed: 98, disagreements: 1 });
   });
 
   test('judge.transition acts as an agent: it cannot set a judge live, and list judges filters by state', async () => {

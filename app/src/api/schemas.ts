@@ -142,7 +142,7 @@ export const judgePropose = z.object({
   created_by: z.enum(['human', 'agent']),
 });
 
-export const judgeActivate = z.object({ version: z.number().int().positive() });
+export const judgeActivate = z.object({ version: z.number().int().positive(), actor: z.enum(['human', 'agent']).default('human') });
 
 export const disagreementsQuery = z.object({ version: z.coerce.number().int().positive().optional() });
 

@@ -37,7 +37,7 @@ export function judgeRoutes(repos: Repos, shell: () => Shell): Hono {
 
   app.post('/:name/activate', async (c) => {
     const form = await c.req.parseBody();
-    const view = activate(repos, c.req.param('name'), versionNumber.parse(form.version));
+    const view = activate(repos, c.req.param('name'), versionNumber.parse(form.version), 'human');
     return c.redirect(view.url, 303);
   });
 

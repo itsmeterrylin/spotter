@@ -156,8 +156,9 @@ export function propose(repos: Repos, input: ProposeInput): { version: VersionVi
   return { version: versionView(repos, fresh, version), existing: false, judge: judgeView(repos, fresh) };
 }
 
-export function activate(repos: Repos, name: string, number: number): JudgeView {
+export function activate(repos: Repos, name: string, number: number, actor: CreatedBy): JudgeView {
   const { judge, version } = requireVersion(repos, name, number);
+  if (actor !== 'human') throw conflict(`only a human can activate judge ${name}; send them ${urls.judge(name)}`);
   const previous = judge.active_version_id ? repos.judges.getVersion(judge.active_version_id) : null;
   if (previous?.id === version.id) return judgeView(repos, judge);
   const line = `activated ${new Date().toISOString()}${previous ? `; previous v${previous.number}` : ''}`;

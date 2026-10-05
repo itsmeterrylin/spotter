@@ -54,7 +54,7 @@ const ops: Record<WriteOp, Handler | number> = {
     return { ids: [result.version.id], existing: result.existing, version: result.version, url: result.version.url };
   }),
   'judge.activate': op(judgeActivate.extend({ judge: z.string().min(1) }), (repos, body) => {
-    const view = activate(repos, body.judge, body.version);
+    const view = activate(repos, body.judge, body.version, 'agent');
     return { ids: [view.active_version_id ?? ''], active_version: view.active_version, url: view.url };
   }),
   'judge.transition': op(z.object({ judge: z.string().min(1), state: z.enum(['draft', 'live', 'paused']) }), (repos, body) => {

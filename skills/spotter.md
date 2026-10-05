@@ -14,7 +14,7 @@ Spotter is the human in the loop for agent-run evals. You run the eval and write
 3. Compare the new run to the baseline run. Read `improvements` and `regressions` per score.
 4. Send the person the compare url and the run url. Say which items changed and why you think so.
 5. The person labels traces (pass, fail, defer) and writes notes. Read them with `list notes`.
-6. Group notes into failure modes. Propose one judge per failure mode with `write judge.propose`, run it with `spotter judge run`, calibrate it against the human labels, and activate it with `write judge.activate` once TPR and TNR pass 90 percent. Until then its scores do not count.
+6. Group notes into failure modes. Propose one judge per failure mode with `write judge.propose`, run it with `spotter judge run`, and calibrate it against the human labels. Activation and going live are human-only: once TPR and TNR pass 90 percent, send the human the judge's url so they can activate the version and set the judge live. Until then its scores do not count.
 
 ## Connect
 
@@ -75,7 +75,7 @@ Every successful result carries `url`. Every list row carries `url`. Errors come
 | `scores.put` | `{trace_id, scores: [{name, value or verdict, reason?, source, judge_version_id?}]}` |
 | `items.from_traces` | `{dataset_id or dataset_name+project, trace_ids? or issue_id?, tags?}`; copies `input` and `expected` from each trace into an item with `source_trace_id`. Idempotent on `(dataset_id, source_trace_id)`: returns `{ids, added, url}` and a repeat has `added: 0`. `issue_id` takes every trace in the issue. This builds the replay dataset for verifying a fix |
 | `judge.propose` | `{judge, from_version?, prompt?, model?, params?, examples?, scope?, note}`; returns the new version, or the existing one with `existing: true` when the definition hash matches; a first version needs `prompt` and `model` and becomes active |
-| `judge.activate` | `{judge, version}`; rollback is activation of an older version. A live judge whose new active version is not calibrated drops to draft |
+| `judge.activate` | `{judge, version}`. Human-only: over MCP it returns a conflict with the judge url to hand to a human. A live judge whose new active version is not calibrated drops to draft |
 | `judge.transition` | `{judge, state}`; draft, live, or paused. An agent may pause or demote a judge. Only a human sets it live, and only with a calibrated active version |
 | `attribute_map.set` | `{project, map: [{source, target, type}]}`; replaces the project's map. On every trace insert and metadata patch, `metadata.attributes[source]` or an event named `source` is copied to `metadata[target]` as `string`, `number`, or `boolean`, so it filters as `metadata.<target>` |
 | `issues.upsert` | `{project, title, fingerprint?, severity?, description?, judge_name?, seed_trace_id?, traces?: [{trace_id, turn?, evidence?}]}`; dedupes on the fingerprint (yours, or the title lowercased without punctuation and stopwords). New: `created: true`. Existing: attaches only new occurrences and returns `added`. Dismissed: `suppressed: true` and nothing is written |
