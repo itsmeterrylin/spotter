@@ -184,7 +184,9 @@ export const issuePatch = z.object({
   actor: actor.default('human'),
 });
 
-export const judgeTransition = z.object({ state: z.enum(['draft', 'live', 'paused']), actor: actor.default('human') });
+export const judgePatch = z
+  .object({ state: z.enum(['draft', 'live', 'paused']).optional(), description: z.string().nullish(), actor: actor.default('human') })
+  .refine((b) => b.state !== undefined || b.description !== undefined, { message: 'send state or description' });
 
 export const issueAttach = z.object({ traces: z.array(occurrence).min(1).max(500), created_by: actor.default('human') });
 

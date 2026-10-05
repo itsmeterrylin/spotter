@@ -65,6 +65,7 @@ export const judgeRepo = (db: Database) => {
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *`,
   );
   const setState = db.query<Judge, [JudgeState, string]>('UPDATE judge SET state = ? WHERE name = ? RETURNING *');
+  const setDescription = db.query<Judge, [string | null, string]>('UPDATE judge SET description = ? WHERE name = ? RETURNING *');
   const activate = db.query<Judge, [string, string]>('UPDATE judge SET active_version_id = ? WHERE name = ? RETURNING *');
   const calibrations = db.query<Calibration, [string]>('SELECT * FROM judge_calibration WHERE judge_version_id = ? ORDER BY split');
   const insertCalibration = db.query<Calibration, [string, string | null, Split, number, number, number, string]>(
@@ -103,6 +104,7 @@ export const judgeRepo = (db: Database) => {
         ),
       ),
     activate: (name: string, versionId: string): Judge | null => activate.get(versionId, name),
+    setDescription: (name: string, description: string | null): Judge => must(setDescription.get(description, name), 'judge'),
     setState: (name: string, state: JudgeState): Judge => must(setState.get(state, name), 'judge'),
     calibrations: (versionId: string): Calibration[] => calibrations.all(versionId),
     putCalibration: (c: Omit<Calibration, 'created_at'>): Calibration => must(insertCalibration.get(c.judge_version_id, c.dataset_id, c.split, c.n, c.tpr, c.tnr, nowIso()), 'calibration'),

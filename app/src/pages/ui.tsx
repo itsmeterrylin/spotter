@@ -210,3 +210,21 @@ export const StatusMenu = ({ kind, id, current, options, variant = 'icon', reloa
     </div>
   </span>
 );
+
+export const RowCheck = ({ label }: { label: string }) => <input type="checkbox" class="row-check" aria-label={`Select ${label}`} data-row-check />;
+
+/** Bottom bar of a list: shows the selection count and offers the same status menu for every selected row. */
+export const BulkBar = ({ kind, options, reason }: { kind: 'issue' | 'judge'; options: StatusOption[]; reason?: boolean }) => (
+  <div class="bulk-bar" data-bulk-bar hidden>
+    <span class="bulk-count num" data-bulk-count></span>
+    <StatusMenu kind={kind} id="bulk" current={null} options={options} variant="bulk" />
+    {reason ? (
+      <form class="bulk-reason" data-bulk-reason hidden>
+        <input class="input" name="reason" placeholder="Reason" aria-label="Reason" required />
+        <button class="btn btn-fail" type="submit"><Icon name="dismiss" size="sm" />Dismiss</button>
+      </form>
+    ) : null}
+    <button class="btn btn-ghost" type="button" data-bulk-clear>Clear</button>
+    <p class="error" data-bulk-error></p>
+  </div>
+);

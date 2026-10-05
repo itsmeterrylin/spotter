@@ -7,7 +7,14 @@ import { urls } from '../urls.ts';
 export type VersionView = JudgeVersion & { calibration: Calibration[]; active: boolean; calibrated: boolean; url: string };
 export type JudgeStatus = 'calibrated' | 'needs_labels' | 'pending';
 export type JudgeView = Judge & { active_version: number | null; status: JudgeStatus; labels: number; live_blocker: string | null; versions: VersionView[]; url: string };
-export type JudgeRow = Omit<JudgeView, 'versions'> & { version_count: number; disagreements: number; disagreements_url: string | null };
+export type JudgeRow = Omit<JudgeView, 'versions'> & {
+  version_count: number;
+  disagreements: number;
+  disagreements_url: string | null;
+  calibration: Calibration | null;
+  open_issues: number;
+  updated_at: string;
+};
 
 export type ProposeInput = {
   name: string;
@@ -34,6 +41,9 @@ export const judgeTransitions: Record<JudgeState, Partial<Record<JudgeState, rea
 
 export const calibrationBar = 0.9;
 export const labelTarget = 100;
+
+/** The split a person reads first: test when it exists, else whichever was stored. */
+export const shownRow = (cals: Calibration[]): Calibration | null => cals.find((c) => c.split === 'test') ?? cals[0] ?? null;
 
 export const isCalibrated = (cals: Calibration[]): boolean => cals.some((c) => c.split === 'test' && c.tpr >= calibrationBar && c.tnr >= calibrationBar);
 
@@ -103,7 +113,10 @@ export function requireVersion(repos: Repos, name: string, number: number | 'act
 
 export const disagreementCount = (repos: Repos, versionId: string): number => repos.judges.pairs(versionId).filter((p) => p.human >= 0.5 !== p.judge >= 0.5).length;
 
+const latest = (stamps: string[]): string => stamps.reduce((a, b) => (b > a ? b : a));
+
 export function listJudges(repos: Repos): { judges: JudgeRow[]; url: string } {
+  const openIssues = repos.issues.openCountsByJudge();
   const judges = repos.judges.list().map((judge) => {
     const { versions, ...rest } = judgeView(repos, judge);
     const active = versions.find((v) => v.active);
@@ -112,6 +125,9 @@ export function listJudges(repos: Repos): { judges: JudgeRow[]; url: string } {
       version_count: versions.length,
       disagreements: active ? disagreementCount(repos, active.id) : 0,
       disagreements_url: active ? urls.judgeDisagreements(judge.name, active.number) : null,
+      calibration: active ? shownRow(active.calibration) : null,
+      open_issues: openIssues.get(judge.name) ?? 0,
+      updated_at: latest([judge.created_at, ...versions.flatMap((v) => [v.created_at, ...v.calibration.map((c) => c.created_at)])]),
     };
   });
   return { judges, url: urls.judges() };
@@ -165,5 +181,16 @@ export function transitionJudge(repos: Repos, name: string, to: JudgeState, acto
     if (blocker) throw conflict(`judge ${name} cannot go live: ${blocker}`);
   }
   repos.judges.setState(name, to);
+  return getJudge(repos, name);
+}
+
+export type JudgeUpdate = { state?: JudgeState; description?: string | null; actor: CreatedBy };
+
+export function updateJudge(repos: Repos, name: string, update: JudgeUpdate): JudgeView {
+  if (!repos.judges.get(name)) throw notFound('judge', name);
+  repos.tx(() => {
+    if (update.description !== undefined) repos.judges.setDescription(name, update.description?.trim() || null);
+    if (update.state) transitionJudge(repos, name, update.state, update.actor);
+  });
   return getJudge(repos, name);
 }

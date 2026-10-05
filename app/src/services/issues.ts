@@ -116,6 +116,8 @@ export function getIssue(repos: Repos, id: string): IssueView {
   return { ...listRow(repos, issue), occurrence_list, backtest: backtest(repos, issue) };
 }
 
+export const issuesForJudge = (repos: Repos, name: string): IssueListRow[] => repos.issues.listByJudge(name).map((r) => listRow(repos, r));
+
 export function listIssues(repos: Repos, q: { project?: string; status?: IssueStatus } = {}): IssueList {
   const project = q.project ? resolveProject(repos, q.project) : null;
   const issues = repos.issues.list({ project_id: project?.id, status: q.status }).map((r) => listRow(repos, r));

@@ -52,18 +52,16 @@ describe('judges pages', () => {
       await propose({ from_version: 2, prompt: 'Draft three {{output}}', note: 'unscored' });
     });
 
-    test('GET /judges lists the judge with its status pill and a disagreements link', async () => {
+    test('GET /judges lists the judge with its version chip, calibration text, and a disagreements link', async () => {
       const [status, html] = await page('/judges');
       expect(status).toBe(200);
-      expect(html).toContain('exercise_match');
-      expect(html).toContain('v1 active');
-      expect(html).toContain('3 versions');
-      expect(html).toContain('Calibrated');
-      expect(html).toContain(`href="${base}/judges/exercise_match/disagreements?version=1">2 disagreements</a>`);
+      expect(html).toContain(`<a class="strong row-link" href="${base}/judges/exercise_match">exercise_match</a><span class="chip-v num">v1</span>`);
+      expect(html).toMatch(/<span class="grow muted cal-text num">TPR \d+% · TNR \d+%<\/span>/);
+      expect(html).toContain(`<a class="meta num" href="${base}/judges/exercise_match/disagreements?version=1" title="Disagreements"><svg class="ic ic-sm" aria-hidden="true"><use href="#i-flag"/></svg>2</a>`);
     });
 
-    test('GET /judges/:name shows the timeline newest first with bars, notes, the active marker, and the activate form', async () => {
-      const [status, html] = await page('/judges/exercise_match');
+    test('GET /judges/:name?tab=versions shows the timeline newest first with bars, notes, the active marker, and the activate form', async () => {
+      const [status, html] = await page('/judges/exercise_match?tab=versions');
       expect(status).toBe(200);
       expect(html.indexOf('>v3<')).toBeLessThan(html.indexOf('>v2<'));
       expect(html.indexOf('>v2<')).toBeLessThan(html.indexOf('>v1<'));
@@ -125,7 +123,7 @@ describe('judges pages', () => {
       const res = await post('2');
       expect(res.status).toBe(303);
       expect(res.headers.get('location')).toBe(`${base}/judges/exercise_match`);
-      const [, html] = await page('/judges/exercise_match');
+      const [, html] = await page('/judges/exercise_match?tab=versions');
       expect(html).toContain('Activate v1');
       expect(html).not.toContain('Activate v2');
       expect(html).toContain('previous v1');

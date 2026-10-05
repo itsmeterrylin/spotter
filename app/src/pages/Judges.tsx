@@ -1,10 +1,11 @@
 import type { IconName } from '../../../design-system/src/icons.ts';
 import type { Calibration } from '../db/repos/judge.ts';
-import { calibrationBar, type JudgeRow, type JudgeStatus, type JudgeView, type VersionView } from '../services/judges.ts';
+import type { JudgeState } from '../db/types.ts';
+import { calibrationBar, type JudgeRow, type JudgeStatus, labelTarget, type VersionView } from '../services/judges.ts';
 import { urls } from '../urls.ts';
 import type { Shell } from './data.ts';
-import { Layout } from './Layout.tsx';
-import { Empty, Icon, pct } from './ui.tsx';
+import { ago, BulkBar, Empty, Icon, JudgeStateIcon, judgeOptions, judgeStateLabel, pct, RowCheck, StatusMenu } from './ui.tsx';
+import { Layout, type Tab } from './Layout.tsx';
 
 const pills: Record<JudgeStatus, [string, IconName, string]> = {
   calibrated: ['pill-pass', 'pass', 'Calibrated'],
@@ -13,8 +14,6 @@ const pills: Record<JudgeStatus, [string, IconName, string]> = {
 };
 
 export const versionStatus = (v: VersionView): JudgeStatus => (v.calibrated ? 'calibrated' : v.calibration.length ? 'pending' : 'needs_labels');
-
-export const shownRow = (cals: Calibration[]): Calibration | null => cals.find((c) => c.split === 'test') ?? cals[0] ?? null;
 
 export const StatusPill = ({ status }: { status: JudgeStatus }) => {
   const [cls, icon, text] = pills[status];
@@ -47,70 +46,51 @@ export const DisagreementsLink = ({ name, number, count }: { name: string; numbe
   <a class="link num" href={urls.judgeDisagreements(name, number)}>{count} {count === 1 ? 'disagreement' : 'disagreements'}</a>
 );
 
-type ListProps = { judges: JudgeRow[]; shell: Shell };
+export type JudgeFilter = JudgeState | 'all';
+export const judgeFilters = ['live', 'draft', 'paused', 'all'] as const satisfies readonly JudgeFilter[];
+const groupOrder = ['live', 'draft', 'paused'] as const satisfies readonly JudgeState[];
 
-export const JudgesPage = ({ judges, shell }: ListProps) => (
-  <Layout title="Judges" section="judges" shell={shell}>
-    {judges.length ? (
-      <div class="card card-flush">
-        {judges.map((j) => (
-          <div class="row">
-            <Icon name="judge" />
-            <div class="grow">
-              <a class="link" href={j.url}>{j.name}</a>{' '}
-              <span class="muted num">
-                · {j.active_version === null ? 'no active version' : `v${j.active_version} active`} · {j.version_count} {j.version_count === 1 ? 'version' : 'versions'}
-              </span>
-            </div>
-            {j.active_version !== null ? <DisagreementsLink name={j.name} number={j.active_version} count={j.disagreements} /> : null}
-            <StatusPill status={j.status} />
-          </div>
-        ))}
-      </div>
+type ListProps = { judges: JudgeRow[]; filter: JudgeFilter; counts: Record<JudgeFilter, number>; shell: Shell };
+
+const listTabs = (filter: JudgeFilter, counts: Record<JudgeFilter, number>): Tab[] =>
+  judgeFilters.map((f) => ({ href: urls.judges(f === 'all' ? undefined : f), label: f === 'all' ? 'All' : judgeStateLabel[f], count: counts[f], current: f === filter }));
+
+const calibrationText = (j: JudgeRow): string => (j.calibration ? `TPR ${pct(j.calibration.tpr)} · TNR ${pct(j.calibration.tnr)}` : `needs labels ${j.labels}/${labelTarget}`);
+
+const JudgeListRow = ({ j }: { j: JudgeRow }) => (
+  <div class="list-row" data-row data-id={j.name}>
+    <RowCheck label={j.name} />
+    <StatusMenu kind="judge" id={j.name} current={j.state} options={judgeOptions(j.state, j.live_blocker)} />
+    <a class="strong row-link" href={j.url}>{j.name}</a>
+    <span class="chip-v num">{j.active_version === null ? 'no version' : `v${j.active_version}`}</span>
+    <span class="grow muted cal-text num">{calibrationText(j)}</span>
+    {j.disagreements_url ? (
+      <a class="meta num" href={j.disagreements_url} title="Disagreements"><Icon name="flag" size="sm" />{j.disagreements}</a>
     ) : (
-      <Empty icon="judge" title="No judges yet" />
+      <span class="meta num" title="Disagreements"><Icon name="flag" size="sm" />0</span>
     )}
-  </Layout>
+    <span class="meta num" title="Open issues"><Icon name="issue" size="sm" />{j.open_issues}</span>
+    <span class="meta num updated" title={j.updated_at}>{ago(j.updated_at)}</span>
+  </div>
 );
 
-type VersionProps = { name: string; version: VersionView; disagreements: number | null };
-
-const Version = ({ name, version: v, disagreements }: VersionProps) => {
-  const row = shownRow(v.calibration);
-  return (
-    <div class="version" data-active={v.active ? '1' : undefined}>
-      <div class="stack" style="--gap: 4px">
-        <a class="link t-heading num" href={v.url}>v{v.number}</a>
-        {v.active ? <span class="pill pill-pass"><Icon name="pass" size="sm" />Active</span> : null}
+export const JudgesPage = ({ judges, filter, counts, shell }: ListProps) => (
+  <Layout title="Judges" meta={`${counts[filter]} ${filter === 'all' ? (counts[filter] === 1 ? 'judge' : 'judges') : filter}`} section="judges" shell={shell} tabs={listTabs(filter, counts)} script="judges">
+    {judges.length ? (
+      <div class="card card-flush judge-list" data-list data-filter={filter}>
+        {groupOrder.map((state) => {
+          const group = judges.filter((j) => j.state === state);
+          return group.length ? (
+            <>
+              <div class="group-head"><JudgeStateIcon state={state} />{judgeStateLabel[state]}<span class="count">{group.length}</span></div>
+              {group.map((j) => <JudgeListRow j={j} />)}
+            </>
+          ) : null;
+        })}
+        <BulkBar kind="judge" options={judgeOptions(null)} />
       </div>
-      <div class="stack">
-        <span class="muted note">
-          {v.note ?? v.model} <span class="muted">· {v.created_by}</span>
-        </span>
-        {row ? <Rates row={row} /> : <StatusPill status="needs_labels" />}
-      </div>
-      <div class="actions">
-        {v.active && disagreements !== null ? <DisagreementsLink name={name} number={v.number} count={disagreements} /> : null}
-        {!v.active && v.calibrated ? <ActivateForm name={name} number={v.number} /> : null}
-      </div>
-    </div>
-  );
-};
-
-type DetailProps = { judge: JudgeView; disagreements: number | null; shell: Shell };
-
-export const JudgePage = ({ judge, disagreements, shell }: DetailProps) => (
-  <Layout title={judge.name} section="judges" shell={shell} crumbs={[[urls.judges(), 'Judges']]}>
-    <div class="page-head">
-      <div class="chips">
-        <span class="t-meta muted num">{judge.versions.length} {judge.versions.length === 1 ? 'version' : 'versions'}</span>
-        <StatusPill status={judge.status} />
-      </div>
-    </div>
-    {judge.versions.length ? (
-      <div class="timeline">{judge.versions.map((v) => <Version name={judge.name} version={v} disagreements={disagreements} />)}</div>
     ) : (
-      <Empty icon="judge" title="No versions yet" />
+      <Empty icon="judge" title={filter === 'all' ? 'No judges yet' : `No ${filter} judges`} />
     )}
   </Layout>
 );

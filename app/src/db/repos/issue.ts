@@ -39,6 +39,8 @@ const counted = `SELECT i.*,
 export const issueRepo = (db: Database) => {
   const byId = db.query<IssueRow, [string]>(`${counted} WHERE i.id = ?`);
   const listed = db.query<IssueRow, [string | null, IssueStatus | null]>(`${counted} WHERE (i.project_id = ?1 OR ?1 IS NULL) AND (i.status = ?2 OR ?2 IS NULL) ORDER BY i.updated_at DESC, i.id DESC`);
+  const byJudge = db.query<IssueRow, [string]>(`${counted} WHERE i.judge_name = ? ORDER BY i.updated_at DESC, i.id DESC`);
+  const openByJudge = db.query<{ judge_name: string; n: number }, []>("SELECT judge_name, COUNT(*) AS n FROM issue WHERE status = 'open' AND judge_name IS NOT NULL GROUP BY judge_name");
   const byFingerprint = db.query<Issue, [string, string]>('SELECT * FROM issue WHERE project_id = ? AND fingerprint = ?');
   const insert = db.query<Issue, [string, string, string, string, Severity, string | null, string | null, string | null, CreatedBy, string, string]>(
     `INSERT INTO issue (id, project_id, title, fingerprint, severity, description, judge_name, seed_trace_id, created_by, created_at, updated_at)
@@ -56,6 +58,8 @@ export const issueRepo = (db: Database) => {
     get: (id: string): IssueRow | null => byId.get(id),
     getByFingerprint: (projectId: string, fingerprint: string): Issue | null => byFingerprint.get(projectId, fingerprint),
     list: (f: IssueFilter = {}): IssueRow[] => listed.all(f.project_id ?? null, f.status ?? null),
+    listByJudge: (name: string): IssueRow[] => byJudge.all(name),
+    openCountsByJudge: (): Map<string, number> => new Map(openByJudge.all().map((r) => [r.judge_name, r.n])),
     insert: (n: NewIssue): Issue => {
       const now = nowIso();
       return must(insert.get(uuid7(), n.project_id, n.title, n.fingerprint, n.severity, n.description, n.judge_name, n.seed_trace_id, n.created_by, now, now), 'issue');

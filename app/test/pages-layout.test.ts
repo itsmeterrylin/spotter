@@ -137,7 +137,9 @@ describe('layout', () => {
     expect((await app.request('/client/compare.js')).status).toBe(200);
     expect(await (await app.request('/client/issues.js')).text()).toContain('row-dismiss');
     expect(await (await app.request('/client/issue.js')).text()).toContain('data-dismiss-form');
-    for (const name of ['issues', 'issue']) {
+    expect(await (await app.request('/client/judge.js')).text()).toContain('data-description');
+    expect(await (await app.request('/client/judges.js')).text()).toContain('data-bulk-bar');
+    for (const name of ['issues', 'issue', 'judges', 'judge']) {
       const bundle = await (await app.request(`/client/${name}.js`)).text();
       for (const hook of ['data-status-trigger', 'statusmenu:pick', '/api/judges/']) expect(bundle).toContain(hook);
     }

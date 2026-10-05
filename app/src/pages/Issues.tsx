@@ -7,7 +7,7 @@ import { urls } from '../urls.ts';
 import { initials, type Shell } from './data.ts';
 import { Layout, type Tab } from './Layout.tsx';
 import { Turns } from './Trace.tsx';
-import { ago, Empty, Icon, issueOptions, pct, PropValue, SeverityPill, severityPill, short, State, StatusMenu, statusLabel, Values } from './ui.tsx';
+import { ago, BulkBar, Empty, Icon, issueOptions, pct, PropValue, RowCheck, SeverityPill, severityPill, short, State, StatusMenu, statusLabel, Values } from './ui.tsx';
 
 export type IssueTab = 'overview' | 'traces' | 'backtest';
 
@@ -21,10 +21,11 @@ const listTabs = (status: IssueStatus, counts: Record<IssueStatus, number>, proj
 export const IssuesPage = ({ issues, status, counts, project, shell }: ListProps) => (
   <Layout title="Issues" meta={`${counts[status]} ${status}${project ? ` · ${project}` : ''}`} section="issues" shell={shell} tabs={listTabs(status, counts, project)} script="issues">
     {issues.length ? (
-      <div class="card card-flush issue-list" data-status={status}>
+      <div class="card card-flush issue-list" data-list data-status={status}>
         <div class="group-head"><State status={status} />{statusLabel[status]}<span class="count">{issues.length}</span></div>
         {issues.map((i) => (
           <div class="list-row" data-row data-id={i.id}>
+            <RowCheck label={i.title} />
             <StatusMenu kind="issue" id={i.id} current={i.status} options={issueOptions(i.status)} />
             <a class="grow strong row-link" href={i.url}>{i.title}</a>
             <span class="meta num" title="Occurrences"><Icon name="trace" size="sm" />{i.occurrences}</span>
@@ -38,6 +39,7 @@ export const IssuesPage = ({ issues, status, counts, project, shell }: ListProps
           <button class="btn btn-fail" type="submit"><Icon name="dismiss" size="sm" />Dismiss</button>
           <p class="error" data-error></p>
         </form>
+        <BulkBar kind="issue" options={issueOptions(null)} reason />
       </div>
     ) : (
       <Empty icon="issue" title={`No ${status} issues`} />

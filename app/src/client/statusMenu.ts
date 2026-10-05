@@ -61,16 +61,18 @@ const move = (m: HTMLElement, step: number): void => {
   setActive(m, list[(at + step + list.length) % list.length]);
 };
 
-/** Replace one menu, and the tab counts, with what the server now renders. Falls back to dropping the row or reloading. */
-export async function refreshMenu(m: HTMLElement): Promise<void> {
+/** Replace menus, and the tab counts, with what the server now renders. A menu whose row left this view takes its row with it. */
+export async function refreshMenus(menus: HTMLElement[]): Promise<void> {
   const res = await fetch(location.href, { headers: { accept: 'text/html' } });
   if (!res.ok) return location.reload();
   const doc = new DOMParser().parseFromString(await res.text(), 'text/html');
-  const fresh = doc.querySelector(`[data-status-menu][data-kind="${m.dataset.kind}"][data-id="${CSS.escape(m.dataset.id ?? '')}"]`);
   const tabs = doc.querySelector('.tabs');
   if (tabs) document.querySelector('.tabs')?.replaceWith(document.importNode(tabs, true));
-  if (fresh) m.replaceWith(document.importNode(fresh, true));
-  else m.closest('[data-row]')?.remove();
+  for (const m of menus) {
+    const fresh = doc.querySelector(`[data-status-menu][data-kind="${m.dataset.kind}"][data-id="${CSS.escape(m.dataset.id ?? '')}"]`);
+    if (fresh) m.replaceWith(document.importNode(fresh, true));
+    else m.closest('[data-row]')?.remove();
+  }
 }
 
 async function pick(m: HTMLElement, item: HTMLElement): Promise<void> {
@@ -93,7 +95,7 @@ async function pick(m: HTMLElement, item: HTMLElement): Promise<void> {
   }
   close();
   if (m.dataset.reload) location.reload();
-  else await refreshMenu(m);
+  else await refreshMenus([m]);
 }
 
 const typing = (t: EventTarget | null): boolean => t instanceof HTMLInputElement || t instanceof HTMLTextAreaElement || t instanceof HTMLSelectElement;
