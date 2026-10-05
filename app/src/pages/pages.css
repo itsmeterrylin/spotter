@@ -1,12 +1,12 @@
 /* Shell: rail and sidebar on the canvas, one inset panel (tabs + main + aside), status bar below. Main and aside scroll on their own. */
-.shell { display: grid; grid-template-columns: var(--rail) var(--sidebar) minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) var(--statusbar); height: 100vh; height: 100dvh; }
+.shell { --collapse: 330ms; --ease: cubic-bezier(0.16, 1, 0.3, 1); --scrim: color-mix(in srgb, var(--ink) 28%, transparent); display: grid; grid-template-columns: var(--rail) var(--sidebar-w, var(--sidebar)) minmax(0, 1fr); transition: grid-template-columns var(--collapse) var(--ease); grid-template-rows: minmax(0, 1fr) var(--statusbar); height: 100vh; height: 100dvh; }
 .nav-toggle { position: absolute; opacity: 0; pointer-events: none; }
 .rail { grid-column: 1; grid-row: 1; overflow-y: auto; }
 .rail-brand { text-decoration: none; display: inline-flex; align-items: center; justify-content: center; width: var(--control); height: var(--control); margin-bottom: var(--space-8); color: var(--brand); }
 .rail .menu { display: none; }
 .rail-foot { margin-top: auto; }
 .rail-btn .badge { position: absolute; top: -2px; right: -4px; }
-.sidebar { grid-column: 2; grid-row: 1; display: flex; flex-direction: column; gap: var(--space-12); padding: var(--space-12) var(--space-12) var(--space-12) var(--space-4); overflow-y: auto; }
+.sidebar { grid-column: 2; grid-row: 1; width: var(--sidebar); transition: transform var(--collapse) var(--ease), visibility 0s; display: flex; flex-direction: column; gap: var(--space-12); padding: var(--space-12) var(--space-12) var(--space-12) var(--space-4); overflow-y: auto; }
 .project-row { position: relative; display: flex; align-items: center; justify-content: space-between; gap: var(--space-8); height: var(--control); padding: 0 var(--space-8) 0 var(--space-6); border-radius: var(--radius-switcher); font-size: var(--text-ui); font-weight: 550; }
 details.project-row { display: block; padding: 0; }
 details.project-row > summary { display: flex; align-items: center; justify-content: space-between; height: var(--control); padding: 0 var(--space-8) 0 var(--space-6); border-radius: var(--radius-switcher); cursor: pointer; list-style: none; }
@@ -17,16 +17,17 @@ details.project-row > summary::-webkit-details-marker { display: none; }
 .sidebar-search > .ic { position: absolute; left: var(--space-10); top: 50%; transform: translateY(-50%); color: var(--ink-faint); pointer-events: none; }
 .sidebar-search .input { padding-left: 32px; }
 .nav { display: flex; flex-direction: column; gap: 2px; }
-.work { grid-column: 3; grid-row: 1; display: flex; flex-direction: column; min-width: 0; min-height: 0; margin: var(--space-8) var(--space-8) 0 0; overflow: hidden; background: var(--surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-panel); box-shadow: var(--shadow-panel); }
+.work { grid-column: 3; grid-row: 1; display: flex; flex-direction: column; min-width: 0; min-height: 0; margin: var(--space-8) var(--space-8) 0 0; transition: margin-left var(--collapse) var(--ease); overflow: hidden; background: var(--surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-panel); box-shadow: var(--shadow-panel); }
 .work-body { flex: 1; display: flex; min-width: 0; min-height: 0; }
 .main { flex: 1; min-width: 0; overflow-y: auto; padding-bottom: var(--space-48); }
-.work-body > .aside { overflow-y: auto; }
+.work-body > .aside { overflow-y: auto; width: clamp(288px, 30vw, var(--aside)); }
 .header { display: flex; flex: none; align-items: center; justify-content: space-between; gap: var(--space-12); height: var(--header); padding-inline: var(--space-16); background: var(--surface); }
 .header .crumbs { display: flex; align-items: center; gap: var(--space-6); min-width: 0; font-size: var(--text-ui); line-height: var(--lh-ui); font-weight: 500; }
 .header .crumb { color: var(--ink-muted); text-decoration: none; white-space: nowrap; }
 .header .crumb:hover { color: var(--ink); }
 .header .crumbs > .ic { color: var(--ink-faint); }
 .crumb-current { min-width: 0; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: inherit; line-height: inherit; font-weight: inherit; color: var(--ink); }
+.header-start { display: flex; align-items: center; gap: var(--space-8); min-width: 0; }
 .header-actions { display: flex; flex: none; align-items: center; gap: var(--space-8); }
 /* Detail pages: one left-aligned column at the title's x, never centered. */
 .container.detail { margin-inline: 0; max-width: none; }
@@ -42,31 +43,25 @@ details.project-row > summary::-webkit-details-marker { display: none; }
 .page-title h1 { overflow-wrap: anywhere; }
 .page-title .meta { font-size: var(--text-meta); font-weight: 450; }
 .badge { display: inline-flex; align-items: center; justify-content: center; min-width: 16px; height: 16px; padding-inline: 4px; border-radius: var(--radius-pill); background: var(--brand); color: var(--on-brand); font-size: 11px; font-weight: 600; line-height: 1; }
-@media (max-width: 1199px) {
-  .work { display: block; overflow-y: auto; }
-  .work-body { display: block; }
-  .header { position: sticky; top: 0; z-index: 6; }
-  .tabs { top: var(--header); }
-  .main { overflow: visible; }
-  .work-body > .aside { width: auto; overflow: visible; border-left: 0; border-top: 1px solid var(--border-subtle); }
-}
 @media (max-width: 899px) {
   .shell { display: flex; flex-direction: column; height: auto; min-height: 100vh; }
   .rail { position: sticky; top: 0; z-index: 20; flex-direction: row; width: auto; padding: var(--space-8) var(--space-12); background: var(--canvas); }
   .rail-brand { margin: 0 auto 0 0; }
   .rail .menu { display: inline-flex; }
   .rail-foot { margin-top: 0; }
-  .sidebar { display: none; padding-inline: var(--space-12); }
+  .sidebar { display: none; width: auto; padding-inline: var(--space-12); }
   .nav-toggle:checked ~ .sidebar { display: flex; }
-  .work { overflow: visible; margin: 0 var(--space-8) var(--space-8); }
-  .header { top: 48px; }
+  .work { display: block; overflow: visible; margin: 0 var(--space-8) var(--space-8); }
+  .work-body { display: block; }
+  .main { overflow: visible; }
+  .header { position: sticky; top: 48px; z-index: 6; }
   .tabs { top: calc(48px + var(--header)); }
+  .sidebar-toggle { display: none; }
 }
 
 /* Peek: one region any list opens a row's panel into. It replaces the page's own aside while open. */
 .aside.pane { gap: var(--space-10); }
 .work-body:has(> .aside.pane:not([hidden])) > .aside:not(.pane) { display: none; }
-@media (max-width: 1199px) { .work-body > .aside.pane { position: fixed; inset: 0 0 0 auto; z-index: 30; width: min(var(--aside), 100%); overflow-y: auto; border-top: 0; border-left: 1px solid var(--border-subtle); background: var(--surface); box-shadow: var(--shadow-popover); } }
 .pane-inner { display: flex; flex-direction: column; gap: var(--space-16); }
 .pane .review { gap: var(--space-10); max-width: none; margin: 0; }
 .pane-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-8); min-width: 0; }
@@ -211,3 +206,21 @@ a.row-link:hover { text-decoration: underline; text-underline-offset: 3px; }
 .help-heading { display: flex; align-items: center; height: 28px; margin-top: var(--space-8); font-size: var(--text-meta); line-height: var(--lh-meta); font-weight: 500; color: var(--ink-muted); }
 .help-row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-12); min-height: var(--menu-item); font-size: var(--text-ui); line-height: 19.5px; }
 .keys-cell { display: inline-flex; flex: none; align-items: center; gap: var(--space-4); }
+
+/* Sidebar collapse: it slides fully off, the panel moves left, state is kept in localStorage and set before first paint. */
+.sidebar-hot { display: none; position: fixed; z-index: 45; top: 0; bottom: var(--statusbar); left: var(--rail); width: 12px; }
+@media (min-width: 900px) {
+  html[data-sidebar="hidden"] .shell { --sidebar-w: 0px; }
+  html[data-sidebar="hidden"] .work { margin-left: var(--space-4); }
+  html[data-sidebar="hidden"] .sidebar { transform: translateX(calc(-1 * (var(--sidebar) + 16px))); visibility: hidden; transition: transform var(--collapse) var(--ease), visibility 0s linear var(--collapse); }
+  html[data-sidebar="hidden"] .sidebar-hot { display: block; }
+  html[data-sidebar="hidden"][data-sidebar-peek] .sidebar { position: relative; z-index: 50; margin-block: var(--space-8); transform: none; visibility: visible; transition: transform var(--collapse) var(--ease), visibility 0s; background: var(--surface); border: 1px solid var(--border-subtle); border-left: 0; border-radius: 0 var(--radius-panel) var(--radius-panel) 0; box-shadow: var(--shadow-popover), 0 0 0 100vmax var(--scrim); }
+}
+.details-toggle { display: none; }
+
+/* Below 1060px the right panel and the peek leave the layout and open as overlays from the right. */
+@media (max-width: 1059px) {
+  .work-body > .aside { position: fixed; z-index: 45; top: var(--space-8); right: var(--space-8); bottom: var(--statusbar); width: min(var(--aside), calc(100vw - 16px)); overflow-y: auto; border: 1px solid var(--border-subtle); border-radius: var(--radius-panel); background: var(--surface); box-shadow: var(--shadow-popover); transform: translateX(calc(100% + 24px)); visibility: hidden; transition: transform var(--collapse) var(--ease), visibility 0s linear var(--collapse); }
+  html[data-details="open"] .work-body > .aside:not(.pane), .work-body > .aside.pane:not([hidden]) { transform: none; visibility: visible; transition: transform var(--collapse) var(--ease), visibility 0s; box-shadow: var(--shadow-popover), 0 0 0 100vmax var(--scrim); }
+  .work:has(.work-body > .aside:not(.pane)) .details-toggle { display: inline-flex; }
+}

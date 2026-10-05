@@ -101,3 +101,61 @@ on('help', () => {
   setModal(true);
 });
 on('close', closeHelp);
+
+const root = document.documentElement;
+const SIDEBAR_KEY = 'spotter.sidebar';
+const PEEK_DELAY_MS = 250;
+const NARROW = window.matchMedia('(max-width: 1059px)');
+
+const collapsed = (): boolean => root.hasAttribute('data-sidebar');
+
+function setCollapsed(on_: boolean): void {
+  root.removeAttribute('data-sidebar-peek');
+  if (on_) root.setAttribute('data-sidebar', 'hidden');
+  else root.removeAttribute('data-sidebar');
+  try {
+    if (on_) localStorage.setItem(SIDEBAR_KEY, 'hidden');
+    else localStorage.removeItem(SIDEBAR_KEY);
+  } catch {
+    // Storage can be blocked. The toggle still works for this page view.
+  }
+}
+
+on('sidebar', () => setCollapsed(!collapsed()));
+document.querySelector('[data-sidebar-toggle]')?.addEventListener('click', () => setCollapsed(!collapsed()));
+
+// Hover peek: the left-edge hot zone shows the collapsed sidebar as an overlay after a short delay, and leaving the sidebar hides it.
+let peekTimer: ReturnType<typeof setTimeout> | undefined;
+const hot = document.querySelector('[data-sidebar-hot]');
+hot?.addEventListener('mouseenter', () => {
+  peekTimer = setTimeout(() => root.setAttribute('data-sidebar-peek', ''), PEEK_DELAY_MS);
+});
+hot?.addEventListener('mouseleave', () => clearTimeout(peekTimer));
+document.querySelector('.sidebar')?.addEventListener('mouseleave', () => root.removeAttribute('data-sidebar-peek'));
+on('close', () => {
+  if (!root.hasAttribute('data-sidebar-peek')) return false;
+  root.removeAttribute('data-sidebar-peek');
+});
+
+// Details: below 1060px the right panel is an overlay that this button, "]", Esc, and a click outside control.
+const hasDetails = document.querySelector('.work-body > .aside:not(.pane)') !== null;
+const detailsOpen = (): boolean => root.hasAttribute('data-details');
+const setDetails = (open_: boolean): void => {
+  if (open_) root.setAttribute('data-details', 'open');
+  else root.removeAttribute('data-details');
+};
+if (hasDetails) {
+  on('details', () => {
+    if (!NARROW.matches) return false;
+    setDetails(!detailsOpen());
+  });
+  document.querySelector('[data-details-toggle]')?.addEventListener('click', () => setDetails(!detailsOpen()));
+  document.addEventListener('click', (e) => {
+    if (!detailsOpen() || !(e.target instanceof Element)) return;
+    if (!e.target.closest('.work-body > .aside, [data-details-toggle]')) setDetails(false);
+  });
+}
+on('close', () => {
+  if (!detailsOpen()) return false;
+  setDetails(false);
+});

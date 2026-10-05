@@ -34,6 +34,9 @@ type Props = {
 // Runs before the stylesheet so a saved theme never flashes the other one.
 const themeBoot = `<script>try{var t=localStorage.getItem('spotter.theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>`;
 const themeToggle = `<script>(function(){var r=document.documentElement,b=document.querySelectorAll('[data-theme-choice]');function cur(){try{return localStorage.getItem('spotter.theme')||'system'}catch(e){return 'system'}}function paint(c){b.forEach(function(x){x.setAttribute('aria-pressed',String(x.dataset.themeChoice===c))})}function set(c){if(c==='system')r.removeAttribute('data-theme');else r.setAttribute('data-theme',c);try{if(c==='system')localStorage.removeItem('spotter.theme');else localStorage.setItem('spotter.theme',c)}catch(e){}paint(c)}b.forEach(function(x){x.addEventListener('click',function(){set(x.dataset.themeChoice)})});paint(cur())})()</script>`;
+// Runs before the stylesheet so a collapsed sidebar never flashes open.
+const sidebarBoot = `<script>try{if(localStorage.getItem('spotter.sidebar')==='hidden')document.documentElement.setAttribute('data-sidebar','hidden')}catch(e){}</script>`;
+
 const count = (n: number): string => n.toLocaleString('en-US');
 
 type NavItem = [Section, string, IconName, string, (s: Shell) => string, string];
@@ -126,16 +129,22 @@ const Header = ({ project, crumbs, current, named, actions }: HeaderProps) => {
   const parents: Crumb[] = project ? [[urls.home(), project], ...crumbs] : crumbs;
   return (
     <header class="header">
-      <nav class="crumbs" aria-label="Breadcrumb">
-        {parents.map(([href, label]) => (
-          <>
-            <a class="crumb" href={href}>{label}</a>
-            <Icon name="crumb" size="sm" />
-          </>
-        ))}
-        {named ? <span class="crumb-current">{current}</span> : <h1 class="crumb-current">{current}</h1>}
-      </nav>
-      {actions ? <div class="header-actions">{actions}</div> : null}
+      <div class="header-start">
+        <button class="btn btn-ghost btn-icon sidebar-toggle" type="button" data-sidebar-toggle title="Toggle sidebar ([)" aria-label="Toggle sidebar"><Icon name="sidebar" size="sm" /></button>
+        <nav class="crumbs" aria-label="Breadcrumb">
+          {parents.map(([href, label]) => (
+            <>
+              <a class="crumb" href={href}>{label}</a>
+              <Icon name="crumb" size="sm" />
+            </>
+          ))}
+          {named ? <span class="crumb-current">{current}</span> : <h1 class="crumb-current">{current}</h1>}
+        </nav>
+      </div>
+      <div class="header-actions">
+        {actions}
+        <button class="btn btn-ghost btn-icon details-toggle" type="button" data-details-toggle title="Toggle details" aria-label="Toggle details"><Icon name="details" size="sm" /></button>
+      </div>
     </header>
   );
 };
@@ -167,6 +176,7 @@ export const Layout = ({ title, heading = false, meta, section, shell, tabs, cru
           <title>{`${title} · Spotter`}</title>
           <link rel="icon" href="/favicon.svg" />
           {raw(themeBoot)}
+        {raw(sidebarBoot)}
           <link rel="stylesheet" href={font.googleFontsUrl} />
           <link rel="stylesheet" href="/spotter.css" />
           <link rel="stylesheet" href="/pages.css" />
@@ -178,6 +188,7 @@ export const Layout = ({ title, heading = false, meta, section, shell, tabs, cru
             <input class="nav-toggle" type="checkbox" id="nav-toggle" />
             <Rail section={section} shell={shell} />
             <Sidebar section={section} shell={shell} />
+          <div class="sidebar-hot" data-sidebar-hot aria-hidden="true"></div>
             <div class="work">
               <Header project={shell.project} crumbs={crumbs} current={current ?? title} named={heading} actions={actions} />
               <div class="work-body">

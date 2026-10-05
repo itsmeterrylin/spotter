@@ -3,7 +3,7 @@
 export type View = 'list' | 'detail' | 'review';
 
 export type Action =
-  | 'help' | 'search' | 'close'
+  | 'help' | 'search' | 'close' | 'sidebar' | 'details'
   | 'go.issues' | 'go.traces' | 'go.judges' | 'go.runs' | 'go.datasets' | 'go.notifications' | 'go.settings'
   | 'list.next' | 'list.prev' | 'list.open' | 'peek' | 'select' | 'status' | 'dismiss'
   | 'object.next' | 'object.prev' | 'back'
@@ -31,6 +31,8 @@ const rows: readonly View[] = ['list', 'detail'];
 export const keymap: readonly Binding[] = [
   { group: 'General', action: 'help', label: 'Show keyboard shortcuts', keys: ['?', 'Mod+/'], modal: true },
   { group: 'General', action: 'search', label: 'Search traces', keys: ['/'] },
+  { group: 'General', action: 'sidebar', label: 'Toggle sidebar', keys: ['['] },
+  { group: 'General', action: 'details', label: 'Toggle details panel', keys: [']'] },
   { group: 'General', action: 'close', label: 'Close menu, peek, panel, or selection', keys: ['Escape'], typing: true, modal: true },
   { group: 'Go to', action: 'go.issues', label: 'Issues', keys: ['g i'] },
   { group: 'Go to', action: 'go.traces', label: 'Traces', keys: ['g t'] },

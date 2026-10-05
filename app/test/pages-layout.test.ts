@@ -197,13 +197,15 @@ describe('layout', () => {
     const text = await css.text();
     expect(text).toContain('.verdict-row');
     expect(text).toContain('.sidebar');
-    expect(text).toContain('grid-template-columns: var(--rail) var(--sidebar) minmax(0, 1fr)');
-    expect(text).toContain('@media (max-width: 1199px)');
+    expect(text).toContain('grid-template-columns: var(--rail) var(--sidebar-w, var(--sidebar)) minmax(0, 1fr)');
+    expect(text).toContain('@media (max-width: 1059px)');
+    expect(text).toContain('translateX(calc(-1 * (var(--sidebar) + 16px)))');
     expect(text).toContain('@media (max-width: 899px)');
     const review = await app.request('/client/review.js');
     expect(review.status).toBe(200);
     expect(review.headers.get('content-type')).toContain('javascript');
-    expect(await review.text()).toContain('keydown');
+    expect(await review.text()).toContain('verdict.pass');
+    expect(await (await app.request('/client/shell.js')).text()).toContain('spotter.sidebar');
     expect((await app.request('/client/compare.js')).status).toBe(200);
     expect(await (await app.request('/client/issues.js')).text()).toContain('row-dismiss');
     expect(await (await app.request('/client/issue.js')).text()).toContain('data-dismiss-form');
@@ -260,6 +262,9 @@ describe('layout', () => {
       const [status, html] = await page(app, path);
       expect(status).toBe(200);
       expect(html).toContain(`<body data-view="${view}"`);
+      expect(html).toContain("localStorage.getItem('spotter.sidebar')");
+      expect(html).toContain('title="Toggle sidebar ([)"');
+      expect(html).toContain('title="Toggle details"');
       if (back) expect(html).toContain(`data-back="${back}"`);
       expect(html).toContain(`<script type="module" src="/client/`);
     }
