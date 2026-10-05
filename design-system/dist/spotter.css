@@ -277,6 +277,7 @@ textarea.input { height: auto; min-height: 96px; padding: var(--space-8) var(--s
 .status-search { display: flex; align-items: center; gap: var(--space-8); height: 36px; padding: 0 var(--space-6) 0 var(--space-10); border-bottom: 1px solid var(--border-subtle); }
 .status-search input { flex: 1; min-width: 0; height: 100%; padding: 0; border: 0; background: transparent; font-size: var(--text-ui); outline: none; }
 .status-search input::placeholder { color: var(--ink-faint); }
+.status-search input:focus-visible { box-shadow: none; }
 .status-items { display: flex; flex-direction: column; padding-top: var(--space-4); }
 .status-item { display: flex; align-items: center; gap: var(--space-8); width: 100%; height: var(--menu-item); padding: 0 var(--space-12) 0 var(--space-10); border: 0; border-radius: var(--radius-control); background: transparent; color: var(--ink); font-size: var(--text-ui); line-height: 19.5px; font-weight: 400; text-align: left; cursor: pointer; }
 .status-item:hover:not([aria-disabled="true"]), .status-item[data-active], .status-item[aria-checked="true"] { background: var(--fill); }

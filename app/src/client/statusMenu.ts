@@ -1,3 +1,4 @@
+import { focusRow } from './list.ts';
 import { patchIssue, patchJudge } from './api.ts';
 
 export type Kind = 'issue' | 'judge';
@@ -61,17 +62,33 @@ const move = (m: HTMLElement, step: number): void => {
   setActive(m, list[(at + step + list.length) % list.length]);
 };
 
-/** Replace menus, and the tab counts, with what the server now renders. A menu whose row left this view takes its row with it. */
+// Only count-bearing regions swap; lists and their bars keep the handlers bound at load.
+const counts = ['.tabs', '.page-title', '.sidebar nav', '.statusbar', '.group-head'];
+
+/** Re-render every region that shows a count, from one fetch of this page, so no count is left stale. */
 export async function refreshMenus(menus: HTMLElement[]): Promise<void> {
   const res = await fetch(location.href, { headers: { accept: 'text/html' } });
   if (!res.ok) return location.reload();
   const doc = new DOMParser().parseFromString(await res.text(), 'text/html');
-  const tabs = doc.querySelector('.tabs');
-  if (tabs) document.querySelector('.tabs')?.replaceWith(document.importNode(tabs, true));
+  const rows = [...document.querySelectorAll<HTMLElement>('.list-row[data-row]')];
+  const focusAt = rows.findIndex((r) => r.hasAttribute('data-focus'));
+  for (const sel of counts) {
+    const now = [...document.querySelectorAll(sel)];
+    const fresh = [...doc.querySelectorAll(sel)];
+    if (now.length && now.length === fresh.length) now.forEach((el, i) => el.replaceWith(document.importNode(fresh[i] as Element, true)));
+  }
   for (const m of menus) {
+    if (!m.isConnected) continue;
     const fresh = doc.querySelector(`[data-status-menu][data-kind="${m.dataset.kind}"][data-id="${CSS.escape(m.dataset.id ?? '')}"]`);
     if (fresh) m.replaceWith(document.importNode(fresh, true));
     else m.closest('[data-row]')?.remove();
+  }
+  const list = document.querySelector('[data-list]');
+  const empty = doc.querySelector('main.main .empty');
+  if (list && !doc.querySelector('[data-list]') && empty) list.replaceWith(document.importNode(empty, true));
+  if (focusAt >= 0) {
+    const after = [...document.querySelectorAll<HTMLElement>('.list-row[data-row]')];
+    focusRow(after[Math.min(focusAt, after.length - 1)]);
   }
 }
 
