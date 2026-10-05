@@ -3,14 +3,15 @@ import type { Score } from '../db/repos/score.ts';
 import type { Message } from '../db/types.ts';
 import type { TraceView } from '../services/traces.ts';
 import { urls } from '../urls.ts';
-import type { HumanVerdict, JudgeSaid, Queue, Shell } from './data.ts';
+import type { JudgeSaid, Queue, Shell } from './data.ts';
 import { Layout } from './Layout.tsx';
+import type { PanelData } from './panelData.ts';
+import { Panel, VerdictRow } from './panels.tsx';
 import { Turn } from './Trace.tsx';
 import { type Crumb, Empty, Icon, JsonView, short, type Verdict } from './ui.tsx';
 
 type Props = {
-  trace: TraceView;
-  verdict: HumanVerdict | null;
+  panel: Extract<PanelData, { kind: 'trace' }>;
   judgeSaid: JudgeSaid | null;
   score: string;
   queue: Queue;
@@ -21,30 +22,12 @@ type Props = {
   shell: Shell;
 };
 
-const verdicts: Array<[Verdict, string, string]> = [
-  ['pass', 'Pass', '1'],
-  ['fail', 'Fail', '2'],
-  ['defer', 'Defer', 'D'],
-];
-
 const isVerdict = (s: string | null): s is Verdict => s === 'pass' || s === 'fail' || s === 'defer';
 
 const turnVerdict = (scores: Score[], name: string, turn: number): Verdict | null => {
   const s = scores.find((x) => x.source === 'human' && x.name === name && x.turn === turn);
   return s && isVerdict(s.label) ? s.label : null;
 };
-
-type RowProps = { turn: number | null; verdict: Verdict | null; focus: boolean };
-
-const VerdictRow = ({ turn, verdict, focus }: RowProps) => (
-  <div class={turn === null ? 'verdict-row' : 'verdict-row verdict-row-turn'} data-turn={turn ?? ''} data-verdict={verdict ?? ''} data-focus={focus ? '1' : undefined}>
-    {verdicts.map(([v, label, key]) => (
-      <button class={`btn btn-${v}`} type="button" data-verdict={v} aria-pressed={verdict === v ? 'true' : 'false'}>
-        <Icon name={v} />{label}{turn === null ? <span class="kbd">{key}</span> : null}
-      </button>
-    ))}
-  </div>
-);
 
 const Conversation = ({ messages, scores, name, focus }: { messages: Message[]; scores: Score[]; name: string; focus?: number }) => (
   <div class="transcript">
@@ -57,20 +40,23 @@ const Conversation = ({ messages, scores, name, focus }: { messages: Message[]; 
   </div>
 );
 
-const Nav = ({ href, name, label }: { href: string | null; name: 'previous' | 'next'; label: string }) =>
-  href ? (
-    <a class="btn btn-ghost btn-icon" href={href} aria-label={label} data-nav={name}><Icon name={name} /></a>
-  ) : (
-    <span class="btn btn-ghost btn-icon" aria-disabled="true" aria-label={label}><Icon name={name} /></span>
-  );
-
 const crumbsOf = (queue: Queue): Crumb[] => {
   if (queue.judge) return [[urls.judges(), 'Judges'], [urls.judge(queue.judge.name), queue.judge.name]];
   return queue.run ? [[urls.runs(queue.run.dataset_id), 'Runs'], [urls.run(queue.run.id), queue.run.name]] : [[urls.traces(), 'Traces']];
 };
 
-export const ReviewPage = ({ trace, verdict, judgeSaid, score, queue, next, prev, datasets, turn, shell }: Props) => (
-  <Layout title="Review" current={short(trace.id)} section={queue.judge ? 'judges' : 'traces'} shell={shell} crumbs={crumbsOf(queue)} script="review">
+export const ReviewPage = ({ panel, judgeSaid, score, queue, next, prev, datasets, turn, shell }: Props) => {
+  const { trace, verdict } = panel;
+  return (
+  <Layout
+    title={short(trace.id)}
+    heading
+    section={queue.judge ? 'judges' : 'traces'}
+    shell={shell}
+    crumbs={crumbsOf(queue)}
+    script="review"
+    aside={<aside class="aside" aria-label="Review"><Panel data={panel} /></aside>}
+  >
     <div
       class="review"
       id="review"
@@ -80,16 +66,6 @@ export const ReviewPage = ({ trace, verdict, judgeSaid, score, queue, next, prev
       data-prev={prev ?? ''}
       data-home={urls.notifications()}
     >
-      <div class="cluster" style="justify-content: space-between">
-        <span class="t-heading num">
-          {queue.ids.length} <span class="muted">left</span>
-          {queue.judge ? <span class="muted"> · disagreements with {queue.judge.name} v{queue.judge.version}</span> : queue.run ? <span class="muted"> · {queue.run.name}</span> : null}
-        </span>
-        <div class="cluster">
-          <Nav href={prev} name="previous" label="Previous" />
-          <Nav href={next} name="next" label="Next" />
-        </div>
-      </div>
       <div class="block">
         <span class="block-label"><Icon name="trace" size="sm" />{trace.messages?.length ? 'Conversation' : 'Input'}</span>
         {trace.messages?.length ? <Conversation messages={trace.messages} scores={trace.scores} name={score} focus={turn} /> : <JsonView value={trace.input} />}
@@ -108,7 +84,6 @@ export const ReviewPage = ({ trace, verdict, judgeSaid, score, queue, next, prev
           {judgeSaid.reason ? <span class="muted"> · {judgeSaid.reason}</span> : null}
         </p>
       ) : null}
-      <VerdictRow turn={null} verdict={verdict?.verdict ?? null} focus={turn === undefined} />
       <p class="error" id="error" aria-live="polite"></p>
       <div class="field">
         <label for="note">Note</label>
@@ -130,7 +105,8 @@ export const ReviewPage = ({ trace, verdict, judgeSaid, score, queue, next, prev
       </div>
     </div>
   </Layout>
-);
+  );
+};
 
 export const ReviewEmpty = ({ shell }: { shell: Shell }) => (
   <Layout title="Review" section="traces" shell={shell}>

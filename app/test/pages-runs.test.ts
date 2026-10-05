@@ -55,18 +55,22 @@ describe('runs', () => {
     expect(html).toContain('33 pts');
   });
 
-  test('GET /runs/:id shows stat cards, trace rows with verdict pills, and the two buttons', async () => {
+  test('GET /runs/:id shows its facts in the right panel, trace rows with verdict pills, and the compare action', async () => {
     const [status, html] = await page(app, `/runs/${s.runB}`);
     expect(status).toBe(200);
     expect(html).toContain('<h1 class="t-title">rules-v2</h1>');
     expect(html).toContain(`<a class="crumb" href="${base}/runs?dataset=${s.datasetId}">Runs</a>`);
-    expect(html).toContain('exercise_match');
+    expect(html).toContain('exercise_match 67%');
+    expect(html).not.toContain('class="card stat"');
+    for (const name of ['Name', 'Status', 'Items', 'Started', 'Ended', 'Items hash']) expect(html).toContain(`<dt class="sr">${name}</dt>`);
+    expect(html).toContain('<dt class="sr">Items</dt><dd><span class="propbtn num" title="Items"><svg class="ic" aria-hidden="true"><use href="#i-dataset"/></svg>3 items</span></dd>');
     expect(html).toContain('aria-label="Compare with rules-v1"');
+    expect(html).toContain('Compare with rules-v1 · 1 regression');
+    expect(html).toContain('3 traces</a>');
     expect(html).toContain('Review 2 unlabeled');
     for (const id of s.b) expect(html).toContain(short(id));
     expect(html).toContain('pill pill-fail');
     expect(html).toContain('unlabeled</span>');
-    expect(html).toContain(`data-selected="1"`);
     expect((await page(app, `/runs/${s.runB}?score=exercise_match`))[0]).toBe(200);
     expect((await page(app, '/runs/nope'))[0]).toBe(404);
   });

@@ -16,8 +16,6 @@ import { peekFromQuery } from './peekRoutes.tsx';
 const listQuery = z.object({ state: z.enum([...judgeStates, 'all']).default('all') });
 const tabQuery = z.enum(['overview', 'versions', 'disagreements', 'issues']).default('overview');
 
-const activeDisagreements = (repos: Repos, judge: JudgeView): number | null => (judge.active_version_id ? disagreementCount(repos, judge.active_version_id) : null);
-
 export function judgeRoutes(repos: Repos, shell: () => Shell): Hono {
   const app = new Hono();
 
@@ -49,8 +47,7 @@ export function judgeRoutes(repos: Repos, shell: () => Shell): Hono {
     const number = versionNumber.parse(c.req.param('number'));
     const version = judge.versions.find((v) => v.number === number);
     if (!version) throw notFound(`judge ${judge.name} version`, String(number));
-    const count = version.active ? activeDisagreements(repos, judge) : null;
-    return c.html(<JudgeVersionPage judge={judge} version={version} disagreements={count} shell={shell()} />);
+    return c.html(<JudgeVersionPage judge={judge} version={version} disagreements={disagreementCount(repos, version.id)} shell={shell()} />);
   });
 
   app.get('/:name/disagreements', (c) => {

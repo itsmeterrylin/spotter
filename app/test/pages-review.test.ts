@@ -48,8 +48,11 @@ describe('review', () => {
   test('GET /review/:id renders the counter, the verdict buttons, and the next link', async () => {
     const [status, html] = await page(app, `/review/${s.b[0]}?run=${s.runB}`);
     expect(status).toBe(200);
-    expect(html).toContain('<h1 class="crumb-current">');
-    expect(html).toContain('2 <span class="muted">left</span>');
+    expect(html).toContain('<span class="crumb-current">');
+    expect(html).toContain('<h1 class="t-title">');
+    expect(html).toContain('<dt class="sr">Queue</dt>');
+    expect(html).toContain('1 of 2</span>');
+    expect(html).toContain('<dt class="sr">Verdict</dt><dd><div class="verdict-row"');
     expect(html).toContain('data-verdict="pass"');
     expect(html).toContain('>Pass<span class="kbd">1</span>');
     expect(html).toContain('data-verdict="fail"');

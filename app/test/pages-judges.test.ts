@@ -102,8 +102,9 @@ describe('judges pages', () => {
       const [status, html] = await page('/review/cal-00?judge=exercise_match&version=1');
       expect(status).toBe(200);
       expect(html).toContain('Judge v1 said fail');
-      expect(html).toContain('2 <span class="muted">left</span>');
-      expect(html).toContain('disagreements with exercise_match v1');
+      expect(html).toContain('<dt class="sr">Queue</dt>');
+      expect(html).toContain('1 of 2</span>');
+      expect(html).toContain('Disagreements with exercise_match v1');
       expect(html).toContain(`data-next="${base}/review/cal-04?run=${runId}&amp;judge=exercise_match&amp;version=1"`);
       expect(html).toContain('aria-pressed="true"');
       expect((await page('/review?judge=exercise_match&version=2'))[1]).toContain('Nothing to label');

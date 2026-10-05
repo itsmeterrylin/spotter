@@ -126,3 +126,29 @@ describe('peek on lists', () => {
     }
   });
 });
+
+describe('detail panels', () => {
+  test('a judge version page has the panel with status, facts, and relations, and no chips or definition block', async () => {
+    const [status, html] = await page(app, '/judges/language-leak/versions/1');
+    expect(status).toBe(200);
+    expect(html).toContain('<aside class="aside" aria-label="Judge version">');
+    expect(html).toContain('<dt class="sr">Status</dt><dd><span class="propbtn verdict-pass" title="Status"><svg class="ic" aria-hidden="true"><use href="#i-stateLive"/></svg>Active</span></dd>');
+    for (const name of ['Version', 'Calibration', 'Scope', 'Model', 'Created by', 'Created', 'Content hash', 'Judge', 'Parent version', 'Calibration report', 'Disagreements']) expect(html).toContain(`<dt class="sr">${name}</dt>`);
+    expect(html).toContain('turn scope');
+    expect(html).toContain('No parent version');
+    expect(html).toContain('No calibration yet');
+    expect(html).toContain(`<a class="link" href="${base}/judges/language-leak">language-leak</a>`);
+    expect(html.indexOf('<h2>Status</h2>')).toBeLessThan(html.indexOf('<h2>Properties</h2>'));
+    expect(html).not.toContain('<dl class="kv">');
+    expect(html).not.toContain('<div class="page-head">');
+  });
+
+  test('a dataset page has the panel with its counts and relations', async () => {
+    const [, html] = await page(app, `/datasets/${ids.dataset}`);
+    expect(html).toContain('<aside class="aside" aria-label="Dataset">');
+    expect(html).toContain('Real guests');
+    expect(html).toContain('<dt class="sr">Items</dt><dd><span class="propbtn num" title="Items"><svg class="ic" aria-hidden="true"><use href="#i-trace"/></svg>1 item</span></dd>');
+    expect(html).toContain(`<a class="link" href="${base}/runs?dataset=${ids.dataset}">1 run</a>`);
+    expect(html).toContain('1 source trace');
+  });
+});

@@ -24,7 +24,7 @@ function wire(root: HTMLElement): void {
   const note = document.getElementById('note') as HTMLTextAreaElement;
   const error = document.getElementById('error') as HTMLElement;
   const picker = document.getElementById('picker') as HTMLElement;
-  const rows = [...root.querySelectorAll<HTMLElement>('.verdict-row')].map(rowOf);
+  const rows = [...document.querySelectorAll<HTMLElement>('.verdict-row')].map(rowOf);
   const whole = rows[rows.length - 1];
   let focused = Math.max(0, rows.findIndex((r) => r.el.hasAttribute('data-focus')));
   let busy = false;

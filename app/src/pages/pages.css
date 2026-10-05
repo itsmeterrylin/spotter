@@ -118,12 +118,12 @@ details.project-row > summary::-webkit-details-marker { display: none; }
 .kv { display: grid; grid-template-columns: max-content 1fr; gap: var(--space-8) var(--space-16); margin: 0; }
 .kv dt { color: var(--ink-muted); }
 .kv dd { font-weight: 500; margin: 0; }
-.verdict-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: var(--space-16); }
-.verdict-row .btn { height: var(--row); font-size: var(--text-ui); }
+.verdict-row { display: flex; flex-wrap: wrap; gap: var(--space-8); }
+.verdict-row .btn { font-size: var(--text-ui); }
 .verdict-row .kbd { margin-left: var(--space-8); }
 .verdict-row .btn[aria-pressed="true"] { box-shadow: 0 0 0 1px var(--focus), inset 0 0 0 1px var(--focus); }
-.verdict-row[data-focus] { outline: 1px solid var(--focus); outline-offset: 6px; border-radius: var(--radius-control); }
-.verdict-row-turn { grid-template-columns: repeat(3, max-content); gap: var(--space-8); margin: 0 0 var(--space-8) calc(112px + var(--space-12)); }
+.verdict-row[data-focus] { outline: 1px solid var(--focus); outline-offset: 2px; border-radius: var(--radius-pill); }
+.verdict-row-turn { margin: 0 0 var(--space-8) calc(112px + var(--space-12)); }
 .error { color: var(--fail); font-weight: 500; min-height: 1.5em; }
 .error:empty { display: none; }
 .timeline { display: grid; gap: var(--space-16); }
@@ -138,7 +138,7 @@ details.project-row > summary::-webkit-details-marker { display: none; }
 .picker .card { width: min(480px, 90vw); box-shadow: var(--shadow-popover); }
 .picker button.opt { width: 100%; justify-content: flex-start; }
 .hint { display: flex; flex-wrap: wrap; gap: var(--space-8); align-items: center; color: var(--ink-muted); font-size: var(--text-meta); }
-@media (max-width: 640px) { .verdict-row { grid-template-columns: 1fr; } .verdict-row-turn { margin-left: 0; } }
+@media (max-width: 640px) { .verdict-row-turn { margin-left: 0; } }
 
 /* Issues */
 .list-row { position: relative; }
@@ -192,3 +192,4 @@ a.row-link:hover { text-decoration: underline; text-underline-offset: 3px; }
 .list-row .run-name, .list-row .expected { max-width: 18ch; overflow: hidden; text-overflow: ellipsis; }
 .chip-v { max-width: 28ch; overflow: hidden; text-overflow: ellipsis; }
 .list-row[data-peeked] { background: color-mix(in srgb, var(--ink) 8%, var(--surface)); }
+.propbtn.muted { color: var(--ink-muted); }

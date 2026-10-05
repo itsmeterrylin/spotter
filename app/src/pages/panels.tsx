@@ -104,6 +104,7 @@ const TracePanel = ({ trace, run, verdict, issues, review }: TraceProps) => {
             </Prop>
           )}
           {review ? <Queue review={review} /> : null}
+          {review?.source ? <Prop name="Queue source" icon="human">{review.source}</Prop> : null}
           <Prop name="Turns" icon="score" class="num" empty="No turns">{turns ? plural(turns, 'turn') : null}</Prop>
           <Prop name="Start" icon="time" class="num" hint={trace.start}>{since('Started', trace.start)}</Prop>
           {tokens === null ? null : <Prop name="Tokens" icon="tokens" class="num">{`${compact(tokens)} tokens`}</Prop>}

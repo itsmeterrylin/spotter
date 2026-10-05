@@ -115,19 +115,21 @@ export function createPages(repos: Repos): Hono {
     const q: Queue = runId || judge ? queue(repos, { run: runId, filter, judge, version: versionOf(c.req.query('version')) }) : { run: null, filter, ids: [], judge: null };
     const { next, prev } = neighbors(q.ids, trace.id);
     const to = (id: string | null): string | null => (id && (q.run || q.judge) ? reviewUrl(id, q) : null);
-    const verdict = humanVerdict(trace.scores);
+    const turn = turnOf(c.req.query('turn'));
+    const index = q.ids.indexOf(trace.id);
+    const panel = loadPanel(repos, { kind: 'trace', id: trace.id }, { review: { index: index < 0 ? null : index + 1, total: q.ids.length, next: to(next), prev: to(prev), focus: turn === undefined, source: q.judge ? `Disagreements with ${q.judge.name} v${q.judge.version}` : q.run ? q.run.name : null } }) as Extract<PanelData, { kind: 'trace' }>;
+    const verdict = panel.verdict;
     const score = verdict?.name ?? q.judge?.name ?? primaryScore([...new Set(trace.scores.map((s) => s.name))]) ?? 'human';
     return c.html(
       <ReviewPage
-        trace={trace}
-        verdict={verdict}
+        panel={panel}
         judgeSaid={judgeSaid(trace.scores, q.judge)}
         score={score}
         queue={q}
         next={to(next)}
         prev={to(prev)}
         datasets={repos.datasets.list()}
-        turn={turnOf(c.req.query('turn'))}
+        turn={turn}
         shell={shell()}
       />,
     );

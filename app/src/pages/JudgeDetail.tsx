@@ -40,12 +40,12 @@ const Version = ({ name, version: v, disagreements, selected }: { name: string; 
 
 const verdict = (value: number): string => (value >= 0.5 ? 'pass' : 'fail');
 
-const Overview = ({ judge, disagreements }: { judge: JudgeView; disagreements: number }) => {
+const Overview = ({ judge }: { judge: JudgeView }) => {
   const active = judge.versions.find((v) => v.active);
   if (!active) return <Empty icon="judge" title="No versions yet" />;
   return (
     <div class="review definition">
-      <VersionBody judge={judge} version={active} disagreements={disagreements} />
+      <VersionBody version={active} />
     </div>
   );
 };
@@ -113,7 +113,7 @@ export const JudgePage = ({ judge, tab, disagreements, issues, shell, selected, 
         </>
       }
     >
-      {tab === 'overview' ? <Overview judge={judge} disagreements={disagreements.length} /> : null}
+      {tab === 'overview' ? <Overview judge={judge} /> : null}
       {tab === 'versions' ? <Versions judge={judge} disagreements={active ? disagreements.length : null} selected={selected} /> : null}
       {tab === 'disagreements' ? <Disagreements judge={judge} items={disagreements} /> : null}
       {tab === 'issues' ? <Issues items={issues} selected={selected} /> : null}

@@ -1,47 +1,27 @@
 import type { Json } from '../db/types.ts';
 import type { JudgeView, VersionView } from '../services/judges.ts';
 import { urls } from '../urls.ts';
-import { ActivateForm, DisagreementsLink, Rates, StatusPill, versionStatus } from './judgeParts.tsx';
+import { Rates } from './judgeParts.tsx';
+import { Panel } from './panels.tsx';
 import type { Shell } from './data.ts';
 import { Layout } from './Layout.tsx';
 import { when } from './Runs.tsx';
 import { Empty, Icon, short } from './ui.tsx';
 
-type Props = { judge: JudgeView; version: VersionView; disagreements: number | null; shell: Shell };
+type Props = { judge: JudgeView; version: VersionView; disagreements: number; shell: Shell };
 
 const Pre = ({ value }: { value: Json | string | null }) =>
   value === null ? <p class="muted">none</p> : <div class="transcript"><pre class="mono">{typeof value === 'string' ? value : JSON.stringify(value, null, 2)}</pre></div>;
 
-/** The definition, prompt, params, examples, and calibration of one version. */
-export const VersionBody = ({ judge, version: v, disagreements }: Omit<Props, 'shell'>) => {
-  const parent = v.parent_id ? judge.versions.find((x) => x.id === v.parent_id) : undefined;
-  return (
-    <>
-      <div class="page-head">
-        <div class="chips">
-          {v.active ? <span class="pill pill-pass"><Icon name="pass" size="sm" />Active</span> : null}
-          <StatusPill status={versionStatus(v)} />
-          {v.active && disagreements !== null ? <DisagreementsLink name={judge.name} number={v.number} count={disagreements} /> : null}
-          {!v.active && v.calibrated ? <ActivateForm name={judge.name} number={v.number} /> : null}
-        </div>
-      </div>
+/** The prompt, params, examples, and calibration of one version. Its facts live in the right panel. */
+export const VersionBody = ({ version: v }: { version: VersionView }) => (
+  <>
+    {v.note ? (
       <div class="block">
-        <span class="block-label"><Icon name="judge" size="sm" />Definition</span>
-        <dl class="kv">
-          <dt>scope</dt>
-          <dd>{v.scope}</dd>
-          <dt>model</dt>
-          <dd>{v.model}</dd>
-          <dt>created by</dt>
-          <dd>{v.created_by} · {when(v.created_at)}</dd>
-          <dt>parent</dt>
-          <dd>{parent ? <a class="link" href={parent.url}>v{parent.number}</a> : 'none'}</dd>
-          <dt>hash</dt>
-          <dd class="mono">{short(v.content_hash)}</dd>
-          <dt>note</dt>
-          <dd class="note">{v.note ?? 'none'}</dd>
-        </dl>
+        <span class="block-label"><Icon name="menu" size="sm" />Note</span>
+        <p class="note">{v.note}</p>
       </div>
+    ) : null}
       <div class="block">
         <span class="block-label"><Icon name="trace" size="sm" />Prompt</span>
         <Pre value={v.prompt} />
@@ -55,7 +35,7 @@ export const VersionBody = ({ judge, version: v, disagreements }: Omit<Props, 's
         <Pre value={v.examples} />
       </div>
       <div class="block">
-        <span class="block-label"><Icon name="score" size="sm" />Calibration</span>
+        <span class="block-label" id="calibration"><Icon name="score" size="sm" />Calibration</span>
         {v.calibration.length ? (
           <div class="timeline">
             {v.calibration.map((row) => (
@@ -72,14 +52,20 @@ export const VersionBody = ({ judge, version: v, disagreements }: Omit<Props, 's
           <Empty icon="judge" title="Needs labels" />
         )}
       </div>
-    </>
-  );
-};
+  </>
+);
 
 export const JudgeVersionPage = ({ judge, version, disagreements, shell }: Props) => (
-  <Layout title={`${judge.name} v${version.number}`} heading section="judges" shell={shell} crumbs={[[urls.judges(), 'Judges'], [judge.url, judge.name]]}>
+  <Layout
+    title={`${judge.name} v${version.number}`}
+    heading
+    section="judges"
+    shell={shell}
+    crumbs={[[urls.judges(), 'Judges'], [judge.url, judge.name]]}
+    aside={<aside class="aside" aria-label="Judge version"><Panel data={{ kind: 'version', judge, version, disagreements }} /></aside>}
+  >
     <div class="review definition">
-      <VersionBody judge={judge} version={version} disagreements={disagreements} />
+      <VersionBody version={version} />
     </div>
   </Layout>
 );

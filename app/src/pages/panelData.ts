@@ -39,7 +39,7 @@ export const peekPath = (ref: PeekRef): string => {
 export const peekId = (ref: PeekRef): string => (ref.kind === 'judge' ? ref.name : ref.kind === 'version' ? String(ref.number) : ref.id);
 
 /** Where the queue stands on a review page. `index` is null once the trace has left the queue. */
-export type ReviewState = { index: number | null; total: number; next: string | null; prev: string | null; focus: boolean };
+export type ReviewState = { index: number | null; total: number; next: string | null; prev: string | null; focus: boolean; source: string | null };
 
 export type PanelData =
   | { kind: 'issue'; issue: IssueView; projectTraces: number }
