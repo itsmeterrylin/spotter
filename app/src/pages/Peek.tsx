@@ -73,7 +73,7 @@ const Preview = ({ data }: { data: PanelData }) => {
           <Block label="First occurrence" icon="trace">
             {first ? (
               <div class="list-row">
-                <a class="id mono" href={first.url}>{short(first.trace_id)}</a>
+                <a class="link mono" href={first.url}>{short(first.trace_id)}</a>
                 <span class="meta">{first.turn === null ? 'whole trace' : `turn ${first.turn}`}</span>
                 <span class="grow muted">{first.evidence ?? ''}</span>
               </div>
@@ -124,7 +124,7 @@ const Preview = ({ data }: { data: PanelData }) => {
                 const s = primary ? scores[primary] : undefined;
                 return (
                   <div class="list-row">
-                    <a class="grow strong" href={urls.run(run.id)}>{run.name}</a>
+                    <a class="grow link link-title" href={urls.run(run.id)}>{run.name}</a>
                     {s ? <span class="num strong">{pct(s.mean)}</span> : null}
                     <span class="meta num" title={run.started_at}>{when(run.started_at)}</span>
                   </div>

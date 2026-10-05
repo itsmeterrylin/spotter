@@ -44,6 +44,8 @@ describe('peek fragments', () => {
       expect(html).toContain(`<div class="pane-inner" data-peek-kind="${kind}">`);
       expect(html).toContain('title="Close" aria-label="Close"');
       expect(html).toContain('data-pane-close');
+      expect(html).not.toMatch(/<a href/);
+      expect(html).not.toMatch(/<a class="(id mono|grow strong)"/);
       expect(html).toContain('<h2>Properties</h2>');
       expect(html.indexOf('<h2>Properties</h2>')).toBeLessThan(html.indexOf('<h2>Relations</h2>'));
       for (const text of expected) expect(html).toContain(text);
