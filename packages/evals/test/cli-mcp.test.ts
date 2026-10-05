@@ -55,6 +55,14 @@ describe('spotter list, read, write, compare forward to MCP', () => {
     expect((JSON.parse(read.out) as { name: string }).name).toBe('cli-golden');
   });
 
+  test('an unknown write op exits non-zero with the server message, not a parse error', async () => {
+    const { code, err } = await spotter(['write', 'nope.op', '--data', '{}']);
+    expect(code).toBe(1);
+    expect(err).not.toContain('JSON Parse error');
+    expect(err).toContain('Invalid option');
+    expect(err).toContain('issues.upsert');
+  });
+
   test('an MCP error exits non-zero and prints the error on stderr', async () => {
     const { code, err } = await spotter(['read', 'run', 'no-such-run']);
     expect(code).toBe(1);

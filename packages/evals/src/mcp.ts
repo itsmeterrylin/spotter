@@ -15,6 +15,15 @@ export function parseRpcBody(text: string): unknown {
   return JSON.parse(data.slice(5).trim());
 }
 
+// Input-validation failures come back as plain text, not JSON.
+const parseToolText = (raw: string): unknown => {
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return { error: { message: raw } };
+  }
+};
+
 type ToolPayload = { isError?: boolean; structuredContent?: unknown; content?: Array<{ text?: string }> };
 
 export async function callTool(config: ClientConfig, name: string, args: Record<string, unknown>): Promise<ToolOutcome> {
@@ -32,7 +41,7 @@ export async function callTool(config: ClientConfig, name: string, args: Record<
   if (rpc.error) throw new Error(`MCP error: ${rpc.error.message ?? 'unknown'}`);
   const payload = rpc.result ?? {};
   const raw = payload.content?.[0]?.text;
-  const result = payload.structuredContent ?? (raw === undefined ? null : JSON.parse(raw));
+  const result = payload.structuredContent ?? (raw === undefined ? null : parseToolText(raw));
   return { isError: payload.isError === true, result };
 }
 
