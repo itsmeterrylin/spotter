@@ -1,0 +1,10 @@
+{
+  "name": "@spotter/evals",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./uuid7": "./src/uuid7.ts"
+  }
+}

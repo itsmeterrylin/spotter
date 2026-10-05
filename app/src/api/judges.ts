@@ -1,0 +1,41 @@
+import { Hono } from 'hono';
+import type { Repos } from '../db/repos/index.ts';
+import { calibrate } from '../services/calibration.ts';
+import { disagreements } from '../services/disagreements.ts';
+import { activate, getJudge, listJudges, propose, updateJudge } from '../services/judges.ts';
+import { disagreementsQuery, judgeActivate, judgeCalibrate, judgePatch, judgePropose, versionNumber } from './schemas.ts';
+
+export const judgesApi = (repos: Repos) => {
+  const api = new Hono();
+
+  api.get('/', (c) => c.json(listJudges(repos)));
+
+  api.get('/:name', (c) => c.json(getJudge(repos, c.req.param('name'))));
+
+  api.patch('/:name', async (c) => {
+    return c.json(updateJudge(repos, c.req.param('name'), judgePatch.parse(await c.req.json())));
+  });
+
+  api.post('/:name/versions', async (c) => {
+    const body = judgePropose.parse(await c.req.json());
+    const result = propose(repos, { ...body, name: c.req.param('name') });
+    return c.json({ ...result.version, existing: result.existing, judge_url: result.judge.url }, result.existing ? 200 : 201);
+  });
+
+  api.post('/:name/activate', async (c) => {
+    const body = judgeActivate.parse(await c.req.json());
+    return c.json(activate(repos, c.req.param('name'), body.version, body.actor));
+  });
+
+  api.post('/:name/versions/:number/calibrate', async (c) => {
+    const body = judgeCalibrate.parse(await c.req.json());
+    return c.json(calibrate(repos, c.req.param('name'), versionNumber.parse(c.req.param('number')), body.dataset_id ?? null));
+  });
+
+  api.get('/:name/disagreements', (c) => {
+    const q = disagreementsQuery.parse(c.req.query());
+    return c.json(disagreements(repos, c.req.param('name'), q.version ?? 'active'));
+  });
+
+  return api;
+};

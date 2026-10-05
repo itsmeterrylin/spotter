@@ -1,0 +1,193 @@
+import { z } from 'zod';
+import type { NewScore } from '../db/repos/score.ts';
+import { operators } from '../services/filters.ts';
+
+const id = z.string().min(1).max(128);
+const jsonObject = z.record(z.string(), z.json());
+const isoTime = z.iso.datetime({ offset: true });
+
+export const datasetCreate = z.object({
+  id: id.optional(),
+  project: z.string().min(1),
+  name: z.string().min(1),
+  description: z.string().nullish(),
+  purpose: z.enum(['eval', 'judge_labels']).optional(),
+});
+
+export const itemsUpsert = z.object({
+  items: z
+    .array(
+      z.object({
+        id,
+        input: z.json(),
+        expected: z.json().optional(),
+        metadata: jsonObject.nullish(),
+        tags: z.array(z.string()).nullish(),
+        source_trace_id: id.nullish(),
+      }),
+    )
+    .min(1)
+    .max(1000),
+});
+
+export const itemsFromTraces = z.object({
+  dataset_id: id.optional(),
+  dataset_name: z.string().min(1).optional(),
+  project: z.string().min(1).optional(),
+  trace_ids: z.array(id).max(1000).optional(),
+  issue_id: id.optional(),
+  tags: z.array(z.string()).optional(),
+});
+
+export const runCreate = z.object({ id: id.optional(), dataset_id: id, name: z.string().min(1), metadata: jsonObject.nullish() });
+
+const verdictValue = { pass: 1, fail: 0, defer: 0 } as const;
+
+export const scoreInput = z
+  .object({
+    name: z.string().min(1),
+    value: z.number().optional(),
+    verdict: z.enum(['pass', 'fail', 'defer']).optional(),
+    label: z.string().nullish(),
+    reason: z.string().nullish(),
+    note: z.string().nullish(),
+    source: z.enum(['sdk', 'judge', 'human']),
+    turn: z.number().int().nonnegative().nullish(),
+    judge_version_id: id.nullish(),
+  })
+  .refine((s) => s.value !== undefined || s.verdict !== undefined, { message: 'a score needs value or verdict' });
+
+export type ScoreInput = z.infer<typeof scoreInput>;
+
+export const toNewScore = (s: ScoreInput): NewScore => ({
+  name: s.name,
+  value: s.value ?? verdictValue[s.verdict ?? 'fail'],
+  label: s.label ?? s.verdict ?? null,
+  reason: s.reason ?? s.note ?? null,
+  source: s.source,
+  turn: s.turn ?? null,
+  judge_version_id: s.judge_version_id ?? null,
+});
+
+export const scoresPut = z.object({ scores: z.array(scoreInput).min(1) });
+
+export const turnParam = z.union([z.literal('null').transform(() => null), z.coerce.number().int().nonnegative()]);
+
+export const scoresDelete = z.object({ name: z.string().min(1), source: z.enum(['sdk', 'judge', 'human']), turn: turnParam.optional() });
+
+export const traceEvent = z.object({ at: isoTime, name: z.string().min(1), data: z.json().optional() });
+
+export const traceInput = z.object({
+  id,
+  project: z.string().min(1),
+  run_id: id.nullish(),
+  dataset_item_id: id.nullish(),
+  input: z.json().optional(),
+  output: z.json().optional(),
+  expected: z.json().optional(),
+  metadata: jsonObject.nullish(),
+  tags: z.array(z.string()).nullish(),
+  start: isoTime,
+  end: isoTime.nullish(),
+  metrics: jsonObject.nullish(),
+  messages: z.array(z.object({ turn: z.number().int(), role: z.string(), content: z.json(), metadata: jsonObject.optional() })).nullish(),
+  events: z.array(traceEvent).nullish(),
+  spans: z.json().optional(),
+  scores: z.array(scoreInput).optional(),
+});
+
+export const tracesBatch = z.object({ traces: z.array(traceInput).min(1).max(500) });
+
+export const metadataPatch = z.object({ metadata: jsonObject.optional(), events: z.array(traceEvent).optional() });
+
+export const filter = z.object({ field: z.string().min(1), key: z.string().optional(), operator: z.enum(operators), value: z.json().optional() });
+
+export const filterList = z
+  .string()
+  .optional()
+  .transform((s, ctx) => {
+    const parsed = s === undefined ? null : z.array(filter).safeParse(JSON.parse(s));
+    if (parsed === null) return [];
+    if (parsed.success) return parsed.data;
+    ctx.addIssue({ code: 'custom', message: 'filters must be a JSON array of {field, key?, operator, value?}' });
+    return z.NEVER;
+  });
+
+export const traceListQuery = z.object({
+  filters: filterList,
+  run_id: id.optional(),
+  limit: z.coerce.number().int().min(1).max(500).default(50),
+  cursor: id.optional(),
+});
+
+export const querySql = z.object({ sql: z.string().min(1) });
+
+export const summaryQuery = z.object({ compare_to: id.optional() });
+
+export const runListQuery = z.object({ dataset_id: id.optional() });
+
+export const compareQuery = z.object({
+  runs: z.string().min(1).transform((s) => s.split(',').filter(Boolean)),
+  only: z.literal('changes').optional(),
+});
+
+export const judgePropose = z.object({
+  from_version: z.number().int().positive().nullish(),
+  prompt: z.string().min(1).optional(),
+  model: z.string().min(1).optional(),
+  params: jsonObject.nullish(),
+  examples: z.json().nullish(),
+  scope: z.enum(['turn', 'transcript']).optional(),
+  note: z.string().nullish(),
+  created_by: z.enum(['human', 'agent']),
+});
+
+export const judgeActivate = z.object({ version: z.number().int().positive(), actor: z.enum(['human', 'agent']).default('human') });
+
+export const disagreementsQuery = z.object({ version: z.coerce.number().int().positive().optional() });
+
+export const versionNumber = z.coerce.number().int().positive();
+
+export const judgeCalibrate = z.object({ dataset_id: id.nullish() });
+
+const metadataKey = z.string().regex(/^[A-Za-z0-9_][A-Za-z0-9_-]*$/, 'target must be a plain metadata key');
+
+export const attributeMapPut = z
+  .array(z.object({ source: z.string().min(1), target: metadataKey, type: z.enum(['string', 'number', 'boolean']) }))
+  .max(200)
+  .refine((xs) => new Set(xs.map((x) => x.source)).size === xs.length, { message: 'each source may appear once' });
+
+const issueStatus = z.enum(['open', 'confirmed', 'dismissed']);
+const severity = z.enum(['low', 'medium', 'high']);
+const actor = z.enum(['human', 'agent']);
+
+export const occurrence = z.object({ trace_id: id, turn: z.number().int().nonnegative().nullish(), evidence: z.string().nullish() });
+
+export const issueUpsert = z.object({
+  project: z.string().min(1),
+  title: z.string().trim().min(1),
+  fingerprint: z.string().nullish(),
+  severity: severity.optional(),
+  description: z.string().nullish(),
+  judge_name: z.string().min(1).nullish(),
+  seed_trace_id: id.nullish(),
+  traces: z.array(occurrence).max(500).optional(),
+  created_by: actor,
+});
+
+export const issuePatch = z.object({
+  status: issueStatus.optional(),
+  dismissed_reason: z.string().nullish(),
+  severity: severity.optional(),
+  judge_name: z.string().min(1).nullable().optional(),
+  title: z.string().trim().min(1).optional(),
+  actor: actor.default('human'),
+});
+
+export const judgePatch = z
+  .object({ state: z.enum(['draft', 'live', 'paused']).optional(), description: z.string().nullish(), actor: actor.default('human') })
+  .refine((b) => b.state !== undefined || b.description !== undefined, { message: 'send state or description' });
+
+export const issueAttach = z.object({ traces: z.array(occurrence).min(1).max(500), created_by: actor.default('human') });
+
+export const issueListQuery = z.object({ status: issueStatus.optional(), project: z.string().min(1).optional() });

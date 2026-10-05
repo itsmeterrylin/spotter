@@ -187,7 +187,7 @@ Every result carries a URL into the UI.
 
 ## OTLP ingestion
 
-`POST /otel/v1/traces` accepts OTLP/HTTP JSON and protobuf. One OTel trace becomes one Spotter trace: `gen_ai.*` message attributes fill `messages`, token attributes fill `metrics`, spans are kept under `spans`, every other attribute is kept raw under `metadata.attributes`, span events become `events`, and the project's `attribute_map` promotes the chosen ones. A trace that arrives in several batches is merged by trace id.
+`POST /otel/v1/traces` accepts OTLP/HTTP JSON. Protobuf answers 415 for now: decoding it needs a protobuf runtime plus the generated OTLP schema, a dependency the app does not take yet, and every OTel SDK can send JSON with `OTEL_EXPORTER_OTLP_PROTOCOL=http/json`. One OTel trace becomes one Spotter trace: `gen_ai.*` message attributes fill `messages`, token attributes fill `metrics`, spans are kept under `spans`, every attribute is kept raw under `metadata.attributes`, span events become `events`, and the project's `attribute_map` promotes the chosen ones. A trace that arrives in several batches is merged by trace id. The response is `{accepted, traces: [{id, url}]}`.
 
 ## Non-goals
 

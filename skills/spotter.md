@@ -1,0 +1,141 @@
+---
+name: spotter
+description: Run evals through Spotter's MCP tools, compare runs, and send the person deep links to verify, label, and calibrate. Use when a task touches datasets, runs, traces, scores, or judges in Spotter.
+---
+
+# Spotter
+
+Spotter is the human in the loop for agent-run evals. You run the eval and write the results. A person opens the links you send to verify, label, and calibrate. Do not use the UI to do work; use it only to check that a link shows what you claim.
+
+## The loop
+
+1. Create or reuse a dataset and its items.
+2. Create a run, execute the task locally, and write one trace per item with SDK scores.
+3. Compare the new run to the baseline run. Read `improvements` and `regressions` per score.
+4. Send the person the compare url and the run url. Say which items changed and why you think so.
+5. The person labels traces (pass, fail, defer) and writes notes. Read them with `list notes`.
+6. Group notes into failure modes. Propose one judge per failure mode with `write judge.propose`, run it with `spotter judge run`, and calibrate it against the human labels. Activation and going live are human-only: once TPR and TNR pass 90 percent, send the human the judge's url so they can activate the version and set the judge live. Until then its scores do not count.
+
+## Connect
+
+```bash
+claude mcp add --transport http spotter http://localhost:3000/mcp
+```
+
+The server is stateless. Every request may be a fresh connection. No session header is needed.
+
+## Tools
+
+Every successful result carries `url`. Every list row carries `url`. Errors come back as `{error: {code, message}}` with `isError: true`.
+
+### list
+
+```
+{type: 'datasets' | 'items' | 'runs' | 'traces' | 'notes' | 'judges' | 'disagreements' | 'issues' | 'inbox' | 'alerts' | 'deliveries',
+ filters?: [{field, key?, operator, value?}], dataset_id?, run_id?, judge?, version?, status?, project?, limit?}
+```
+
+- `items` needs `dataset_id`. `runs` accepts `dataset_id`. `traces` and `notes` accept `run_id` and `filters`.
+- `notes` returns human scores that have a reason, each with its trace, so you can cluster failure modes.
+- `filters` fields: `id`, `run_id`, `dataset_item_id`, `start`, `end`, `metadata.<key>`, `tags`, `events.name`, `source`, `score` (with `key` = score name), `text` (`contains` over input, output, and messages). Operators: `=`, `!=`, `<`, `<=`, `>`, `>=`, `contains`, `starts_with`, `in`, `is_empty`.
+- `judges` returns every judge with `active_version`, `status` (`calibrated`, `needs_labels`, `pending`), `labels`, and `disagreements`.
+- `disagreements` needs `judge` and accepts `version` (default: the active version). It returns traces where the human verdict and that judge version differ in pass or fail.
+- `issues` accepts `status` (`open`, `confirmed`, `dismissed`) and `project`. It returns rows with `occurrences` and `traces`, plus `counts` per status and `dismissed_fingerprints`. Put the dismissed fingerprints in your prompt as exclusions before you look for new failures.
+- `inbox` returns the PM queue as rows `{kind, title, detail, count, url, action}`: regressions, unlabeled traces, judge disagreements, labels needed, finished runs. Check it first to see what a person is waiting on.
+- `alerts`, `deliveries` return `{items: [], note: 'available after phase 9'}` until that phase ships.
+
+### read
+
+```
+{type: 'run' | 'trace' | 'dataset' | 'judge' | 'judge_version' | 'issue' | 'audit' | 'attribute_map', id?, version?}
+```
+
+- `run` returns the run with `aggregates` (trace count, per-score mean, p50 duration, tokens, and `pending`: score names whose judge version is not yet calibrated, so those judge scores are excluded).
+- `trace` returns the trace with its `scores`.
+- `dataset` returns the dataset with `item_count` and its `runs`.
+- `judge` returns the judge with `versions` (newest first, each with `calibration`, `active`, `calibrated`, `url`) and the active version's `disagreements`.
+- `judge_version` takes the judge name as `id` and a `version` number. It returns that version with `prompt`, `model`, `calibration`, `active`, and `url`.
+- `issue` returns the issue with `occurrence_list` and `backtest` (the linked judge's active version: `scored`, `fails`, `fail_rate`, `failing` traces with turns, and the `spotter judge run` command), or `backtest: null` when no judge is linked.
+- `attribute_map` takes a project id or name and returns its `map` (`[{source, target, type}]`).
+- `audit` returns counts: `datasets`, `runs`, `traces`, `human_labels`, `runs_without_baseline`, `datasets_without_runs`, and `judges` (per judge: `active_version`, `status`, `labels`, `labels_needed`, `disagreements`). Call it first when you do not know the state of the server.
+
+### write
+
+```
+{op, data, dry_run?}
+```
+
+| op | data |
+|---|---|
+| `dataset.create` | `{project, name, description?, purpose?}` |
+| `items.upsert` | `{dataset_id, items: [{id, input, expected?, metadata?, tags?}]}` |
+| `run.create` | `{dataset_id, name, metadata?}` |
+| `traces.insert` | `{traces: [{id, project, run_id?, dataset_item_id?, input, output, expected?, start, end?, metrics?, scores?: [{name, value, source}]}]}` |
+| `trace.patch_metadata` | `{trace_id, metadata?, events?}` |
+| `scores.put` | `{trace_id, scores: [{name, value or verdict, reason?, source, judge_version_id?}]}` |
+| `items.from_traces` | `{dataset_id or dataset_name+project, trace_ids? or issue_id?, tags?}`; copies `input` and `expected` from each trace into an item with `source_trace_id`. Idempotent on `(dataset_id, source_trace_id)`: returns `{ids, added, url}` and a repeat has `added: 0`. `issue_id` takes every trace in the issue. This builds the replay dataset for verifying a fix |
+| `judge.propose` | `{judge, from_version?, prompt?, model?, params?, examples?, scope?, note}`; returns the new version, or the existing one with `existing: true` when the definition hash matches; a first version needs `prompt` and `model` and becomes active |
+| `judge.activate` | `{judge, version}`. Human-only: over MCP it returns a conflict with the judge url to hand to a human. A live judge whose new active version is not calibrated drops to draft |
+| `judge.transition` | `{judge, state}`; draft, live, or paused. An agent may pause or demote a judge. Only a human sets it live, and only with a calibrated active version |
+| `attribute_map.set` | `{project, map: [{source, target, type}]}`; replaces the project's map. On every trace insert and metadata patch, `metadata.attributes[source]` or an event named `source` is copied to `metadata[target]` as `string`, `number`, or `boolean`, so it filters as `metadata.<target>` |
+| `issues.upsert` | `{project, title, fingerprint?, severity?, description?, judge_name?, seed_trace_id?, traces?: [{trace_id, turn?, evidence?}]}`; dedupes on the fingerprint (yours, or the title lowercased without punctuation and stopwords). New: `created: true`. Existing: attaches only new occurrences and returns `added`. Dismissed: `suppressed: true` and nothing is written |
+| `issue.transition` | `{id, status, reason?}`; open to confirmed or dismissed, confirmed to dismissed or open. Dismiss needs `reason`. Only a human reopens a dismissed issue; an illegal move is a `conflict` error |
+| `issue.attach` | `{id, traces: [{trace_id, turn?, evidence?}]}`; suppressed on a dismissed issue |
+| `judge.calibrate` | `{judge, version, dataset_id?}`; pairs human and judge scores by trace, splits them by trace id (15 percent examples pool, 45 dev, 40 test), stores TPR and TNR per split, and returns the bias-corrected pass rate with a 95 percent bootstrap interval. A version counts in aggregates once its test TPR and TNR are both at least 0.9 |
+
+- `dry_run: true` validates `data` and returns `{ok: true, dry_run: true}` without writing.
+- Set `metadata.baseline` on a run to the run id you compare against. `read audit` counts runs that lack it.
+- Trace ids are yours. Insert is idempotent by id: a repeat reports `skipped`.
+- `alert.create`, `alert.test` return `{ok: false, note}` until their phase ships.
+
+### compare
+
+```
+{dataset_id, run_ids: [baseline, candidate], only?: 'changes'}
+```
+
+Returns `items` with one cell per run (output, scores, trace url), `summary` per score (means per run, `diff`, `improvements`, `regressions`), and the compare page `url`. Pass `only: 'changes'` to get only the items whose scores differ.
+
+## CLI
+
+`spotter list|read|write|compare` forward to the tools above over HTTP and print the tool JSON, so every `url` shows. They contain no service logic. `--json` prints compact JSON. A tool error exits 1 and prints the error on stderr. Set `SPOTTER_URL` (default `http://localhost:3000`).
+
+```bash
+spotter list issues --status open --project copper        # list <type> [--status --project --judge --version --run --dataset --limit --filters '<json>']
+spotter read judge_version exercise_match --version 2     # read <type> [id] [--version n]
+spotter write items.from_traces --data '{"issue_id":"<id>","dataset_name":"replay","project":"copper"}' --dry-run
+echo '{"project":"copper","name":"golden"}' | spotter write dataset.create --data -     # --data accepts JSON, @file.json, or - for stdin
+spotter compare <dataset_id> <baseline_run>,<candidate_run> --only changes
+```
+
+`spotter compare <a> <b>` with exactly two ids and no comma is the older form, `<baseline_run> <run>`, and prints the run summary. A comma in the second argument, or a third id, selects the dataset form above.
+
+## Verify with links
+
+Every result and every row has a `url`. When you finish a step, paste the urls for the human and say what to look at: the compare url for a change, the trace url for a failure, the dataset url after `items.from_traces`, the issue url after `issues.upsert`. Do not describe a result without its link. To verify a fix, build a replay dataset with `items.from_traces`, run it, and send the compare url.
+
+## Deep links
+
+Send these to the person. A link opened in a fresh tab shows the same state it showed when copied.
+
+| Object | URL |
+|---|---|
+| Run | `/runs/{run_id}?score={name}` |
+| Compare | `/datasets/{dataset_id}/compare?runs={a},{b}&only=changes&score={name}` |
+| Trace | `/traces/{trace_id}?turn={n}` |
+| Dataset items | `/datasets/{dataset_id}/items?tag={tag}` |
+| Dataset item across runs | `/datasets/{dataset_id}/items/{item_id}` |
+| Review queue | `/review?run={run_id}&filter=unlabeled` |
+| Review one trace | `/review/{trace_id}?run={run_id}` |
+| Judge | `/judges/{name}`, `/judges/{name}/versions/{n}`, `/judges/{name}/disagreements?version={n}` |
+| Issues | `/` (open), `/issues?status={status}&project={name}` |
+| Issue | `/issues/{id}?tab=traces` or `?tab=backtest` |
+| Trace search | `/traces?q={text}&tab=unlabeled` |
+
+Use the `url` field from a result instead of building a link by hand. The origin comes from `SPOTTER_BASE_URL`.
+
+## Rules
+
+- Write through the tools. Never edit the SQLite file.
+- A judge's scores count only after it is calibrated against human labels.
+- When you report a regression, include the compare url and the trace url of at least one regressed item.
