@@ -6,25 +6,29 @@ import type { TraceView } from '../services/traces.ts';
 import { urls } from '../urls.ts';
 import { initials, type Shell } from './data.ts';
 import { Layout, type Tab } from './Layout.tsx';
+import { Panel } from './panels.tsx';
+import { PeekRegion, peekRow } from './Peek.tsx';
 import { Turns } from './Trace.tsx';
 import { ago, BulkBar, Empty, Icon, issueOptions, pct, Prop, RowCheck, SeverityPill, severityPill, short, since, State, StatusMenu, statusLabel, Values } from './ui.tsx';
 
 export type IssueTab = 'overview' | 'traces' | 'backtest';
 
+const plural = (n: number, word: string): string => `${n} ${word}${n === 1 ? '' : 's'}`;
+
 const turnLabel = (turn: number | null): string => (turn === null ? 'whole trace' : `turn ${turn}`);
 
-type ListProps = { issues: IssueListRow[]; status: IssueStatus; counts: Record<IssueStatus, number>; project?: string; shell: Shell };
+type ListProps = { issues: IssueListRow[]; status: IssueStatus; counts: Record<IssueStatus, number>; project?: string; shell: Shell; selected?: string; pane?: Child };
 
 const listTabs = (status: IssueStatus, counts: Record<IssueStatus, number>, project?: string): Tab[] =>
   issueStatuses.map((s) => ({ href: s === 'open' && !project ? urls.home() : urls.issues({ status: s, project }), label: statusLabel[s], count: counts[s], current: s === status }));
 
-export const IssuesPage = ({ issues, status, counts, project, shell }: ListProps) => (
-  <Layout title="Issues" meta={`${counts[status]} ${status}${project ? ` · ${project}` : ''}`} section="issues" shell={shell} tabs={listTabs(status, counts, project)} script="issues">
+export const IssuesPage = ({ issues, status, counts, project, shell, selected, pane }: ListProps) => (
+  <Layout title="Issues" section="issues" shell={shell} tabs={listTabs(status, counts, project)} script="issues" aside={<PeekRegion>{pane}</PeekRegion>}>
     {issues.length ? (
       <div class="card card-flush issue-list" data-list data-status={status}>
         <div class="group-head"><State status={status} />{statusLabel[status]}<span class="count">{issues.length}</span></div>
         {issues.map((i) => (
-          <div class="list-row" data-row data-id={i.id}>
+          <div class="list-row" data-row data-id={i.id} {...peekRow({ kind: 'issue', id: i.id }, selected)}>
             <RowCheck label={i.title} />
             <StatusMenu kind="issue" id={i.id} current={i.status} options={issueOptions(i.status)} />
             <a class="grow strong row-link" href={i.url}>{i.title}</a>
@@ -47,7 +51,7 @@ export const IssuesPage = ({ issues, status, counts, project, shell }: ListProps
   </Layout>
 );
 
-type DetailProps = { issue: IssueView; tab: IssueTab; seed: TraceView | null; projectTraces: number; judges: Judge[]; shell: Shell };
+type DetailProps = { issue: IssueView; tab: IssueTab; seed: TraceView | null; projectTraces: number; judges: Judge[]; shell: Shell; selected?: string; pane?: Child };
 
 const detailTabs = (issue: IssueView, tab: IssueTab): Tab[] => [
   { href: urls.issue(issue.id), label: 'Overview', current: tab === 'overview' },
@@ -55,39 +59,30 @@ const detailTabs = (issue: IssueView, tab: IssueTab): Tab[] => [
   { href: urls.issue(issue.id, 'backtest'), label: 'Backtest', count: issue.backtest?.fails, current: tab === 'backtest' },
 ];
 
-const Stat = ({ icon, label, children }: { icon: 'trace' | 'issue' | 'flag' | 'score' | 'fail'; label: string; children: Child }) => (
-  <div class="card stat">
-    <span class="label"><Icon name={icon} size="sm" />{label}</span>
-    {children}
-  </div>
-);
-
-const ActionCard = ({ issue }: { issue: IssueView }) => {
+const BacktestSection = ({ issue }: { issue: IssueView }) => {
   const b = issue.backtest;
   return (
-    <div class="card action-card">
-      <span class="avatar">{b ? initials(b.judge) : <Icon name="judge" size="sm" />}</span>
-      <div class="grow stack" style="--gap: 0">
-        <span class="strong">{b ? b.judge : 'No judge'}</span>
-        {b ? <span class="muted t-meta">{b.version === null ? 'no active version' : `v${b.version} · ${b.fails} of ${b.scored} fail`}</span> : null}
+    <div class="block">
+      <span class="block-label"><Icon name="backtest" size="sm" />Backtest</span>
+      <div class="backtest-row">
+        <span class="avatar">{b ? initials(b.judge) : <Icon name="judge" size="sm" />}</span>
+        <div class="grow stack" style="--gap: 0">
+          <span class="strong">{b ? b.judge : 'No judge'}</span>
+          {b ? <span class="muted t-meta">{b.version === null ? 'no active version' : `v${b.version} · ${b.fails} of ${b.scored} fail`}</span> : null}
+        </div>
+        <a class="btn btn-primary" href={urls.issue(issue.id, 'backtest')}>
+          <Icon name="backtest" />
+          {b ? `Backtest with ${b.judge}` : 'Link a judge'}
+        </a>
       </div>
-      <a class="btn btn-primary" href={urls.issue(issue.id, 'backtest')}>
-        <Icon name="backtest" />
-        {b ? `Backtest with ${b.judge}` : 'Link a judge'}
-      </a>
     </div>
   );
 };
 
-const Overview = ({ issue, seed, projectTraces }: Pick<DetailProps, 'issue' | 'seed' | 'projectTraces'>) => {
+const Overview = ({ issue, seed }: Pick<DetailProps, 'issue' | 'seed'>) => {
   const seedTurn = issue.occurrence_list.find((o) => o.trace_id === seed?.id)?.turn ?? undefined;
   return (
     <div class="stack" style="--gap: var(--space-32)">
-      <div class="stats" style="margin: 0">
-        <Stat icon="trace" label="Occurrences"><span class="t-stat num">{issue.occurrences}</span></Stat>
-        <Stat icon="issue" label="Traces affected"><span class="t-stat num">{projectTraces ? pct(issue.traces / projectTraces) : '–'}</span></Stat>
-        <Stat icon="flag" label="Severity"><span><span class={`${severityPill[issue.severity]} pill-lg`}>{issue.severity}</span></span></Stat>
-      </div>
       {issue.description ? (
         <div class="block">
           <span class="block-label">Description</span>
@@ -100,25 +95,24 @@ const Overview = ({ issue, seed, projectTraces }: Pick<DetailProps, 'issue' | 's
           {seed.messages?.length ? <Turns messages={seed.messages} scores={seed.scores} focus={seedTurn} /> : <Values value={seed.output} />}
         </div>
       ) : null}
-      <ActionCard issue={issue} />
+      <BacktestSection issue={issue} />
     </div>
   );
 };
 
-const OccurrenceRow = ({ o }: { o: OccurrenceView }) => (
-  <a class="list-row" href={o.url}>
-    <span class="avatar avatar-sm"><Icon name="trace" size="sm" /></span>
-    <span class="mono strong">{short(o.trace_id)}</span>
+const OccurrenceRow = ({ o, selected }: { o: OccurrenceView; selected?: string }) => (
+  <div class="list-row" data-row {...peekRow({ kind: 'trace', id: o.trace_id }, selected)}>
+    <a class="id mono row-link" href={o.url}>{short(o.trace_id)}</a>
     <span class="meta">{turnLabel(o.turn)}</span>
     <span class="grow muted">{o.evidence ?? ''}</span>
     <span class="meta">{o.created_by}</span>
     <span class="meta num" title={o.created_at}>{ago(o.created_at)}</span>
-  </a>
+  </div>
 );
 
-const Occurrences = ({ issue }: { issue: IssueView }) =>
+const Occurrences = ({ issue, selected }: { issue: IssueView; selected?: string }) =>
   issue.occurrence_list.length ? (
-    <div class="card card-flush">{issue.occurrence_list.map((o) => <OccurrenceRow o={o} />)}</div>
+    <div class="card card-flush" data-list>{issue.occurrence_list.map((o) => <OccurrenceRow o={o} selected={selected} />)}</div>
   ) : (
     <Empty icon="trace" title="No occurrences" />
   );
@@ -144,11 +138,7 @@ const BacktestTab = ({ issue, judges }: { issue: IssueView; judges: Judge[] }) =
   );
   return (
     <div class="stack" style="--gap: var(--space-32)">
-      <div class="stats" style="margin: 0">
-        <Stat icon="score" label="Traces scored"><span class="t-stat num">{b.scored}</span></Stat>
-        <Stat icon="fail" label="Fails"><span class="t-stat num">{b.fails}</span></Stat>
-        <Stat icon="issue" label="Fail rate"><span class="t-stat num">{b.fail_rate === null ? '–' : pct(b.fail_rate)}</span></Stat>
-      </div>
+      <p class="meta-line num">{`${b.scored} scored · ${plural(b.fails, 'fail')} · ${b.fail_rate === null ? 'no' : pct(b.fail_rate)} fail rate`}</p>
       <div class="block">
         <span class="block-label"><Icon name="run" size="sm" />Run</span>
         <div class="command">
@@ -159,13 +149,13 @@ const BacktestTab = ({ issue, judges }: { issue: IssueView; judges: Judge[] }) =
       <div class="block">
         <span class="block-label"><Icon name="fail" size="sm" />Failing traces · <a class="link" href={b.url}>{b.judge}{b.version === null ? '' : ` v${b.version}`}</a></span>
         {b.failing.length ? (
-          <div class="card card-flush">
+          <div class="card card-flush" data-list>
             {b.failing.map((f) => (
-              <a class="list-row" href={f.url}>
-                <span class="avatar avatar-sm"><Icon name="fail" size="sm" /></span>
-                <span class="mono strong grow">{short(f.trace_id)}</span>
+              <div class="list-row" data-row>
+                <a class="id mono row-link" href={f.url}>{short(f.trace_id)}</a>
+                <span class="grow"></span>
                 <span class="meta">{f.turns.length ? f.turns.map((t) => `turn ${t}`).join(' · ') : 'whole trace'}</span>
-              </a>
+              </div>
             ))}
           </div>
         ) : (
@@ -177,77 +167,28 @@ const BacktestTab = ({ issue, judges }: { issue: IssueView; judges: Judge[] }) =
   );
 };
 
-const Properties = ({ issue }: { issue: IssueView }) => (
-  <aside class="aside" aria-label="Issue" data-issue={issue.id}>
-    <section class="stack" style="--gap: var(--space-8)">
-      <h2>Status</h2>
-      <StatusMenu kind="issue" id={issue.id} current={issue.status} options={issueOptions(issue.status)} variant="field" reload />
-      <form class="dismiss-form stack" data-dismiss-form hidden={issue.status !== 'dismissed' || undefined} style="--gap: var(--space-8)">
-        <input class="input" name="reason" placeholder="Reason" aria-label="Reason" value={issue.dismissed_reason ?? ''} required />
-        <button class="btn btn-fail" type="submit"><Icon name="dismiss" size="sm" />{issue.status === 'dismissed' ? 'Save reason' : 'Dismiss'}</button>
-      </form>
-      <p class="error" data-error></p>
-    </section>
-    <section>
-      <h2>Properties</h2>
-      <dl>
-        <Prop name="Severity" icon="flag" field>
-          <select class="input" name="severity" aria-label="Severity" data-patch="severity">
-            {(['low', 'medium', 'high'] as const).map((s) => <option value={s} selected={s === issue.severity}>{s}</option>)}
-          </select>
-        </Prop>
-        <Prop name="Project" icon="dataset">{issue.project}</Prop>
-        <Prop name="Created by" icon="human">{`Created by ${issue.created_by}`}</Prop>
-        <Prop name="Created" icon="time" class="num" hint={issue.created_at}>{since('Created', issue.created_at)}</Prop>
-        <Prop name="Updated" icon="time" class="num" hint={issue.updated_at}>{since('Updated', issue.updated_at)}</Prop>
-      </dl>
-    </section>
-    <section>
-      <h2>Relations</h2>
-      <dl>
-        <Prop name="Judge" icon="judge" empty={<a class="link" href={urls.issue(issue.id, 'backtest')}>Link judge</a>}>
-          {issue.judge_name ? <a class="link" href={urls.judge(issue.judge_name)}>{issue.judge_name}</a> : null}
-        </Prop>
-        <Prop name="Seed trace" icon="trace" class="mono" empty="No seed trace">
-          {issue.seed_trace_id ? <a class="link" href={urls.trace(issue.seed_trace_id)}>{short(issue.seed_trace_id)}</a> : null}
-        </Prop>
-      </dl>
-    </section>
-    <section class="stack" style="--gap: var(--space-8)">
-      <h2>Recent occurrences</h2>
-      {issue.occurrence_list.length ? (
-        <div class="occ-list">
-          {issue.occurrence_list.slice(0, 6).map((o) => (
-            <a class="list-row" href={o.url}>
-              <span class="avatar avatar-sm"><Icon name="trace" size="sm" /></span>
-              <span class="grow mono">{short(o.trace_id)}</span>
-              <span class="meta">{turnLabel(o.turn)}</span>
-            </a>
-          ))}
-        </div>
-      ) : (
-        <p class="muted">None</p>
-      )}
-    </section>
-  </aside>
-);
-
-export const IssuePage = ({ issue, tab, seed, projectTraces, judges, shell }: DetailProps) => (
+export const IssuePage = ({ issue, tab, seed, projectTraces, judges, shell, selected, pane }: DetailProps) => (
   <Layout
     title={issue.title}
-    meta={`${statusLabel[issue.status]} · ${issue.created_by} · ${ago(issue.created_at)}`}
+    heading
+    meta={`${plural(issue.occurrences, 'occurrence')} · ${projectTraces ? pct(issue.traces / projectTraces) : '–'} of traces`}
     section="issues"
     shell={shell}
     tabs={detailTabs(issue, tab)}
     crumbs={[[urls.issues({ status: issue.status === 'open' ? undefined : issue.status }), 'Issues']]}
     script="issue"
-    aside={<Properties issue={issue} />}
+    aside={
+      <>
+        <aside class="aside" aria-label="Issue"><Panel data={{ kind: 'issue', issue, projectTraces }} /></aside>
+        <PeekRegion>{pane}</PeekRegion>
+      </>
+    }
   >
     {issue.status === 'dismissed' && issue.dismissed_reason ? (
       <p class="dismissed-note"><span class="pill"><Icon name="dismiss" size="sm" />Dismissed</span> {issue.dismissed_reason}</p>
     ) : null}
-    {tab === 'overview' ? <Overview issue={issue} seed={seed} projectTraces={projectTraces} /> : null}
-    {tab === 'traces' ? <Occurrences issue={issue} /> : null}
+    {tab === 'overview' ? <Overview issue={issue} seed={seed} /> : null}
+    {tab === 'traces' ? <Occurrences issue={issue} selected={selected} /> : null}
     {tab === 'backtest' ? <BacktestTab issue={issue} judges={judges} /> : null}
   </Layout>
 );

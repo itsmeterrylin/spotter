@@ -21,7 +21,7 @@ npm run check:deps  # 60-day release-age gate
 | Shadow | Two: panel (cards, buttons, the main panel) and popover (menus, pickers). |
 | Controls | 28px buttons, inputs, tabs, nav items, property buttons. 24px chips. 32px menu items. 36px group headers. 44px rows. One primary action per screen. |
 | Icons | 14, 16, 20 rendered. Stroke 2 on the 24 grid. They take the color of the adjacent text. |
-| Shell | Rail 48 and sidebar 244 on the canvas, no borders. Tabs, main, and aside form one inset panel (8px from top and right, radius 12). Aside 386 (wide 440). Status bar 28 below the panel. |
+| Shell | Rail 48 and sidebar 244 on the canvas, no borders. Tabs, main, and aside form one inset panel (8px from top and right, radius 12). Aside and peek panel 386. Status bar 28 below the panel. |
 | Source | Measured values and their rationale: `docs/design/linear-reference.md`. |
 
 ## Components
@@ -43,7 +43,7 @@ Shell components:
 | `.rail`, `.rail-btn`, `.avatar` | Icon-only left rail; `aria-current="page"` marks the active button |
 | `.nav2` | One-line sidebar item: icon, `.label`, trailing `.meta` count |
 | `.tabs`, `.tab` | Pill tabs; child `.count`; `aria-current="page"` |
-| `.aside` | Right sidebar; `-wide`; `h2` section labels |
+| `.aside` | Right sidebar. `.panel-body` holds one object's Status, Properties, and Relations groups with `h2` labels |
 | `.prop`, `.propbtn` | Property group: label `dt`/`.key` over a 28px pill value `dd`/`.value` |
 | `.statusbar` | Bottom bar with left and right groups |
 | `.state` | Issue status circle: `-confirmed` `-dismissed`; plain is open |

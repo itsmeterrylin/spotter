@@ -64,11 +64,14 @@ export const SettingsPage = ({ maps, authSet, judge, shell }: Props) => (
           </dl>
           <Code text={mcpAdd} />
         </div>
-        <div class="card card-flush scroll-x">
-          <table class="table">
-            <thead><tr><th>Tool</th><th>Accepts</th></tr></thead>
-            <tbody>{tools.map(([name, accepts]) => <tr><td class="strong mono">{name}</td><td class="muted">{accepts}</td></tr>)}</tbody>
-          </table>
+        <div class="card card-flush">
+          <div class="group-head">Tool<span class="count">Accepts</span></div>
+          {tools.map(([name, accepts]) => (
+            <div class="list-row">
+              <span class="strong mono id">{name}</span>
+              <span class="grow wrap muted">{accepts}</span>
+            </div>
+          ))}
         </div>
       </Section>
 
@@ -89,13 +92,18 @@ export const SettingsPage = ({ maps, authSet, judge, shell }: Props) => (
         </div>
         {maps.map((m) => (
           <div class="card card-flush">
-            <div class="row"><Icon name="filter" /><div class="grow"><span class="strong">Attribute map</span> <span class="muted">· {m.project}</span></div><span class="t-meta mono muted">write attribute_map.set</span></div>
+            <div class="group-head"><Icon name="filter" size="sm" />Attribute map<span class="count">{m.project}</span></div>
             {m.map.length ? (
-              <table class="table">
-                <thead><tr><th>Source</th><th>Target</th><th>Type</th></tr></thead>
-                <tbody>{m.map.map((e) => <tr><td class="mono">{e.source}</td><td class="mono">metadata.{e.target}</td><td class="muted">{e.type}</td></tr>)}</tbody>
-              </table>
-            ) : <div class="row"><span class="muted">No promoted attributes</span></div>}
+              m.map.map((e) => (
+                <div class="list-row">
+                  <span class="grow mono">{e.source}</span>
+                  <span class="mono">metadata.{e.target}</span>
+                  <span class="meta">{e.type}</span>
+                </div>
+              ))
+            ) : (
+              <div class="list-row"><span class="muted">No promoted attributes</span></div>
+            )}
           </div>
         ))}
       </Section>
@@ -109,11 +117,14 @@ export const SettingsPage = ({ maps, authSet, judge, shell }: Props) => (
           </dl>
           <Code text={`SPOTTER_JUDGE_BASE_URL=${judge.baseUrl}\nSPOTTER_JUDGE_API_KEY=...`} />
         </div>
-        <div class="card card-flush scroll-x">
-          <table class="table">
-            <thead><tr><th>Provider</th><th>Base URL</th></tr></thead>
-            <tbody>{providers.map(([name, url]) => <tr><td class="strong">{name}</td><td class="mono muted">{url}</td></tr>)}</tbody>
-          </table>
+        <div class="card card-flush">
+          <div class="group-head">Provider<span class="count">Base URL</span></div>
+          {providers.map(([name, url]) => (
+            <div class="list-row">
+              <span class="strong">{name}</span>
+              <span class="grow wrap mono muted">{url}</span>
+            </div>
+          ))}
         </div>
       </Section>
 

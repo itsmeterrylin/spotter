@@ -1,4 +1,6 @@
 import { uuid7 } from '@spotter/evals/uuid7';
+import { on } from './keys.ts';
+import { listUrl } from './detail.ts';
 
 type Verdict = 'pass' | 'fail' | 'defer';
 type TraceBody = { input: unknown; output: unknown; expected: unknown };
@@ -24,13 +26,13 @@ function wire(root: HTMLElement): void {
   const note = document.getElementById('note') as HTMLTextAreaElement;
   const error = document.getElementById('error') as HTMLElement;
   const picker = document.getElementById('picker') as HTMLElement;
-  const rows = [...root.querySelectorAll<HTMLElement>('.verdict-row')].map(rowOf);
+  const rows = [...document.querySelectorAll<HTMLElement>('.verdict-row')].map(rowOf);
   const whole = rows[rows.length - 1];
   let focused = Math.max(0, rows.findIndex((r) => r.el.hasAttribute('data-focus')));
   let busy = false;
 
   const go = (url: string | null): void => {
-    location.href = url ?? home;
+    location.href = url ?? listUrl() ?? home;
   };
   const press = (row: Row, v: Verdict | null): void => {
     row.saved = v;
@@ -120,30 +122,28 @@ function wire(root: HTMLElement): void {
   }
   picker.querySelector('[data-picker-close]')?.addEventListener('click', closePicker);
 
-  document.addEventListener('keydown', (e) => {
-    if (picker.hasAttribute('data-open')) {
-      if (e.key === 'Escape') closePicker();
-      return;
-    }
-    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
-      e.preventDefault();
-      if (whole?.saved) void save(whole, whole.saved).then((ok) => ok && go(next));
-      return;
-    }
-    if (document.activeElement === note) return;
-    const row = current();
-    if (!row) return;
-    const key = e.key.toLowerCase();
-    if (key === '1') void verdictThenMove(row, 'pass');
-    else if (key === '2') void verdictThenMove(row, 'fail');
-    else if (key === 'd') void verdictThenMove(row, 'defer');
-    else if (key === 'u') void undo(row);
-    else if (key === 'a') openPicker();
-    else if (e.key === 'ArrowDown') focus(focused + 1);
-    else if (e.key === 'ArrowUp') focus(focused - 1);
-    else if (e.key === 'ArrowRight') go(next);
-    else if (e.key === 'ArrowLeft') go(prev);
-    else if (e.key === 'Escape') go(home);
+  const row = (fn: (r: Row) => void): (() => boolean | void) => () => {
+    if (picker.hasAttribute('data-open') || document.activeElement === note) return false;
+    const r = current();
+    if (!r) return false;
+    fn(r);
+  };
+  on('close', () => {
+    if (!picker.hasAttribute('data-open')) return false;
+    closePicker();
+  });
+  on('verdict.pass', row((r) => void verdictThenMove(r, 'pass')));
+  on('verdict.fail', row((r) => void verdictThenMove(r, 'fail')));
+  on('verdict.defer', row((r) => void verdictThenMove(r, 'defer')));
+  on('undo', row((r) => void undo(r)));
+  on('dataset', row(openPicker));
+  on('list.next', row(() => focus(focused + 1)));
+  on('list.prev', row(() => focus(focused - 1)));
+  on('object.next', row(() => go(next)));
+  on('object.prev', row(() => go(prev)));
+  on('save.next', () => {
+    if (picker.hasAttribute('data-open') || !whole?.saved) return false;
+    void save(whole, whole.saved).then((ok) => ok && go(next));
   });
 }
 

@@ -3,7 +3,6 @@ import { Hono } from 'hono';
 import { createApp } from '../src/app.ts';
 import { openDatabase } from '../src/db/client.ts';
 import { createRepos, type Repos } from '../src/db/repos/index.ts';
-import { createPages } from '../src/pages/index.tsx';
 
 export const testApp = (): Hono => createApp(openDatabase(':memory:'));
 
@@ -48,10 +47,7 @@ export type PageSeed = Seed & { a: string[]; b: string[] };
 export function pageApp(): { app: Hono; repos: Repos } {
   const db = openDatabase(':memory:');
   const repos = createRepos(db);
-  const app = new Hono();
-  app.route('/', createPages(repos));
-  app.route('/', createApp(db));
-  return { app, repos };
+  return { app: createApp(db), repos };
 }
 
 export const page = async (app: Hono, path: string): Promise<[number, string]> => {

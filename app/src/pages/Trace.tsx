@@ -1,4 +1,3 @@
-import type { Child } from 'hono/jsx';
 import type { IssueRow } from '../db/repos/issue.ts';
 import type { Run } from '../db/repos/run.ts';
 import type { Score } from '../db/repos/score.ts';
@@ -8,7 +7,8 @@ import { parseMaybeJson } from '../db/json.ts';
 import { urls } from '../urls.ts';
 import type { HumanVerdict, Shell } from './data.ts';
 import { Layout } from './Layout.tsx';
-import { Icon, JsonView, pct, Prop, short, since, State, summarize, Values, VerdictPill } from './ui.tsx';
+import { Panel } from './panels.tsx';
+import { Icon, IconButton, JsonView, pct, short, summarize, Values, VerdictPill } from './ui.tsx';
 
 const scoreIcon = (s: Score): 'pass' | 'fail' | 'score' => (s.value === 1 ? 'pass' : s.value === 0 ? 'fail' : 'score');
 
@@ -43,7 +43,7 @@ export const Turns = ({ messages, scores, focus, flags }: { messages: Message[];
   </div>
 );
 
-const NewIssueForm = ({ trace, turn }: { trace: TraceView; turn?: number }) => {
+export const NewIssueForm = ({ trace, turn }: { trace: TraceView; turn?: number }) => {
   const turns = [...new Set((trace.messages ?? []).map((m) => m.turn))];
   const id = (name: string): string => `new-issue-${name}-${trace.id}`;
   return (
@@ -77,22 +77,18 @@ const NewIssueForm = ({ trace, turn }: { trace: TraceView; turn?: number }) => {
   );
 };
 
-const NewIssueButton = ({ compact }: { compact?: boolean }) => (
-  <button class="btn btn-primary" type="button" data-new-issue-open><Icon name="issue" size={compact ? 'sm' : 'md'} />New issue</button>
-);
-
 const Scores = ({ scores, verdict }: { scores: Score[]; verdict: HumanVerdict | null }) => (
   <div class="card card-flush">
     {scores.filter((s) => s.source !== 'human' && s.turn === null).map((s) => (
-      <div class="row">
-        <Icon name={scoreIcon(s)} />
+      <div class="list-row">
+        <Icon name={scoreIcon(s)} size="sm" />
         <div class="grow">{s.name} <span class="muted">· {s.source}</span></div>
         <span class="num strong">{pct(s.value)}</span>
       </div>
     ))}
     {verdict ? (
-      <div class="row">
-        <Icon name="human" />
+      <div class="list-row">
+        <Icon name="human" size="sm" />
         <div class="grow">
           {verdict.name} <span class="muted">· human{verdict.note ? ` · ${verdict.note}` : ''}</span>
         </div>
@@ -105,8 +101,8 @@ const Scores = ({ scores, verdict }: { scores: Score[]; verdict: HumanVerdict | 
 const Events = ({ events }: { events: TraceEvent[] }) => (
   <div class="card card-flush">
     {events.map((e) => (
-      <div class="row">
-        <Icon name="time" />
+      <div class="list-row">
+        <Icon name="time" size="sm" />
         <div class="grow">{e.name} <span class="muted num">· {e.at}</span></div>
         {e.data === undefined ? null : <span class="mono t-meta">{summarize(e.data)}</span>}
       </div>
@@ -114,47 +110,13 @@ const Events = ({ events }: { events: TraceEvent[] }) => (
   </div>
 );
 
-const tokenCount = (m: TraceView['metrics']): number | null => {
-  if (m?.prompt_tokens === undefined && m?.completion_tokens === undefined) return null;
-  return (m.prompt_tokens ?? 0) + (m.completion_tokens ?? 0);
-};
-
-const compact = (n: number): string => (n >= 1000 ? `${(n / 1000).toFixed(1).replace(/\.0$/, '')}k` : String(n));
-
-const plural = (n: number, word: string): string => `${n} ${word}${n === 1 ? '' : 's'}`;
-
-const verdictIcon = { pass: 'pass', fail: 'fail', defer: 'defer' } as const;
-
-const TraceProperties = ({ trace, run, verdict }: { trace: TraceView; run: Run | null; verdict: HumanVerdict | null }) => {
-  const tokens = tokenCount(trace.metrics);
-  const errors = trace.metrics?.errors;
-  const turns = trace.messages?.length ?? 0;
-  return (
-    <section>
-      <h2>Properties</h2>
-      <dl>
-        <Prop name="Verdict" icon={verdict ? verdictIcon[verdict.verdict] : 'time'} class={verdict ? `verdict-${verdict.verdict}` : undefined} empty="Set verdict">
-          {verdict ? verdict.verdict : null}
-        </Prop>
-        <Prop name="Run" icon="run" empty="No run">{run ? <a class="link" href={urls.run(run.id)}>{run.name}</a> : null}</Prop>
-        <Prop name="Dataset item" icon="dataset" class="mono" empty="No dataset item">{trace.dataset_item_id ? short(trace.dataset_item_id) : null}</Prop>
-        <Prop name="Turns" icon="score" class="num" empty="No turns">{turns ? plural(turns, 'turn') : null}</Prop>
-        <Prop name="Start" icon="time" class="num" hint={trace.start}>{since('Started', trace.start)}</Prop>
-        {tokens === null ? null : <Prop name="Tokens" icon="tokens" class="num">{`${compact(tokens)} tokens`}</Prop>}
-        {typeof errors === 'number' ? <Prop name="Errors" icon="fail" class="num">{plural(errors, 'error')}</Prop> : null}
-      </dl>
-    </section>
-  );
-};
-
 const isEmptyValue = (v: unknown): boolean => v === null || v === undefined;
 
-export const TraceBody = ({ trace, verdict, turn, properties }: { trace: TraceView; verdict: HumanVerdict | null; turn?: number; properties?: Child }) => {
+export const TraceBody = ({ trace, verdict, turn }: { trace: TraceView; verdict: HumanVerdict | null; turn?: number }) => {
   const hasScores = trace.scores.some((s) => s.source !== 'human' && s.turn === null) || verdict !== null;
   return (
     <div class="review">
       <NewIssueForm trace={trace} turn={turn} />
-      {properties}
       <div class="block">
         <span class="block-label">{trace.messages?.length ? 'Conversation' : 'Input'}</span>
         {trace.messages?.length ? <Turns messages={trace.messages} scores={trace.scores} focus={turn} flags /> : <JsonView value={trace.input} />}
@@ -189,60 +151,22 @@ export const TraceBody = ({ trace, verdict, turn, properties }: { trace: TraceVi
 
 type Props = { trace: TraceView; run: Run | null; verdict: HumanVerdict | null; turn?: number; issues: IssueRow[]; shell: Shell };
 
-const TraceAside = ({ trace, run, verdict, issues }: Pick<Props, 'trace' | 'run' | 'verdict' | 'issues'>) => (
-  <aside class="aside" aria-label="Trace">
-    <TraceProperties trace={trace} run={run} verdict={verdict} />
-    <section>
-      <h2>Issues</h2>
-      {issues.length ? (
-        <div class="occ-list">
-          {issues.map((i) => (
-            <a class="list-row" href={urls.issue(i.id)}>
-              <State status={i.status} />
-              <span class="grow">{i.title}</span>
-            </a>
-          ))}
-        </div>
-      ) : (
-        <dl><Prop name="Issues" icon="issue" empty="No issues" /></dl>
-      )}
-    </section>
-  </aside>
-);
-
 export const TracePage = ({ trace, run, verdict, turn, issues, shell }: Props) => (
   <Layout
     title={short(trace.id)}
+    heading
     section="traces"
     shell={shell}
     crumbs={run ? [[urls.runs(run.dataset_id), 'Runs'], [urls.run(run.id), run.name]] : [[urls.traces(), 'Traces']]}
-    action={
+    actions={
       <>
-        <a class="btn btn-secondary" href={urls.reviewTrace(trace.id, { run: run?.id })}><Icon name="human" />{verdict ? 'Change verdict' : 'Label'}</a>
-        <NewIssueButton />
+        <IconButton href={urls.reviewTrace(trace.id, { run: run?.id })} icon="human" label={verdict ? 'Change verdict' : 'Label'} />
+        <button class="btn btn-icon" type="button" data-new-issue-open title="New issue" aria-label="New issue"><Icon name="issue" /></button>
       </>
     }
     script="trace"
-    aside={<TraceAside trace={trace} run={run} verdict={verdict} issues={issues} />}
+    aside={<aside class="aside" aria-label="Trace"><Panel data={{ kind: 'trace', trace, run, verdict, issues }} /></aside>}
   >
     <TraceBody trace={trace} verdict={verdict} turn={turn} />
   </Layout>
-);
-
-export const TracePane = ({ trace, run, verdict, closeHref }: { trace: TraceView; run: Run | null; verdict: HumanVerdict | null; closeHref: string }) => (
-  <div class="pane-inner" data-trace={trace.id}>
-    <div class="pane-head">
-      <div class="pane-id">
-        <a class="pane-trace" href={urls.trace(trace.id)} title="Open trace page">{short(trace.id)}</a>
-        {run ? <a class="pill pane-run" href={urls.run(run.id)} title={`Run ${run.name}`}>{run.name}</a> : null}
-      </div>
-      <div class="pane-actions">
-        <NewIssueButton compact />
-        <a class="btn btn-ghost btn-icon" href={urls.reviewTrace(trace.id, { run: run?.id })} title={verdict ? 'Change verdict' : 'Label'} aria-label={verdict ? 'Change verdict' : 'Label'}><Icon name="human" size="sm" /></a>
-        <a class="btn btn-ghost btn-icon" href={urls.trace(trace.id)} title="Open" aria-label="Open trace page"><Icon name="open" size="sm" /></a>
-        <a class="btn btn-ghost btn-icon" href={closeHref} data-pane-close title="Close" aria-label="Close"><Icon name="fail" size="sm" /></a>
-      </div>
-    </div>
-    <TraceBody trace={trace} verdict={verdict} properties={<TraceProperties trace={trace} run={run} verdict={verdict} />} />
-  </div>
 );

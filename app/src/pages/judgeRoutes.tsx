@@ -11,11 +11,10 @@ import type { Shell } from './data.ts';
 import { JudgePage, type JudgeTab } from './JudgeDetail.tsx';
 import { type JudgeFilter, JudgesPage } from './Judges.tsx';
 import { JudgeVersionPage } from './JudgeVersion.tsx';
+import { peekFromQuery } from './peekRoutes.tsx';
 
 const listQuery = z.object({ state: z.enum([...judgeStates, 'all']).default('all') });
 const tabQuery = z.enum(['overview', 'versions', 'disagreements', 'issues']).default('overview');
-
-const activeDisagreements = (repos: Repos, judge: JudgeView): number | null => (judge.active_version_id ? disagreementCount(repos, judge.active_version_id) : null);
 
 export function judgeRoutes(repos: Repos, shell: () => Shell): Hono {
   const app = new Hono();
@@ -25,14 +24,16 @@ export function judgeRoutes(repos: Repos, shell: () => Shell): Hono {
     const all = listJudges(repos).judges;
     const counts = { all: all.length, draft: 0, live: 0, paused: 0 };
     for (const j of all) counts[j.state] += 1;
-    return c.html(<JudgesPage judges={filter === 'all' ? all : all.filter((j) => j.state === filter)} filter={filter} counts={counts} shell={shell()} />);
+    const { selected, pane } = peekFromQuery(repos, c, (name) => ({ kind: 'judge', name }));
+    return c.html(<JudgesPage judges={filter === 'all' ? all : all.filter((j) => j.state === filter)} filter={filter} counts={counts} shell={shell()} selected={selected} pane={pane} />);
   });
 
   app.get('/:name', (c) => {
     const judge = getJudge(repos, c.req.param('name'));
     const tab: JudgeTab = tabQuery.parse(c.req.query('tab'));
     const found = judge.active_version_id ? disagreements(repos, judge.name, 'active').traces : [];
-    return c.html(<JudgePage judge={judge} tab={tab} disagreements={found} issues={issuesForJudge(repos, judge.name)} shell={shell()} />);
+    const { selected, pane } = peekFromQuery(repos, c, (id) => (tab === 'versions' ? { kind: 'version', name: judge.name, number: versionNumber.parse(id) } : { kind: 'issue', id }));
+    return c.html(<JudgePage judge={judge} tab={tab} disagreements={found} issues={issuesForJudge(repos, judge.name)} shell={shell()} selected={selected} pane={pane} />);
   });
 
   app.post('/:name/activate', async (c) => {
@@ -46,8 +47,7 @@ export function judgeRoutes(repos: Repos, shell: () => Shell): Hono {
     const number = versionNumber.parse(c.req.param('number'));
     const version = judge.versions.find((v) => v.number === number);
     if (!version) throw notFound(`judge ${judge.name} version`, String(number));
-    const count = version.active ? activeDisagreements(repos, judge) : null;
-    return c.html(<JudgeVersionPage judge={judge} version={version} disagreements={count} shell={shell()} />);
+    return c.html(<JudgeVersionPage judge={judge} version={version} disagreements={disagreementCount(repos, version.id)} shell={shell()} />);
   });
 
   app.get('/:name/disagreements', (c) => {

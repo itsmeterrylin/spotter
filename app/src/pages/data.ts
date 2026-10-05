@@ -11,6 +11,7 @@ import { unlabeledIds } from '../services/traces.ts';
 import { config } from '../config.ts';
 import { unreadCount } from '../services/notifications.ts';
 import pkg from '../../package.json' with { type: 'json' };
+import { type JudgeResult, judgeResults } from './judgeResult.ts';
 import type { Verdict } from './ui.tsx';
 
 export type HumanVerdict = { name: string; verdict: Verdict; note: string | null };
@@ -31,12 +32,15 @@ export type QueueQuery = { run?: string; filter?: string; judge?: string; versio
 
 const isVerdict = (s: string | null): s is Verdict => s === 'pass' || s === 'fail' || s === 'defer';
 
-export type JudgeSaid = { version: number; verdict: 'pass' | 'fail'; reason: string | null };
+export type JudgeSaid = { version: number; result: JudgeResult; reason: string | null };
 
 export const judgeSaid = (scores: Score[], judge: JudgeQueue | null): JudgeSaid | null => {
   if (!judge) return null;
-  const s = scores.find((x) => x.source === 'judge' && x.judge_version_id === judge.version_id && x.turn === null);
-  return s ? { version: judge.version, verdict: s.value >= 0.5 ? 'pass' : 'fail', reason: s.reason } : null;
+  const mine = scores.filter((x) => x.judge_version_id === judge.version_id);
+  const result = judgeResults(mine)[0];
+  if (!result) return null;
+  const failed = mine.find((x) => x.value < 0.5);
+  return { version: judge.version, result, reason: (failed ?? mine[0])?.reason ?? null };
 };
 
 export const humanVerdict = (scores: Score[]): HumanVerdict | null => {

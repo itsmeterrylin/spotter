@@ -1,7 +1,8 @@
+import { on } from './keys.ts';
 import { focusRow } from './list.ts';
 import { patchIssue, patchJudge } from './api.ts';
 
-export type Kind = 'issue' | 'judge';
+export type Kind = 'issue' | 'judge' | 'severity';
 
 const menuOf = (el: Element | null): HTMLElement | null => el?.closest<HTMLElement>('[data-status-menu]') ?? null;
 const popover = (m: HTMLElement): HTMLElement | null => m.querySelector('[data-status-popover]');
@@ -12,8 +13,11 @@ const items = (m: HTMLElement): HTMLButtonElement[] => [...m.querySelectorAll<HT
 const pickable = (m: HTMLElement): HTMLButtonElement[] => items(m).filter((i) => !i.hidden && i.getAttribute('aria-disabled') !== 'true');
 
 /** PATCH one issue or judge. Resolves to an error message, or null on success. */
-export const patchStatus = (kind: Kind, id: string, value: string, reason?: string): Promise<string | null> =>
-  kind === 'issue' ? patchIssue(id, reason === undefined ? { status: value } : { status: value, dismissed_reason: reason }) : patchJudge(id, { state: value });
+export const patchStatus = (kind: Kind, id: string, value: string, reason?: string): Promise<string | null> => {
+  if (kind === 'severity') return patchIssue(id, { severity: value });
+  if (kind === 'judge') return patchJudge(id, { state: value });
+  return patchIssue(id, reason === undefined ? { status: value } : { status: value, dismissed_reason: reason });
+};
 
 let current: HTMLElement | null = null;
 
@@ -115,15 +119,18 @@ async function pick(m: HTMLElement, item: HTMLElement): Promise<void> {
   else await refreshMenus([m]);
 }
 
-const typing = (t: EventTarget | null): boolean => t instanceof HTMLInputElement || t instanceof HTMLTextAreaElement || t instanceof HTMLSelectElement;
+const shown = (el: HTMLElement): boolean => el.offsetParent !== null;
 
 const hotkeyTarget = (): HTMLElement | null =>
-  document.querySelector<HTMLElement>('[data-row][data-focus] [data-status-menu]') ?? document.querySelector<HTMLElement>('[data-status-menu][data-variant="field"]');
+  document.querySelector<HTMLElement>('[data-row][data-focus] [data-status-menu]') ??
+  [...document.querySelectorAll<HTMLElement>('[data-status-menu][data-variant="field"]')].find(shown) ??
+  null;
 
 function onKey(e: KeyboardEvent): void {
   if (e.metaKey || e.ctrlKey || e.altKey) return;
   const m = current;
   if (m) {
+    e.stopImmediatePropagation();
     const active = items(m).find((i) => i.hasAttribute('data-active'));
     if (e.key === 'ArrowDown' || e.key === 'ArrowUp') move(m, e.key === 'ArrowDown' ? 1 : -1);
     else if (e.key === 'Enter' && active) void pick(m, active);
@@ -134,14 +141,14 @@ function onKey(e: KeyboardEvent): void {
       void pick(m, item);
     } else return;
     e.preventDefault();
-    return;
   }
-  if (e.key !== 's' || typing(e.target)) return;
-  const target = hotkeyTarget();
-  if (!target) return;
-  e.preventDefault();
-  show(target);
 }
+
+on('status', () => {
+  const target = hotkeyTarget();
+  if (!target) return false;
+  show(target);
+});
 
 document.addEventListener('keydown', onKey, true);
 

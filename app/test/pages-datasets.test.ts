@@ -15,25 +15,23 @@ describe('datasets', () => {
   test('GET /datasets lists name, items, runs, and last run', async () => {
     const [status, html] = await page(app, '/datasets');
     expect(status).toBe(200);
-    expect(html).toContain('<th>Name</th><th class="num">Items</th><th class="num">Runs</th><th>Last run</th>');
-    expect(html).toContain(`<tr class="linkrow" data-href="${base}/datasets/${s.datasetId}">`);
+    expect(html).toContain(`<a class="grow strong row-link" href="${base}/datasets/${s.datasetId}">golden-`);
     expect(html).toContain(`href="${base}/datasets/${s.datasetId}">golden-`);
-    expect(html).toContain('<td class="num">3</td><td class="num">2</td>');
-    expect(html).toContain(`href="${base}/runs/${s.runB}">rules-v2</a>`);
+    expect(html).toContain('3 items');
+    expect(html).toContain(`href="${base}/runs/${s.runB}" title="Last run">rules-v2</a>`);
   });
 
   test('GET /datasets/:id shows the items table, the runs on it, and Compare latest', async () => {
     const [status, html] = await page(app, `/datasets/${s.datasetId}`);
     expect(status).toBe(200);
-    expect(html).toContain('<th>Id</th><th>Input</th><th>Expected</th><th>Source</th>');
+    expect(html).toContain('<span class="id mono">');
     for (const id of s.itemIds) expect(html).toContain(short(id));
     expect(html).toContain('set 0');
-    expect(html).toContain('<td class="wrap">bench</td>');
+    expect(html).toContain('<span class="meta expected">bench</span>');
     expect(html).toContain('rules-v1');
     expect(html).toContain('rules-v2');
-    expect(html).toContain(`<a class="btn btn-primary" href="${base}/datasets/${s.datasetId}/compare?runs=${s.runA}%2C${s.runB}&amp;only=changes">`);
-    expect(html).toContain('Compare latest</a>');
-    expect(html).toContain(`<a href="${base}/datasets">Datasets</a>`);
+    expect(html).toContain(`<a class="btn btn-icon" href="${base}/datasets/${s.datasetId}/compare?runs=${s.runA}%2C${s.runB}&amp;only=changes" title="Compare latest runs" aria-label="Compare latest runs">`);
+    expect(html).toContain(`<a class="crumb" href="${base}/datasets">Datasets</a>`);
     expect((await page(app, '/datasets/nope'))[0]).toBe(404);
   });
 
@@ -48,10 +46,11 @@ describe('traces', () => {
   test('GET /traces lists every trace with item, run, output, a column per score, and a verdict pill', async () => {
     const [status, html] = await page(app, '/traces');
     expect(status).toBe(200);
-    expect(html).toContain('<th>Item</th><th>Run</th><th>Output</th><th class="num" data-score="exercise_match">exercise_match</th><th>Verdict</th>');
-    for (const id of [...s.a, ...s.b]) expect(html).toContain(`data-href="${base}/traces/${id}"`);
+    expect(html).toContain('<div class="group-head">');
+    for (const id of [...s.a, ...s.b]) expect(html).toContain(`href="${base}/traces/${id}">`);
+    expect(html).toContain('exercise_match ');
     expect(html).toContain(`href="${base}/traces?run=${s.runB}">rules-v2</a>`);
-    expect(html).toContain('<td class="wrap">bench</td>');
+    expect(html).toContain('>bench</a>');
     expect(html).toContain('pill pill-fail');
     expect(html).toContain('unlabeled</span>');
     expect(html).not.toContain('Review unlabeled');
@@ -59,14 +58,13 @@ describe('traces', () => {
   });
 
   test('?run= narrows to one run, adds the breadcrumb, and offers Review unlabeled', async () => {
-    const [status, html] = await page(app, `/traces?run=${s.runB}&score=exercise_match`);
+    const [status, html] = await page(app, `/traces?run=${s.runB}`);
     expect(status).toBe(200);
     for (const id of s.b) expect(html).toContain(short(id));
     for (const id of s.a) expect(html).not.toContain(short(id));
-    expect(html).toContain(`<a class="btn btn-primary" href="${base}/review?run=${s.runB}&amp;filter=unlabeled">`);
+    expect(html).toContain(`<a class="btn btn-icon" href="${base}/review?run=${s.runB}&amp;filter=unlabeled" title="Review unlabeled" aria-label="Review unlabeled">`);
     expect(html).toContain('Review unlabeled');
-    expect(html).toContain(`<a href="${base}/runs/${s.runB}">rules-v2</a>`);
-    expect(html).toContain('data-score="exercise_match" data-selected="1"');
+    expect(html).toContain(`<a class="crumb" href="${base}/runs/${s.runB}">rules-v2</a>`);
     expect((await page(app, '/traces?run=nope'))[0]).toBe(404);
   });
 

@@ -4,20 +4,28 @@ import type { IconName } from '../../../design-system/src/icons.ts';
 import { font } from '../../../design-system/src/tokens.ts';
 import { urls } from '../urls.ts';
 import { initials, type Shell } from './data.ts';
-import { type Crumb, Crumbs, Icon, sprite } from './ui.tsx';
+import { type Crumb, Icon, sprite } from './ui.tsx';
 
 export type Section = 'issues' | 'runs' | 'datasets' | 'traces' | 'judges' | 'notifications' | 'settings';
 
 export type Tab = { href: string; label: string; count?: number; current: boolean };
 
 type Props = {
+  /** Document title. The header's current crumb shows it unless `current` says otherwise. */
   title: string;
+  /** Show the title and meta in the body. Detail pages only; lists and tools let the header name them. */
+  heading?: boolean;
   meta?: Child;
   section: Section | null;
   shell: Shell;
   tabs?: Tab[];
+  /** Parent links between the project and the current page. */
   crumbs?: Crumb[];
-  action?: Child;
+  current?: string;
+  /** Icon buttons for the right end of the header. */
+  actions?: Child;
+  /** Which keymap view the page uses. Defaults to `detail` when `heading` is set, else `list`. */
+  view?: 'list' | 'detail' | 'review';
   script?: string;
   aside?: Child;
   children: Child;
@@ -26,8 +34,8 @@ type Props = {
 // Runs before the stylesheet so a saved theme never flashes the other one.
 const themeBoot = `<script>try{var t=localStorage.getItem('spotter.theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>`;
 const themeToggle = `<script>(function(){var r=document.documentElement,b=document.querySelectorAll('[data-theme-choice]');function cur(){try{return localStorage.getItem('spotter.theme')||'system'}catch(e){return 'system'}}function paint(c){b.forEach(function(x){x.setAttribute('aria-pressed',String(x.dataset.themeChoice===c))})}function set(c){if(c==='system')r.removeAttribute('data-theme');else r.setAttribute('data-theme',c);try{if(c==='system')localStorage.removeItem('spotter.theme');else localStorage.setItem('spotter.theme',c)}catch(e){}paint(c)}b.forEach(function(x){x.addEventListener('click',function(){set(x.dataset.themeChoice)})});paint(cur())})()</script>`;
-// The rail search button and "/" open the sidebar (on narrow screens) and focus its search box; without JS the link opens /traces.
-const searchBoot = `<script>(function(){var i=document.getElementById('sidebar-search'),t=document.getElementById('nav-toggle');function go(e){if(!i)return;e.preventDefault();if(t)t.checked=true;i.focus()}var b=document.querySelector('[data-search]');if(b)b.addEventListener('click',go);document.addEventListener('keydown',function(e){var x=e.target;if(e.key!=='/'||e.metaKey||e.ctrlKey||x instanceof HTMLInputElement||x instanceof HTMLTextAreaElement||x instanceof HTMLSelectElement)return;go(e)})})()</script>`;
+// Runs before the stylesheet so a collapsed sidebar never flashes open.
+const sidebarBoot = `<script>try{if(localStorage.getItem('spotter.sidebar')==='hidden')document.documentElement.setAttribute('data-sidebar','hidden')}catch(e){}</script>`;
 
 const count = (n: number): string => n.toLocaleString('en-US');
 
@@ -115,6 +123,32 @@ const Tabs = ({ tabs }: { tabs: Tab[] }) => (
   </nav>
 );
 
+type HeaderProps = { project: string | null; crumbs: Crumb[]; current: string; named: boolean; actions?: Child };
+
+const Header = ({ project, crumbs, current, named, actions }: HeaderProps) => {
+  const parents: Crumb[] = project ? [[urls.home(), project], ...crumbs] : crumbs;
+  return (
+    <header class="header">
+      <div class="header-start">
+        <button class="btn btn-ghost btn-icon sidebar-toggle" type="button" data-sidebar-toggle title="Toggle sidebar ([)" aria-label="Toggle sidebar"><Icon name="sidebar" size="sm" /></button>
+        <nav class="crumbs" aria-label="Breadcrumb">
+          {parents.map(([href, label]) => (
+            <>
+              <a class="crumb" href={href}>{label}</a>
+              <Icon name="crumb" size="sm" />
+            </>
+          ))}
+          {named ? <span class="crumb-current">{current}</span> : <h1 class="crumb-current">{current}</h1>}
+        </nav>
+      </div>
+      <div class="header-actions">
+        {actions}
+        <button class="btn btn-ghost btn-icon details-toggle" type="button" data-details-toggle title="Toggle details" aria-label="Toggle details"><Icon name="details" size="sm" /></button>
+      </div>
+    </header>
+  );
+};
+
 const StatusBar = ({ shell }: { shell: Shell }) => (
   <footer class="statusbar">
     <span>
@@ -129,49 +163,57 @@ const StatusBar = ({ shell }: { shell: Shell }) => (
   </footer>
 );
 
-export const Layout = ({ title, meta, section, shell, tabs, crumbs = [], action, script, aside, children }: Props) => (
-  <>
-    {raw('<!doctype html>')}
-    <html lang="en">
-      <head>
-        <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>{`${title} · Spotter`}</title>
-        <link rel="icon" href="/favicon.svg" />
-        {raw(themeBoot)}
-        <link rel="stylesheet" href={font.googleFontsUrl} />
-        <link rel="stylesheet" href="/spotter.css" />
-        <link rel="stylesheet" href="/pages.css" />
-        {script ? <script type="module" src={`/client/${script}.js`}></script> : null}
-      </head>
-      <body>
-        {sprite}
-        <div class="shell">
-          <input class="nav-toggle" type="checkbox" id="nav-toggle" />
-          <Rail section={section} shell={shell} />
-          <Sidebar section={section} shell={shell} />
-          <div class="work">
-            <main class="main">
-              {tabs?.length ? <Tabs tabs={tabs} /> : null}
-              <div class="container">
-                <header class="page-title">
-                  <div class="head">
-                    {crumbs.length ? <Crumbs items={crumbs} /> : null}
-                    <h1 class="t-title">{title}</h1>
-                    {meta ? <p class="meta muted">{meta}</p> : null}
+export const Layout = ({ title, heading = false, meta, section, shell, tabs, crumbs = [], current, actions, view, script, aside, children }: Props) => {
+  const keyView = view ?? (heading ? 'detail' : 'list');
+  const back = crumbs.at(-1)?.[0];
+  return (
+    <>
+      {raw('<!doctype html>')}
+      <html lang="en">
+        <head>
+          <meta charset="utf-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1" />
+          <title>{`${title} · Spotter`}</title>
+          <link rel="icon" href="/favicon.svg" />
+          {raw(themeBoot)}
+        {raw(sidebarBoot)}
+          <link rel="stylesheet" href={font.googleFontsUrl} />
+          <link rel="stylesheet" href="/spotter.css" />
+          <link rel="stylesheet" href="/pages.css" />
+          <script type="module" src={`/client/${script ?? (keyView === 'detail' ? 'detail' : 'shell')}.js`}></script>
+        </head>
+        <body data-view={keyView} data-back={keyView === 'list' ? undefined : back}>
+          {sprite}
+          <div class="shell">
+            <input class="nav-toggle" type="checkbox" id="nav-toggle" />
+            <Rail section={section} shell={shell} />
+            <Sidebar section={section} shell={shell} />
+          <div class="sidebar-hot" data-sidebar-hot aria-hidden="true"></div>
+            <div class="work">
+              <Header project={shell.project} crumbs={crumbs} current={current ?? title} named={heading} actions={actions} />
+              <div class="work-body">
+                <main class="main">
+                  {tabs?.length ? <Tabs tabs={tabs} /> : null}
+                  <div class={heading ? 'container detail' : 'container no-title'}>
+                    {heading ? (
+                      <div class="page-title">
+                        <div class="head">
+                          <h1 class="t-title">{title}</h1>
+                          {meta ? <p class="meta muted">{meta}</p> : null}
+                        </div>
+                      </div>
+                    ) : null}
+                    {children}
                   </div>
-                  {action ? <div class="actions">{action}</div> : null}
-                </header>
-                {children}
+                </main>
+                {aside}
               </div>
-            </main>
-            {aside}
+            </div>
+            <StatusBar shell={shell} />
           </div>
-          <StatusBar shell={shell} />
-        </div>
-        {raw(searchBoot)}
-        {section === 'settings' ? raw(themeToggle) : null}
-      </body>
-    </html>
-  </>
-);
+          {section === 'settings' ? raw(themeToggle) : null}
+        </body>
+      </html>
+    </>
+  );
+};

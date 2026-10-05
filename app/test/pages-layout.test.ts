@@ -43,14 +43,67 @@ describe('layout', () => {
     expect(html).toContain(`<span class="mcp" title="${base}/mcp"><i class="live" aria-hidden="true"></i>MCP localhost:3000/mcp</span>`);
     expect(html).toContain('id="nav-toggle"');
     expect(html).toContain('aria-label="Menu"');
-    expect(html).toContain('<h1 class="t-title">Issues</h1>');
-    expect(html).not.toContain('class="aside');
+    expect(html).toContain('<h1 class="crumb-current">Issues</h1>');
+    expect(html).toContain('<header class="header">');
+    expect(html).toContain('<a class="crumb" href="http://localhost:3000/">copper</a>');
+    expect(html).not.toContain('<aside class="aside" ');
+    expect(html).toContain('<aside class="aside pane" id="pane" aria-label="Peek" hidden="">');
     expect(html).toContain('/pages.css');
     expect(html).toContain('<symbol id="i-paw"');
     expect(html).toContain('<link rel="icon" href="/favicon.svg"');
     expect(html).toContain('Datasets');
     expect(html).toContain('Judges');
     expect(html).toContain('Traces');
+  });
+
+  test('every view renders the header bar; tabs sit in a row under it, only where a view has tabs; only detail pages title the body', async () => {
+    const [, issues] = await page(app, '/');
+    expect(issues.indexOf('<header class="header">')).toBeLessThan(issues.indexOf('<nav class="tabs"'));
+    for (const path of ['/runs', '/datasets', '/notifications', '/settings', '/traces', '/judges', '/']) {
+      const [status, html] = await page(app, path);
+      expect(status).toBe(200);
+      expect(html.match(/<header class="header">/g)?.length).toBe(1);
+      expect(html).not.toContain('<h1 class="t-title">');
+    }
+    const [, runs] = await page(app, '/runs');
+    expect(runs).not.toContain('<nav class="tabs"');
+    const [, detail] = await page(app, `/runs/${s.runB}`);
+    expect(detail).toContain('<h1 class="t-title">rules-v2</h1>');
+    expect(detail).toContain('<header class="header">');
+  });
+
+  test('every object list is a .list-row list: no tables or .row blocks, one row-link per row, the shared keymap loaded', async () => {
+    const lists: Array<[path: string, script: string]> = [
+      ['/traces', 'traces'],
+      ['/runs', 'rows'],
+      ['/datasets', 'rows'],
+      [`/datasets/${s.datasetId}`, 'rows'],
+      [`/runs/${s.runB}`, 'rows'],
+      ['/notifications', 'rows'],
+      ['/settings', ''],
+    ];
+    for (const [path, script] of lists) {
+      const [status, html] = await page(app, path);
+      expect(status).toBe(200);
+      expect(html).not.toContain('<table');
+      expect(html).not.toContain('class="row"');
+      expect(html).toContain('class="list-row"');
+      if (script) expect(html).toContain(`/client/${script}.js`);
+    }
+    for (const name of ['rows', 'traces', 'issue', 'judge', 'trace', 'issues', 'judges']) {
+      expect(await (await app.request(`/client/${name}.js`)).text()).toContain('data-focus');
+    }
+  });
+
+  test('the traces list groups rows under verdict headers (failing first, then unlabeled, then passed), and each row links to its trace and still opens the pane', async () => {
+    const [, html] = await page(app, '/traces');
+    const heads = [...html.matchAll(/<div class="group-head">.*?<\/span>([A-Za-z]+)<span class="count">(\d+)<\/span><\/div>/g)].map((m) => `${m[1]} ${m[2]}`);
+    expect(heads).toEqual(['Failing 1', 'Unlabeled 5']);
+    expect(html.match(/class="list-row" data-row="true" data-peek="\/traces\//g)?.length).toBe(6);
+    for (const id of [...s.a, ...s.b]) expect(html).toContain(`<a class="grow row-link" href="${base}/traces/${id}">`);
+    const [, pane] = await page(app, `/traces?trace=${s.b[0]}`);
+    expect(pane).toContain(`data-peek="/traces/${s.b[0]}/pane" data-peek-id="${s.b[0]}" data-peeked="1"`);
+    expect(pane).toContain('<div class="pane-inner"');
   });
 
   test('each section page marks its own nav item active', async () => {
@@ -63,15 +116,15 @@ describe('layout', () => {
 
   test('/traces?q= searches transcript text and ?tab=unlabeled keeps traces without a human label', async () => {
     const [, all] = await page(app, '/traces');
-    expect(all.match(/<tr class="linkrow"/g)?.length).toBe(6);
+    expect(all.match(/class="list-row" data-row="true" data-peek="\/traces\//g)?.length).toBe(6);
     expect(all).toContain('<a class="tab" href="http://localhost:3000/traces" aria-current="page">All</a>');
     const [, found] = await page(app, '/traces?q=squat');
-    expect(found.match(/<tr class="linkrow"/g)?.length).toBe(1);
-    expect(found).toContain('<span class="pill pill-brand"><svg class="ic ic-sm" aria-hidden="true"><use href="#i-search"/></svg>squat</span>');
+    expect(found.match(/class="list-row" data-row="true" data-peek="\/traces\//g)?.length).toBe(1);
+    expect(found).toContain('<span class="pill"><svg class="ic ic-sm" aria-hidden="true"><use href="#i-search"/></svg>squat</span>');
     const [, none] = await page(app, '/traces?q=nothing-matches');
     expect(none).toContain('No matches');
     const [, unlabeled] = await page(app, '/traces?tab=unlabeled');
-    expect(unlabeled.match(/<tr class="linkrow"/g)?.length).toBe(5);
+    expect(unlabeled.match(/class="list-row" data-row="true" data-peek="\/traces\//g)?.length).toBe(5);
     expect(unlabeled).toContain('<a class="tab" href="http://localhost:3000/traces?tab=unlabeled" aria-current="page">Unlabeled</a>');
   });
 
@@ -121,19 +174,38 @@ describe('layout', () => {
     expect(ico.headers.get('location')).toBe('/favicon.svg');
   });
 
+  test('links are muted with no underline at rest, titles are primary, and underline appears on hover only', async () => {
+    const css = await (await app.request('/spotter.css')).text();
+    expect(css).toContain('.link { color: var(--ink-muted); font-weight: 450; text-decoration: none;');
+    expect(css).toContain('.link:hover { color: var(--ink); text-decoration: underline; }');
+    expect(css).toContain('.link-title { color: var(--ink); font-weight: 500; }');
+    const pages = await (await app.request('/pages.css')).text();
+    expect(pages).toContain('a.row-link { color: var(--ink); text-decoration: none; }');
+    expect(pages).toContain('a.row-link:hover { text-decoration: underline;');
+    const [, runs] = await page(app, '/runs');
+    expect(runs).not.toContain('pill-brand');
+  });
+
+  test('section labels lay out icon and text on one line, flush with the content', async () => {
+    const pages = await (await app.request('/pages.css')).text();
+    expect(pages).toContain('.block-label { display: flex; align-items: center; gap: var(--space-6); padding-inline: 0;');
+  });
+
   test('serves pages.css and the built client modules', async () => {
     const css = await app.request('/pages.css');
     expect(css.status).toBe(200);
     const text = await css.text();
     expect(text).toContain('.verdict-row');
     expect(text).toContain('.sidebar');
-    expect(text).toContain('grid-template-columns: var(--rail) var(--sidebar) minmax(0, 1fr)');
-    expect(text).toContain('@media (max-width: 1199px)');
+    expect(text).toContain('grid-template-columns: var(--rail) var(--sidebar-w, var(--sidebar)) minmax(0, 1fr)');
+    expect(text).toContain('@media (max-width: 1059px)');
+    expect(text).toContain('translateX(calc(-1 * (var(--sidebar) + 16px)))');
     expect(text).toContain('@media (max-width: 899px)');
     const review = await app.request('/client/review.js');
     expect(review.status).toBe(200);
     expect(review.headers.get('content-type')).toContain('javascript');
-    expect(await review.text()).toContain('keydown');
+    expect(await review.text()).toContain('verdict.pass');
+    expect(await (await app.request('/client/shell.js')).text()).toContain('spotter.sidebar');
     expect((await app.request('/client/compare.js')).status).toBe(200);
     expect(await (await app.request('/client/issues.js')).text()).toContain('row-dismiss');
     expect(await (await app.request('/client/issue.js')).text()).toContain('data-dismiss-form');
@@ -148,11 +220,53 @@ describe('layout', () => {
     expect((await app.request('/client/nope.js')).status).toBe(404);
   });
 
-  test('error pages keep the sidebar and offer the runs list', async () => {
-    const [status, html] = await page(app, '/runs/nope');
+  test('an unknown object says what is missing and offers its own parent list', async () => {
+    const cases: Array<[path: string, title: string, list: string, label: string]> = [
+      ['/runs/nope', 'No run nope', 'runs', 'Runs'],
+      ['/traces/nope', 'No trace nope', 'traces', 'Traces'],
+      ['/datasets/nope', 'No dataset nope', 'datasets', 'Datasets'],
+      ['/issues/nope', 'No issue nope', '', 'Issues'],
+      ['/judges/nope', 'No judge nope', 'judges', 'Judges'],
+          ];
+    for (const [path, title, list, label] of cases) {
+      const [status, html] = await page(app, path);
+      expect(status).toBe(404);
+      expect(html).toContain(`<h1 class="crumb-current">${title}</h1>`);
+      expect(html).toContain('<aside class="sidebar">');
+      expect(html).toContain(`<a class="btn btn-primary" href="${base}/${list}">${label}</a>`);
+    }
+  });
+
+  test('an unknown route renders inside the shell with the path, while API and MCP paths keep the plain 404', async () => {
+    const [status, html] = await page(app, '/no/such/page');
     expect(status).toBe(404);
-    expect(html).toContain('Not here');
+    expect(html).toContain('<h1 class="crumb-current">Page not found</h1>');
+    expect(html).toContain('/no/such/page');
     expect(html).toContain('<aside class="sidebar">');
-    expect(html).toContain(`href="${base}/runs">Runs</a>`);
+    expect(html).toContain('<title>Page not found · Spotter</title>');
+    const api = await app.request('/api/no/such/route');
+    expect(api.status).toBe(404);
+    expect(await api.text()).toBe('404 Not Found');
+  });
+
+
+  test('every page names its keymap view, and detail pages carry their default list', async () => {
+    const cases: Array<[string, string, string | undefined]> = [
+      ['/', 'list', undefined],
+      ['/traces', 'list', undefined],
+      [`/runs/${s.runA}`, 'detail', `${base}/runs?dataset=${s.datasetId}`],
+      [`/datasets/${s.datasetId}`, 'detail', `${base}/datasets`],
+      ['/settings', 'list', undefined],
+    ];
+    for (const [path, view, back] of cases) {
+      const [status, html] = await page(app, path);
+      expect(status).toBe(200);
+      expect(html).toContain(`<body data-view="${view}"`);
+      expect(html).toContain("localStorage.getItem('spotter.sidebar')");
+      expect(html).toContain('title="Toggle sidebar ([)"');
+      expect(html).toContain('title="Toggle details"');
+      if (back) expect(html).toContain(`data-back="${back}"`);
+      expect(html).toContain(`<script type="module" src="/client/`);
+    }
   });
 });

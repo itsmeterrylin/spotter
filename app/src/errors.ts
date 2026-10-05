@@ -5,12 +5,13 @@ export class ApiError extends Error {
     readonly status: ErrorStatus,
     readonly code: string,
     message: string,
+    readonly subject?: { what: string; id: string },
   ) {
     super(message);
   }
 }
 
 export const invalid = (message: string): ApiError => new ApiError(400, 'invalid', message);
-export const notFound = (what: string, id: string): ApiError => new ApiError(404, 'not_found', `${what} ${id} not found`);
+export const notFound = (what: string, id: string): ApiError => new ApiError(404, 'not_found', `${what} ${id} not found`, { what, id });
 export const conflict = (message: string): ApiError => new ApiError(409, 'conflict', message);
 export const unsupportedMedia = (message: string): ApiError => new ApiError(415, 'unsupported_media_type', message);

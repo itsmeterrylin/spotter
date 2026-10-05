@@ -103,10 +103,13 @@ export const size = {
   row: 44,
   container: 1200,
   containerNarrow: 440,
-  /** Shell regions: left rail, section sidebar, right aside (wide for the traces pane), bottom status bar. */
+  /** Widest a detail page body gets, left-aligned under the title. */
+  detail: 760,
+  /** Shell regions: left rail, section sidebar, right aside and peek panel, bottom status bar. */
   rail: 48,
   sidebar: 244,
   aside: 386,
-  asideWide: 440,
   statusbar: 28,
+  /** Header bar at the top of the main panel. */
+  header: 44,
 } as const;

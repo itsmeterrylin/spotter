@@ -1,3 +1,5 @@
+import { on } from './keys.ts';
+
 type Upsert = { id: string; status: string; suppressed: boolean; url: string };
 type ApiError = { error?: { message?: string } };
 
@@ -17,7 +19,7 @@ const showSuppressed = async (form: HTMLFormElement, result: Upsert): Promise<vo
   const issue = (await (await fetch(`/api/issues/${result.id}`)).json()) as { title?: string };
   slot.innerHTML = '<span class="pill"><svg class="ic ic-sm" aria-hidden="true"><use href="#i-dismiss"/></svg>Dismissed</span>';
   const link = document.createElement('a');
-  link.className = 'link';
+  link.className = 'link link-title';
   link.href = result.url;
   link.textContent = issue.title ?? 'Open';
   slot.append(link);
@@ -51,6 +53,11 @@ async function submit(form: HTMLFormElement): Promise<void> {
 }
 
 export function wireNewIssue(): void {
+  on('close', () => {
+    const form = document.querySelector<HTMLFormElement>('form[data-new-issue]:not([hidden])');
+    if (!form) return false;
+    form.hidden = true;
+  });
   document.addEventListener('click', (e) => {
     if (!(e.target instanceof Element)) return;
     const opener = e.target.closest<HTMLElement>('[data-new-issue-open]');

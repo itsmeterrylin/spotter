@@ -1,6 +1,9 @@
 import { patchIssue } from './api.ts';
 import './bulk.ts';
-import { focusedRow, focusRow, isTyping } from './list.ts';
+import './panels.ts';
+import './peek.ts';
+import { on } from './keys.ts';
+import { focusedRow, focusRow } from './list.ts';
 import './statusMenu.ts';
 
 const list = document.querySelector<HTMLElement>('.issue-list');
@@ -39,14 +42,13 @@ document.addEventListener('statusmenu:pick', (e) => {
   showForm(row);
 });
 
-document.addEventListener('keydown', (e) => {
-  if (e.metaKey || e.ctrlKey || e.altKey) return;
-  if (isTyping(e.target)) {
-    if (e.key === 'Escape') hideForm();
-    return;
-  }
-  if (e.key === 'd' && focusedRow()) {
-    e.preventDefault();
-    showForm(focusedRow());
-  } else if (e.key === 'Escape') hideForm();
+on('dismiss', () => {
+  const row = focusedRow();
+  if (!row) return false;
+  showForm(row);
+});
+
+on('close', () => {
+  if (!form || form.hidden) return false;
+  hideForm();
 });

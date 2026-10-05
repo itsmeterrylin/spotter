@@ -9,16 +9,16 @@ const icons: Record<NotificationKind, IconName> = { regression: 'down', unlabele
 type Props = { items: Notification[]; shell: Shell };
 
 export const NotificationsPage = ({ items, shell }: Props) => (
-  <Layout title="Notifications" section="notifications" shell={shell}>
+  <Layout title="Notifications" section="notifications" shell={shell} script="rows">
     {items.length ? (
-      <div class="card card-flush">
+      <div class="card card-flush" data-list>
         {items.map((n) => (
-          <div class="row" data-kind={n.kind}>
-            <Icon name={icons[n.kind]} />
-            <div class="grow">
+          <div class="list-row" data-row data-kind={n.kind}>
+            <Icon name={icons[n.kind]} size="sm" />
+            <span class="grow">
               <span class="strong num">{n.count}</span> {n.title} <span class="muted">· {n.detail}</span>
-            </div>
-            <a class="btn btn-primary" href={n.url}>{n.action}</a>
+            </span>
+            <a class="meta row-link" href={n.url}>{n.action}</a>
           </div>
         ))}
       </div>
