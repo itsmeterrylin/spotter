@@ -84,15 +84,15 @@ const NewIssueButton = ({ compact }: { compact?: boolean }) => (
 const Scores = ({ scores, verdict }: { scores: Score[]; verdict: HumanVerdict | null }) => (
   <div class="card card-flush">
     {scores.filter((s) => s.source !== 'human' && s.turn === null).map((s) => (
-      <div class="row">
-        <Icon name={scoreIcon(s)} />
+      <div class="list-row">
+        <Icon name={scoreIcon(s)} size="sm" />
         <div class="grow">{s.name} <span class="muted">· {s.source}</span></div>
         <span class="num strong">{pct(s.value)}</span>
       </div>
     ))}
     {verdict ? (
-      <div class="row">
-        <Icon name="human" />
+      <div class="list-row">
+        <Icon name="human" size="sm" />
         <div class="grow">
           {verdict.name} <span class="muted">· human{verdict.note ? ` · ${verdict.note}` : ''}</span>
         </div>
@@ -105,8 +105,8 @@ const Scores = ({ scores, verdict }: { scores: Score[]; verdict: HumanVerdict | 
 const Events = ({ events }: { events: TraceEvent[] }) => (
   <div class="card card-flush">
     {events.map((e) => (
-      <div class="row">
-        <Icon name="time" />
+      <div class="list-row">
+        <Icon name="time" size="sm" />
         <div class="grow">{e.name} <span class="muted num">· {e.at}</span></div>
         {e.data === undefined ? null : <span class="mono t-meta">{summarize(e.data)}</span>}
       </div>
@@ -197,10 +197,10 @@ const TraceAside = ({ trace, run, verdict, issues }: Pick<Props, 'trace' | 'run'
       {issues.length ? (
         <div class="occ-list">
           {issues.map((i) => (
-            <a class="list-row" href={urls.issue(i.id)}>
+            <div class="list-row" data-row>
               <State status={i.status} />
-              <span class="grow">{i.title}</span>
-            </a>
+              <a class="grow row-link" href={urls.issue(i.id)}>{i.title}</a>
+            </div>
           ))}
         </div>
       ) : (

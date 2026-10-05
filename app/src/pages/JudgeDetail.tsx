@@ -3,7 +3,7 @@ import type { IssueListRow } from '../services/issues.ts';
 import { labelTarget, shownRow, type JudgeView, type VersionView } from '../services/judges.ts';
 import { urls } from '../urls.ts';
 import type { Shell } from './data.ts';
-import { ActivateForm, DisagreementsLink, Rates, StatusPill } from './Judges.tsx';
+import { ActivateForm, DisagreementsLink, StatusPill } from './Judges.tsx';
 import { VersionBody } from './JudgeVersion.tsx';
 import { Layout, type Tab } from './Layout.tsx';
 import { ago, Empty, Icon, JudgeStateIcon, judgeOptions, judgeStateLabel, pct, Prop, SeverityPill, short, since, State, StatusMenu, summarize } from './ui.tsx';
@@ -24,21 +24,13 @@ const tabs = (judge: JudgeView, tab: JudgeTab, disagreements: number, issues: nu
 const Version = ({ name, version: v, disagreements }: { name: string; version: VersionView; disagreements: number | null }) => {
   const row = shownRow(v.calibration);
   return (
-    <div class="version" data-active={v.active ? '1' : undefined}>
-      <div class="stack" style="--gap: 4px">
-        <a class="link t-heading num" href={v.url}>v{v.number}</a>
-        {v.active ? <span class="pill pill-pass"><Icon name="pass" size="sm" />Active</span> : null}
-      </div>
-      <div class="stack">
-        <span class="muted note">
-          {v.note ?? v.model} <span class="muted">· {v.created_by}</span>
-        </span>
-        {row ? <Rates row={row} /> : <StatusPill status="needs_labels" />}
-      </div>
-      <div class="actions">
-        {v.active && disagreements !== null ? <DisagreementsLink name={name} number={v.number} count={disagreements} /> : null}
-        {!v.active && v.calibrated ? <ActivateForm name={name} number={v.number} /> : null}
-      </div>
+    <div class="list-row" data-row data-active={v.active ? '1' : undefined}>
+      <a class="id num row-link" href={v.url}>v{v.number}</a>
+      {v.active ? <span class="pill pill-pass"><Icon name="pass" size="sm" />Active</span> : null}
+      <span class="grow muted">{`${v.note ?? v.model} · ${v.created_by}`}</span>
+      {row ? <span class="meta num">{`TPR ${pct(row.tpr)} · TNR ${pct(row.tnr)} · n=${row.n}`}</span> : <StatusPill status="needs_labels" />}
+      {v.active && disagreements !== null ? <DisagreementsLink name={name} number={v.number} count={disagreements} /> : null}
+      {!v.active && v.calibrated ? <ActivateForm name={name} number={v.number} /> : null}
     </div>
   );
 };
@@ -57,7 +49,7 @@ const Overview = ({ judge, disagreements }: { judge: JudgeView; disagreements: n
 
 const Versions = ({ judge, disagreements }: { judge: JudgeView; disagreements: number | null }) =>
   judge.versions.length ? (
-    <div class="timeline">{judge.versions.map((v) => <Version name={judge.name} version={v} disagreements={disagreements} />)}</div>
+    <div class="card card-flush" data-list>{judge.versions.map((v) => <Version name={judge.name} version={v} disagreements={disagreements} />)}</div>
   ) : (
     <Empty icon="judge" title="No versions yet" />
   );
@@ -68,14 +60,13 @@ const Disagreements = ({ judge, items }: { judge: JudgeView; items: Disagreement
       <div class="cluster">
         <a class="btn btn-secondary" href={urls.judgeDisagreements(judge.name, judge.active_version ?? 1)}><Icon name="flag" size="sm" />Review queue</a>
       </div>
-      <div class="card card-flush">
+      <div class="card card-flush" data-list>
         {items.map((d) => (
-          <a class="list-row" href={d.url}>
-            <span class="avatar avatar-sm"><Icon name="trace" size="sm" /></span>
-            <span class="mono strong">{short(d.trace_id)}</span>
+          <div class="list-row" data-row>
+            <a class="id mono row-link" href={d.url}>{short(d.trace_id)}</a>
             <span class="meta">{`human ${verdict(d.human.value)} · judge ${verdict(d.judge.value)}`}</span>
             <span class="grow muted">{summarize(d.output)}</span>
-          </a>
+          </div>
         ))}
       </div>
     </div>
@@ -85,14 +76,14 @@ const Disagreements = ({ judge, items }: { judge: JudgeView; items: Disagreement
 
 const Issues = ({ items }: { items: IssueListRow[] }) =>
   items.length ? (
-    <div class="card card-flush">
+    <div class="card card-flush" data-list>
       {items.map((i) => (
-        <a class="list-row" href={i.url}>
+        <div class="list-row" data-row>
           <State status={i.status} />
-          <span class="grow strong">{i.title}</span>
+          <a class="grow strong row-link" href={i.url}>{i.title}</a>
           <SeverityPill severity={i.severity} />
           <span class="meta num" title={i.updated_at}>{ago(i.updated_at)}</span>
-        </a>
+        </div>
       ))}
     </div>
   ) : (

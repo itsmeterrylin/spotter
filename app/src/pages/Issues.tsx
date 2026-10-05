@@ -106,19 +106,18 @@ const Overview = ({ issue, seed, projectTraces }: Pick<DetailProps, 'issue' | 's
 };
 
 const OccurrenceRow = ({ o }: { o: OccurrenceView }) => (
-  <a class="list-row" href={o.url}>
-    <span class="avatar avatar-sm"><Icon name="trace" size="sm" /></span>
-    <span class="mono strong">{short(o.trace_id)}</span>
+  <div class="list-row" data-row>
+    <a class="id mono row-link" href={o.url}>{short(o.trace_id)}</a>
     <span class="meta">{turnLabel(o.turn)}</span>
     <span class="grow muted">{o.evidence ?? ''}</span>
     <span class="meta">{o.created_by}</span>
     <span class="meta num" title={o.created_at}>{ago(o.created_at)}</span>
-  </a>
+  </div>
 );
 
 const Occurrences = ({ issue }: { issue: IssueView }) =>
   issue.occurrence_list.length ? (
-    <div class="card card-flush">{issue.occurrence_list.map((o) => <OccurrenceRow o={o} />)}</div>
+    <div class="card card-flush" data-list>{issue.occurrence_list.map((o) => <OccurrenceRow o={o} />)}</div>
   ) : (
     <Empty icon="trace" title="No occurrences" />
   );
@@ -159,13 +158,13 @@ const BacktestTab = ({ issue, judges }: { issue: IssueView; judges: Judge[] }) =
       <div class="block">
         <span class="block-label"><Icon name="fail" size="sm" />Failing traces · <a class="link" href={b.url}>{b.judge}{b.version === null ? '' : ` v${b.version}`}</a></span>
         {b.failing.length ? (
-          <div class="card card-flush">
+          <div class="card card-flush" data-list>
             {b.failing.map((f) => (
-              <a class="list-row" href={f.url}>
-                <span class="avatar avatar-sm"><Icon name="fail" size="sm" /></span>
-                <span class="mono strong grow">{short(f.trace_id)}</span>
+              <div class="list-row" data-row>
+                <a class="id mono row-link" href={f.url}>{short(f.trace_id)}</a>
+                <span class="grow"></span>
                 <span class="meta">{f.turns.length ? f.turns.map((t) => `turn ${t}`).join(' · ') : 'whole trace'}</span>
-              </a>
+              </div>
             ))}
           </div>
         ) : (
@@ -218,11 +217,11 @@ const Properties = ({ issue }: { issue: IssueView }) => (
       {issue.occurrence_list.length ? (
         <div class="occ-list">
           {issue.occurrence_list.slice(0, 6).map((o) => (
-            <a class="list-row" href={o.url}>
-              <span class="avatar avatar-sm"><Icon name="trace" size="sm" /></span>
-              <span class="grow mono">{short(o.trace_id)}</span>
+            <div class="list-row" data-row>
+              <a class="id mono row-link" href={o.url}>{short(o.trace_id)}</a>
+              <span class="grow"></span>
               <span class="meta">{turnLabel(o.turn)}</span>
-            </a>
+            </div>
           ))}
         </div>
       ) : (

@@ -87,7 +87,7 @@ describe('issue pages', () => {
 
   test('the Traces tab lists occurrences with their turn', async () => {
     const [, html] = await page(app, `/issues/${ids.open}?tab=traces`);
-    expect(html).toContain(`<a class="list-row" href="${base}/traces/${ids.trace}?turn=3">`);
+    expect(html).toContain(`<div class="list-row" data-row="true"><a class="id mono row-link" href="${base}/traces/${ids.trace}?turn=3">`);
     expect(html).toContain('<span class="meta">turn 3</span>');
   });
 
@@ -98,7 +98,7 @@ describe('issue pages', () => {
     expect(html).toContain('Fail rate</span><span class="t-stat num">50%</span>');
     expect(html).toMatch(/<pre class="code">spotter judge run language-leak --run [0-9a-f-]{36}<\/pre>/);
     expect(html).toContain('data-copy="spotter judge run language-leak --run ');
-    expect(html).toContain(`<a class="list-row" href="${base}/traces/${ids.trace}?turn=3">`);
+    expect(html).toContain(`<div class="list-row" data-row="true"><a class="id mono row-link" href="${base}/traces/${ids.trace}?turn=3">`);
   });
 
   test('without a judge, Backtest offers the judge select and a link to /judges', async () => {
@@ -115,7 +115,7 @@ describe('issue pages', () => {
     const [, html] = await page(app, `/traces/${ids.trace}?turn=3`);
     expect(html).toContain('<button class="turn-flag" type="button" data-new-issue-open="true" data-turn="3" aria-label="New issue at turn 3" title="New issue at turn 3">');
     expect(html).toContain('<option value="3" selected="">Turn 3</option>');
-    expect(html).toContain(`<a class="list-row" href="${base}/issues/${ids.open}"><span class="state" role="img" aria-label="Open"></span><span class="grow">Reply slips into Dutch</span></a>`);
+    expect(html).toContain(`<div class="list-row" data-row="true"><span class="state" role="img" aria-label="Open"></span><a class="grow row-link" href="${base}/issues/${ids.open}">Reply slips into Dutch</a></div>`);
   });
 
   test('unknown issues 404 and a bad tab is 400', async () => {

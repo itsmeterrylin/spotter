@@ -71,6 +71,40 @@ describe('layout', () => {
     expect(detail).toContain('<header class="header">');
   });
 
+  test('every object list is a .list-row list: no tables or .row blocks, one row-link per row, the shared keymap loaded', async () => {
+    const lists: Array<[path: string, script: string]> = [
+      ['/traces', 'traces'],
+      ['/runs', 'rows'],
+      ['/datasets', 'rows'],
+      [`/datasets/${s.datasetId}`, 'rows'],
+      [`/runs/${s.runB}`, 'rows'],
+      ['/notifications', 'rows'],
+      ['/settings', ''],
+    ];
+    for (const [path, script] of lists) {
+      const [status, html] = await page(app, path);
+      expect(status).toBe(200);
+      expect(html).not.toContain('<table');
+      expect(html).not.toContain('class="row"');
+      expect(html).toContain('class="list-row"');
+      if (script) expect(html).toContain(`/client/${script}.js`);
+    }
+    for (const name of ['rows', 'traces', 'issue', 'judge', 'trace', 'issues', 'judges']) {
+      expect(await (await app.request(`/client/${name}.js`)).text()).toContain('data-focus');
+    }
+  });
+
+  test('the traces list groups rows under verdict headers (failing first, then unlabeled, then passed), and each row links to its trace and still opens the pane', async () => {
+    const [, html] = await page(app, '/traces');
+    const heads = [...html.matchAll(/<div class="group-head">.*?<\/span>([A-Za-z]+)<span class="count">(\d+)<\/span><\/div>/g)].map((m) => `${m[1]} ${m[2]}`);
+    expect(heads).toEqual(['Failing 1', 'Unlabeled 5']);
+    expect(html.match(/class="list-row" data-row="true" data-trace="/g)?.length).toBe(6);
+    for (const id of [...s.a, ...s.b]) expect(html).toContain(`<a class="grow row-link" href="${base}/traces/${id}">`);
+    const [, pane] = await page(app, `/traces?trace=${s.b[0]}`);
+    expect(pane).toContain(`data-trace="${s.b[0]}" data-selected="1"`);
+    expect(pane).toContain('<div class="pane-inner"');
+  });
+
   test('each section page marks its own nav item active', async () => {
     for (const path of ['/runs', '/datasets', '/traces', '/judges']) {
       const [status, html] = await page(app, path);
@@ -81,15 +115,15 @@ describe('layout', () => {
 
   test('/traces?q= searches transcript text and ?tab=unlabeled keeps traces without a human label', async () => {
     const [, all] = await page(app, '/traces');
-    expect(all.match(/<tr class="linkrow"/g)?.length).toBe(6);
+    expect(all.match(/class="list-row" data-row="true" data-trace=/g)?.length).toBe(6);
     expect(all).toContain('<a class="tab" href="http://localhost:3000/traces" aria-current="page">All</a>');
     const [, found] = await page(app, '/traces?q=squat');
-    expect(found.match(/<tr class="linkrow"/g)?.length).toBe(1);
+    expect(found.match(/class="list-row" data-row="true" data-trace=/g)?.length).toBe(1);
     expect(found).toContain('<span class="pill"><svg class="ic ic-sm" aria-hidden="true"><use href="#i-search"/></svg>squat</span>');
     const [, none] = await page(app, '/traces?q=nothing-matches');
     expect(none).toContain('No matches');
     const [, unlabeled] = await page(app, '/traces?tab=unlabeled');
-    expect(unlabeled.match(/<tr class="linkrow"/g)?.length).toBe(5);
+    expect(unlabeled.match(/class="list-row" data-row="true" data-trace=/g)?.length).toBe(5);
     expect(unlabeled).toContain('<a class="tab" href="http://localhost:3000/traces?tab=unlabeled" aria-current="page">Unlabeled</a>');
   });
 

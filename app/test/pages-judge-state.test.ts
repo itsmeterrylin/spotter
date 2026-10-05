@@ -120,9 +120,9 @@ describe('judge page', () => {
 
   test('the Issues tab lists issues linked to the judge, and Versions lists the timeline', async () => {
     const [, issues] = await page('/judges/alpha?tab=issues');
-    expect(issues).toContain('<span class="grow strong">Reply slips into Dutch</span>');
+    expect(issues).toContain('>Reply slips into Dutch</a>');
     expect((await page('/judges/beta?tab=issues'))[1]).toContain('No linked issues');
-    expect((await page('/judges/alpha?tab=versions'))[1]).toContain('class="version"');
+    expect((await page('/judges/alpha?tab=versions'))[1]).toContain('class="id num row-link"');
     expect((await page('/judges/alpha?tab=disagreements'))[1]).toContain('No disagreements');
   });
 

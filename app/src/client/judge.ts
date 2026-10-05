@@ -1,4 +1,5 @@
 import { activateVersion, patchJudge } from './api.ts';
+import './list.ts';
 import './statusMenu.ts';
 
 const aside = document.querySelector<HTMLElement>('aside[data-judge]');

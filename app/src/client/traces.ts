@@ -1,6 +1,7 @@
+import './list.ts';
 import { wireNewIssue } from './newIssue.ts';
 
-const rows = [...document.querySelectorAll<HTMLElement>('tr.linkrow[data-trace]')];
+const rows = [...document.querySelectorAll<HTMLElement>('.list-row[data-trace]')];
 const pane = document.getElementById('pane') as HTMLElement | null;
 wireNewIssue();
 
@@ -40,10 +41,15 @@ const openPane = async (id: string, push = true): Promise<void> => {
 
 const selectedIndex = (): number => rows.findIndex((r) => r.hasAttribute('data-selected'));
 
-for (const tr of rows) {
-  tr.addEventListener('click', (e) => {
-    if (e.target instanceof Element && e.target.closest('a')) return;
-    const id = tr.dataset.trace;
+const opensPage = (e: MouseEvent): boolean => e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0;
+
+for (const row of rows) {
+  row.addEventListener('click', (e) => {
+    if (opensPage(e) || !(e.target instanceof Element)) return;
+    const link = e.target.closest('a');
+    if (link && !link.classList.contains('row-link')) return;
+    e.preventDefault();
+    const id = row.dataset.trace;
     if (id) void openPane(id);
   });
 }
@@ -61,7 +67,6 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && i >= 0) closePane();
   else if (e.key === 'ArrowDown' && rows.length) { e.preventDefault(); void openPane(rows[Math.min(i + 1, rows.length - 1)]?.dataset.trace ?? ''); }
   else if (e.key === 'ArrowUp' && rows.length) { e.preventDefault(); void openPane(rows[Math.max(i - 1, 0)]?.dataset.trace ?? ''); }
-  else if (e.key === 'Enter' && i >= 0) { const href = rows[i]?.dataset.href; if (href) location.href = href; }
 });
 
 window.addEventListener('popstate', () => {

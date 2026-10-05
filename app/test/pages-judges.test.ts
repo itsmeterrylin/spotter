@@ -66,8 +66,7 @@ describe('judges pages', () => {
       expect(html.indexOf('>v3<')).toBeLessThan(html.indexOf('>v2<'));
       expect(html.indexOf('>v2<')).toBeLessThan(html.indexOf('>v1<'));
       expect(html).toContain('Active');
-      expect(html).toContain('TPR · test · n=15');
-      expect(html).toContain('bar bar-pass');
+      expect(html).toMatch(/TPR \d+% · TNR \d+% · n=15/);
       expect(html).toContain('first draft');
       expect(html).toContain('stricter');
       expect(html).toContain('Needs labels');

@@ -63,7 +63,6 @@ export function listRoutes(repos: Repos, shell: () => Shell): Hono {
       values: rollup(counts(repos, trace.scores)),
       verdict: humanVerdict(trace.scores)?.verdict ?? null,
     }));
-    const names = [...new Set(rows.flatMap((r) => [...r.values.keys()]))].sort();
     const selected = c.req.query('trace');
     const query = new URL(c.req.url).searchParams;
     query.delete('trace');
@@ -74,7 +73,7 @@ export function listRoutes(repos: Repos, shell: () => Shell): Hono {
           return <TracePane trace={t} run={t.run_id ? repos.runs.get(t.run_id) : null} verdict={humanVerdict(t.scores)} closeHref={closeHref} />;
         })()
       : undefined;
-    return c.html(<TracesPage rows={rows} names={names} run={run} score={c.req.query('score')} filters={filters.length} tab={tab} q={q} query={query} limit={traceLimit} shell={shell()} selected={selected} pane={pane} />);
+    return c.html(<TracesPage rows={rows} run={run} filters={filters.length} tab={tab} q={q} query={query} shell={shell()} selected={selected} pane={pane} />);
   });
 
   app.get('/notifications', (c) => {

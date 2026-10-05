@@ -2,20 +2,19 @@ import type { Trace } from '../db/repos/trace.ts';
 import { urls } from '../urls.ts';
 import type { HumanVerdict, RunCard, Shell } from './data.ts';
 import { Layout } from './Layout.tsx';
-import { Delta, Empty, Icon, IconButton, pct, short, summarize, VerdictPill } from './ui.tsx';
+import { TraceList } from './TraceList.tsx';
+import { Delta, Empty, Icon, IconButton, pct } from './ui.tsx';
 
 export type TraceRow = { trace: Trace; verdict: HumanVerdict | null; value: number | null };
 
 type Props = { card: RunCard; rows: TraceRow[]; shell: Shell };
-
-const rowIcon = (value: number | null): 'pass' | 'fail' | 'trace' => (value === 1 ? 'pass' : value === 0 ? 'fail' : 'trace');
 
 export const RunPage = ({ card, rows, shell }: Props) => {
   const { run, baseline, scores, primary, unlabeled, regressed } = card;
   const compareUrl = baseline ? urls.compare(run.dataset_id, [baseline.id, run.id], 'changes') : null;
   const action = baseline && compareUrl ? <IconButton href={compareUrl} icon="compare" label={`Compare with ${baseline.name}`} /> : undefined;
   return (
-    <Layout title={run.name} heading section="runs" shell={shell} crumbs={[[urls.runs(run.dataset_id), 'Runs']]} actions={action}>
+    <Layout title={run.name} heading section="runs" shell={shell} crumbs={[[urls.runs(run.dataset_id), 'Runs']]} actions={action} script="rows">
       <div class="stats">
         {Object.entries(scores).map(([name, s]) => (
           <a class="card stat" href={urls.run(run.id, name)} data-selected={name === primary ? '1' : undefined}>
@@ -37,18 +36,7 @@ export const RunPage = ({ card, rows, shell }: Props) => {
         ) : null}
       </div>
       {rows.length ? (
-        <div class="card card-flush">
-          {rows.map(({ trace, verdict, value }) => (
-            <div class="row">
-              <Icon name={rowIcon(value)} />
-              <div class="grow">
-                <a class="link mono" href={urls.trace(trace.id)}>{short(trace.id)}</a> <span class="muted">{summarize(trace.output)}</span>
-              </div>
-              {value !== null ? <span class="num strong">{pct(value)}</span> : null}
-              <VerdictPill verdict={verdict?.verdict ?? null} />
-            </div>
-          ))}
-        </div>
+        <TraceList items={rows.map(({ trace, verdict, value }) => ({ trace, verdict: verdict?.verdict ?? null, run: null, scores: primary && value !== null ? [[primary, value]] : [] }))} />
       ) : (
         <Empty icon="trace" title="No traces yet" />
       )}

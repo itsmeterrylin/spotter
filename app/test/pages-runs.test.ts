@@ -12,17 +12,16 @@ beforeAll(async () => {
 });
 
 describe('runs', () => {
-  test('GET /runs renders the runs table with dataset, pass rate, delta, and status', async () => {
+  test('GET /runs renders runs grouped by dataset with dataset, pass rate, delta, and status', async () => {
     const [status, html] = await page(app, '/runs');
     expect(status).toBe(200);
-    expect(html).toContain('<th>Name</th><th>Dataset</th><th>Started</th><th class="num">Pass rate</th><th class="num">Delta</th><th>Status</th>');
-    expect(html).toContain(`<tr class="linkrow" data-href="${base}/runs/${s.runB}">`);
+    expect(html).toContain('<div class="group-head">');
+    expect(html).toContain(`<div class="list-row" data-row="true"><a class="grow strong row-link" href="${base}/runs/${s.runB}">rules-v2</a>`);
     expect(html).toContain(`href="${base}/runs/${s.runB}">rules-v2</a>`);
     expect(html).toContain(`href="${base}/runs/${s.runA}">rules-v1</a>`);
     expect(html).toContain(`href="${base}/datasets/${s.datasetId}">golden-`);
-    expect(html).toContain('<td class="num strong">67%</td>');
+    expect(html).toContain('<span class="num strong">67%</span>');
     expect(html).toContain('aria-label="no change"');
-    expect(html).toContain('<td class="num"><span class="muted">–</span></td>');
     expect(html).toContain('Running');
     expect(html).toContain('/client/rows.js');
     expect(html.indexOf('rules-v2')).toBeLessThan(html.indexOf('rules-v1'));
