@@ -1,6 +1,7 @@
 {
   "name": "@spotter/design-system",
   "version": "0.1.0",
+  "license": "MIT",
   "private": true,
   "type": "module",
   "description": "Tokens, component contracts, and generated CSS for Spotter.",

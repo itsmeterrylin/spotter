@@ -1,6 +1,7 @@
 {
   "name": "spotter",
   "version": "0.1.0",
+  "license": "MIT",
   "private": true,
   "type": "module",
   "workspaces": ["app", "packages/evals"],
