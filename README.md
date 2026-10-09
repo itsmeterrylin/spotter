@@ -148,3 +148,7 @@ The second run prints a table with mean, diff, improvements, and regressions per
 |---|---|---|
 | `SPOTTER_URL` | `http://localhost:3000` | Server the SDK posts to |
 | `SPOTTER_AUTH_TOKEN` | unset | Sent as a bearer token when set |
+
+## License
+
+MIT. See [LICENSE](LICENSE). You may use, modify, and redistribute Spotter, including in commercial products, as long as you keep the copyright notice.
